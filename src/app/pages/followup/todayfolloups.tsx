@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import apiHelper from "@/utils/apiHelper";
 import {
   RiFilePdfFill,
   RiFileExcel2Fill,
@@ -50,28 +51,163 @@ interface GridCard {
   badge: number;
 }
 
+const FollowUpCard: React.FC<{
+  lead: any;
+  onView: (id: number) => void;
+  onHistory: (id: number) => void;
+}> = ({ lead, onView, onHistory }) => (
+  <div className="dark:bg-dark-700 dark:border-dark-600 overflow-x-auto rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
+    <div className="min-w-[260px]">
+      <div className="mb-4 flex items-center gap-3">
+        <Badge variant="outlined" className="rounded-full whitespace-nowrap">
+          {lead.quotationNo || `#${lead.id}`}
+        </Badge>
+        <span className="text-sm font-bold whitespace-nowrap text-gray-900 dark:text-white">
+          {lead.customer?.accountName || "-"}
+        </span>
+      </div>
+
+      <div className="space-y-2.5">
+        <div className="dark:bg-dark-800 flex items-center justify-between gap-2 rounded-full bg-gray-50 py-2 pr-2 pl-4">
+          <div className="flex items-center gap-2 whitespace-nowrap">
+            <RiCalendarLine className="shrink-0 text-blue-500" size={15} />
+            <span className="text-xs font-medium whitespace-nowrap text-gray-500 dark:text-gray-400">
+              Ex. Date
+            </span>
+          </div>
+          <Badge
+            variant="outlined"
+            color="primary"
+            className="rounded-full whitespace-nowrap"
+          >
+            {lead.expectedPurchaseDate
+              ? new Date(lead.expectedPurchaseDate).toLocaleDateString("en-GB")
+              : "-"}
+          </Badge>
+        </div>
+
+        <div className="dark:bg-dark-800 flex items-center justify-between gap-2 rounded-full bg-gray-50 py-2 pr-2 pl-4">
+          <div className="flex items-center gap-2 whitespace-nowrap">
+            <RiCalendarCheckLine className="shrink-0 text-blue-500" size={15} />
+            <span className="text-xs font-medium whitespace-nowrap text-gray-500 dark:text-gray-400">
+              L-Follow-up Date
+            </span>
+          </div>
+          <Badge
+            variant="outlined"
+            color="primary"
+            className="rounded-full whitespace-nowrap"
+          >
+            {lead.latestFollowUp?.nextScheduledDate || lead.followUpDate
+              ? new Date(
+                  lead.latestFollowUp?.nextScheduledDate || lead.followUpDate,
+                ).toLocaleDateString("en-GB")
+              : "-"}
+          </Badge>
+        </div>
+
+        <div className="dark:bg-dark-800 flex items-center justify-between gap-2 rounded-full bg-gray-50 py-2 pr-2 pl-4">
+          <div className="flex items-center gap-2 whitespace-nowrap">
+            <RiPhoneLine className="shrink-0 text-blue-500" size={15} />
+            <span className="text-xs font-medium whitespace-nowrap text-gray-500 dark:text-gray-400">
+              Call Response
+            </span>
+          </div>
+          <Badge
+            variant="outlined"
+            color="success"
+            className="rounded-full whitespace-nowrap"
+          >
+            {lead.latestFollowUp?.callResponse || "New"}
+          </Badge>
+        </div>
+
+        <div className="dark:bg-dark-800 flex items-center gap-2 rounded-full bg-gray-50 py-2.5 pr-4 pl-4">
+          <RiChat3Line className="shrink-0 text-blue-500" size={15} />
+          <span className="text-xs whitespace-nowrap text-gray-400 dark:text-gray-500">
+            {lead.latestFollowUp?.discussion || "No remarks yet"}
+          </span>
+        </div>
+      </div>
+
+      <div className="dark:border-dark-600 my-4 border-t border-dashed border-gray-300" />
+
+      <div className="flex items-center justify-end gap-2">
+        <span className="dark:bg-dark-800 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-500 dark:text-gray-400">
+          {lead.latestFollowUp?.followupCount ?? 1}
+        </span>
+        <button
+          onClick={() => onView(lead.id)}
+          className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-blue-100 text-blue-600 transition-all duration-200 hover:bg-blue-200 active:scale-95 dark:bg-blue-900/30 dark:text-blue-400"
+          title="Add Follow-up"
+        >
+          <RiAddLine className="text-lg" />
+        </button>
+        <button
+          onClick={() => onHistory(lead.id)}
+          className="dark:bg-dark-800 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all duration-200 hover:bg-gray-200 active:scale-95 dark:text-gray-400"
+          title="View"
+        >
+          <RiEyeLine className="text-lg" />
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 const TodayFollowUps: React.FC = () => {
   const navigate = useNavigate();
-  const [view, setView] = useState<"table" | "grid">("table");
+  const [view, setView] = useState<"table" | "grid">("grid");
   const [searchTerm, setSearchTerm] = useState("");
   const [rowsPerPage, setRowsPerPage] = useState(15);
   const [currentPage, setCurrentPage] = useState(1);
   const [collapsed, setCollapsed] = useState(false);
 
-  // Sample data - empty for now
-  const tableData: FollowUpData[] = [];
+  const [board, setBoard] = useState<{
+    Pending: any[];
+    Attend: any[];
+    Delay: any[];
+    Upcoming: any[];
+  }>({ Pending: [], Attend: [], Delay: [], Upcoming: [] });
+  const [loading, setLoading] = useState(true);
 
-  const gridData: GridCard[] = [
-    {
-      id: 1,
-      customerName: "Denish patel",
-      exDate: "17-06-2026",
-      followUpDate: "18-06-2026",
-      callResponse: "Connected",
-      phone: "+91 9081540774",
-      badge: 1,
-    },
+  const fetchBoard = async () => {
+    try {
+      setLoading(true);
+      const res = await apiHelper.get(`/followup/board?t=${Date.now()}`);
+      setBoard(
+        res.data || { Pending: [], Attend: [], Delay: [], Upcoming: [] },
+      );
+    } catch (error) {
+      console.error("Board fetch error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBoard();
+  }, []);
+
+  // Sample data - empty for now
+  const flattenBoard = () => [
+    ...board.Pending.map((l: any) => ({ ...l, bucket: "Pending" })),
+    ...board.Attend.map((l: any) => ({ ...l, bucket: "Attend" })),
+    ...board.Delay.map((l: any) => ({ ...l, bucket: "Delay" })),
+    ...board.Upcoming.map((l: any) => ({ ...l, bucket: "Upcoming" })),
   ];
+
+  const allRows = flattenBoard();
+
+  const searchLower = searchTerm.toLowerCase();
+  const tableData = allRows.filter((lead: any) => {
+    if (!searchTerm) return true;
+    return (
+      lead.customer?.accountName?.toLowerCase().includes(searchLower) ||
+      lead.customer?.mobile?.includes(searchTerm) ||
+      lead.dmsEnquiryNo?.toLowerCase().includes(searchLower)
+    );
+  });
 
   const totalPages = Math.ceil(tableData.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
@@ -151,17 +287,6 @@ const TodayFollowUps: React.FC = () => {
       {/* View Switch */}
       <div className="dark:border-dark-600 mb-6 flex items-center gap-1 border-b border-gray-200">
         <button
-          onClick={() => setView("table")}
-          className={`flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-all ${
-            view === "table"
-              ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
-              : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-          }`}
-        >
-          <RiListUnordered className="text-lg" />
-          Table
-        </button>
-        <button
           onClick={() => setView("grid")}
           className={`flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-all ${
             view === "grid"
@@ -171,6 +296,17 @@ const TodayFollowUps: React.FC = () => {
         >
           <RiGridLine className="text-lg" />
           Grid
+        </button>
+        <button
+          onClick={() => setView("table")}
+          className={`flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-all ${
+            view === "table"
+              ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
+              : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          }`}
+        >
+          <RiListUnordered className="text-lg" />
+          Table
         </button>
       </div>
 
@@ -258,61 +394,90 @@ const TodayFollowUps: React.FC = () => {
                       </td>
                     </tr>
                   ) : (
-                    currentData.map((item, index) => (
-                      <tr
-                        key={index}
-                        className="dark:hover:bg-dark-600 transition-colors hover:bg-gray-50"
-                      >
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                          {startIndex + index + 1}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                          {item.leadId}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                          {item.dmsEnquiryNo}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                          {item.dmsEnquiryDate}
-                        </td>
-                        <td className="px-4 py-3 font-medium whitespace-nowrap text-gray-900 dark:text-white">
-                          {item.customerName}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                          {item.contact}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                          {item.leadStatus}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                          {item.createdBy}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                          {item.callResponse}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                          {item.enquiryStatus}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                          {item.time}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                          {item.fCount}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                          {item.ageLead}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                          {item.view}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                          {item.lastUpdate}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                          {item.status}
-                        </td>
-                      </tr>
-                    ))
+                    currentData.map((item: any, index: number) => {
+                      const bucketColor: Record<string, string> = {
+                        Pending: "bg-orange-100 text-orange-600",
+                        Delay: "bg-red-100 text-red-600",
+                        Attend: "bg-green-100 text-green-600",
+                        Upcoming: "bg-yellow-100 text-yellow-600",
+                      };
+                      return (
+                        <tr
+                          key={item.id}
+                          className="dark:hover:bg-dark-600 transition-colors hover:bg-gray-50"
+                        >
+                          <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                            {startIndex + index + 1}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                            {item.quotationNo || item.id}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                            {item.dmsEnquiryNo || "-"}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                            {item.dmsEnquiryDate
+                              ? new Date(
+                                  item.dmsEnquiryDate,
+                                ).toLocaleDateString("en-GB")
+                              : "-"}
+                          </td>
+                          <td className="px-4 py-3 font-medium whitespace-nowrap text-gray-900 dark:text-white">
+                            {item.customer?.accountName || "-"}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                            {item.customer?.mobile || "-"}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                            {item.leadTemperature || "-"}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                            {item.createdBy || "-"}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                            {item.latestFollowUp?.callResponse || "New"}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                            {item.enquiryStatus?.enquiryStatus || "-"}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                            {item.latestFollowUp?.callTime || "-"}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                            {item.latestFollowUp?.followupCount ?? 0}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                            {item.followUpDate
+                              ? new Date(item.followUpDate).toLocaleDateString(
+                                  "en-GB",
+                                )
+                              : "-"}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                            <button
+                              onClick={() => handleViewClick(item.id)}
+                              className="text-blue-600 hover:underline"
+                            >
+                              View
+                            </button>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                            {item.updatedAt
+                              ? new Date(item.updatedAt).toLocaleDateString(
+                                  "en-GB",
+                                )
+                              : "-"}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-xs font-semibold ${bucketColor[item.bucket]}`}
+                            >
+                              {item.bucket}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -418,17 +583,31 @@ const TodayFollowUps: React.FC = () => {
                 </span>
               </div>
               <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-semibold text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">
-                0
+                {board.Pending.length}
               </span>
             </div>
-            <div className="flex h-[300px] items-center justify-center">
-              <span className="text-sm text-gray-400 dark:text-gray-500">
-                No Pending Follow-ups
-              </span>
+            <div className="max-h-[500px] min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+              {board.Pending.length === 0 ? (
+                <div className="flex h-[300px] items-center justify-center">
+                  <span className="text-sm text-gray-400 dark:text-gray-500">
+                    No Pending Follow-ups
+                  </span>
+                </div>
+              ) : (
+                board.Pending.map((lead: any) => (
+                  <FollowUpCard
+                    key={lead.id}
+                    lead={lead}
+                    onView={handleViewClick}
+                    onHistory={handleHistoryClick}
+                  />
+                ))
+              )}
             </div>
           </div>
 
           {/* Delay Column */}
+
           <div className="dark:bg-dark-600 min-h-[400px] rounded-xl bg-gray-100 p-4">
             <div className="dark:bg-dark-700 mb-3 flex items-center justify-between rounded-lg bg-white px-4 py-2 shadow-sm">
               <div className="flex items-center gap-2">
@@ -440,127 +619,27 @@ const TodayFollowUps: React.FC = () => {
                 </span>
               </div>
               <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-600 dark:bg-red-900/30 dark:text-red-400">
-                1
+                {board.Delay.length}
               </span>
             </div>
-            {/* Delay Card */}
-            <div className="dark:bg-dark-600 flex max-h-[500px] min-h-[400px] flex-col rounded-xl bg-gray-100 p-4">
-              {/* Scrollable content area */}
-              <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
-                {/* Delay Card */}
-                <div className="dark:bg-dark-700 dark:border-dark-600 overflow-x-auto rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
-                  <div className="min-w-[260px]">
-                    {/* Header: Ref No + Name */}
-                    <div className="mb-4 flex items-center gap-3">
-                      <Badge
-                        variant="outlined"
-                        className="rounded-full whitespace-nowrap"
-                      >
-                        Q/25-26/001
-                      </Badge>
-                      <span className="text-sm font-bold whitespace-nowrap text-gray-900 dark:text-white">
-                        Denish patel
-                      </span>
-                    </div>
-
-                    {/* Info Pills */}
-                    <div className="space-y-2.5">
-                      <div className="dark:bg-dark-800 flex items-center justify-between gap-2 rounded-full bg-gray-50 py-2 pr-2 pl-4">
-                        <div className="flex items-center gap-2 whitespace-nowrap">
-                          <RiCalendarLine
-                            className="shrink-0 text-blue-500"
-                            size={15}
-                          />
-                          <span className="text-xs font-medium whitespace-nowrap text-gray-500 dark:text-gray-400">
-                            Ex. Date
-                          </span>
-                        </div>
-                        <Badge
-                          variant="outlined"
-                          color="primary"
-                          className="rounded-full whitespace-nowrap"
-                        >
-                          17-06-2026
-                        </Badge>
-                      </div>
-
-                      <div className="dark:bg-dark-800 flex items-center justify-between gap-2 rounded-full bg-gray-50 py-2 pr-2 pl-4">
-                        <div className="flex items-center gap-2 whitespace-nowrap">
-                          <RiCalendarCheckLine
-                            className="shrink-0 text-blue-500"
-                            size={15}
-                          />
-                          <span className="text-xs font-medium whitespace-nowrap text-gray-500 dark:text-gray-400">
-                            L-Follow-up Date
-                          </span>
-                        </div>
-                        <Badge
-                          variant="outlined"
-                          color="primary"
-                          className="rounded-full whitespace-nowrap"
-                        >
-                          18-06-2026
-                        </Badge>
-                      </div>
-
-                      <div className="dark:bg-dark-800 flex items-center justify-between gap-2 rounded-full bg-gray-50 py-2 pr-2 pl-4">
-                        <div className="flex items-center gap-2 whitespace-nowrap">
-                          <RiPhoneLine
-                            className="shrink-0 text-blue-500"
-                            size={15}
-                          />
-                          <span className="text-xs font-medium whitespace-nowrap text-gray-500 dark:text-gray-400">
-                            Call Response
-                          </span>
-                        </div>
-                        <Badge
-                          variant="outlined"
-                          color="success"
-                          className="rounded-full whitespace-nowrap"
-                        >
-                          Connected
-                        </Badge>
-                      </div>
-
-                      <div className="dark:bg-dark-800 flex items-center gap-2 rounded-full bg-gray-50 py-2.5 pr-4 pl-4">
-                        <RiChat3Line
-                          className="shrink-0 text-blue-500"
-                          size={15}
-                        />
-                        <span className="text-xs whitespace-nowrap text-gray-400 dark:text-gray-500">
-                          No remarks yet
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Dotted Separator */}
-                    <div className="dark:border-dark-600 my-4 border-t border-dashed border-gray-300" />
-
-                    {/* Footer Actions */}
-                    <div className="flex items-center justify-end gap-2">
-                      <span className="dark:bg-dark-800 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-500 dark:text-gray-400">
-                        1
-                      </span>
-                      <button
-                        onClick={() => handleViewClick(gridData[0].id)}
-                        className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-blue-100 text-blue-600 transition-all duration-200 hover:bg-blue-200 active:scale-95 dark:bg-blue-900/30 dark:text-blue-400"
-                        title="Add Follow-up"
-                      >
-                        <RiAddLine className="text-lg" />
-                      </button>
-                      <button
-                        onClick={() => handleHistoryClick(gridData[0].id)}
-                        className="dark:bg-dark-800 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all duration-200 hover:bg-gray-200 active:scale-95 dark:text-gray-400"
-                        title="View"
-                      >
-                        <RiEyeLine className="text-lg" />
-                      </button>
-                    </div>
-                  </div>
+            <div className="max-h-[500px] min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+              {board.Delay.length === 0 ? (
+                <div className="flex h-[300px] items-center justify-center">
+                  <span className="text-sm text-gray-400 dark:text-gray-500">
+                    No Delayed Follow-ups
+                  </span>
                 </div>
-                {/* more delay cards can go here, they'll stack + scroll together */}
-              </div>
-            </div>{" "}
+              ) : (
+                board.Delay.map((lead: any) => (
+                  <FollowUpCard
+                    key={lead.id}
+                    lead={lead}
+                    onView={handleViewClick}
+                    onHistory={handleHistoryClick}
+                  />
+                ))
+              )}
+            </div>
           </div>
 
           {/* Attend Column */}
@@ -575,13 +654,26 @@ const TodayFollowUps: React.FC = () => {
                 </span>
               </div>
               <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-600 dark:bg-green-900/30 dark:text-green-400">
-                0
+                {board.Attend.length}
               </span>
             </div>
-            <div className="flex h-[300px] items-center justify-center">
-              <span className="text-sm text-gray-400 dark:text-gray-500">
-                No Attend Follow-ups
-              </span>
+            <div className="max-h-[500px] min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+              {board.Attend.length === 0 ? (
+                <div className="flex h-[300px] items-center justify-center">
+                  <span className="text-sm text-gray-400 dark:text-gray-500">
+                    No Attend Follow-ups
+                  </span>
+                </div>
+              ) : (
+                board.Attend.map((lead: any) => (
+                  <FollowUpCard
+                    key={lead.id}
+                    lead={lead}
+                    onView={handleViewClick}
+                    onHistory={handleHistoryClick}
+                  />
+                ))
+              )}
             </div>
           </div>
 
@@ -597,13 +689,26 @@ const TodayFollowUps: React.FC = () => {
                 </span>
               </div>
               <span className="rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-semibold text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400">
-                0
+                {board.Upcoming.length}
               </span>
             </div>
-            <div className="flex h-[300px] items-center justify-center">
-              <span className="text-sm text-gray-400 dark:text-gray-500">
-                No Upcoming Follow-ups
-              </span>
+            <div className="max-h-[500px] min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+              {board.Upcoming.length === 0 ? (
+                <div className="flex h-[300px] items-center justify-center">
+                  <span className="text-sm text-gray-400 dark:text-gray-500">
+                    No Upcoming Follow-ups
+                  </span>
+                </div>
+              ) : (
+                board.Upcoming.map((lead: any) => (
+                  <FollowUpCard
+                    key={lead.id}
+                    lead={lead}
+                    onView={handleViewClick}
+                    onHistory={handleHistoryClick}
+                  />
+                ))
+              )}
             </div>
           </div>
         </div>

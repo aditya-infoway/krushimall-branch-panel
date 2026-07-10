@@ -12,9 +12,6 @@ import { Listbox } from "@/components/shared/form/StyledListbox";
 import { GroupCombobox } from "@/components/shared/form/GroupCombobox";
 import { toast } from "sonner";
 
-
-
-
 type FormValues = {
   accountName: string;
   printName: string;
@@ -208,28 +205,31 @@ const NewAccount = () => {
   };
 
   const onFormSubmit = async (data: FormValues) => {
-  try {
-    const finalPayload = {
-      ...data,
-      birthday: data.birthday || null,
-      anniversary: data.anniversary || null,
-      openingBalance: Number(data.openingBalance) || 0,
-    };
+    try {
+      const finalPayload = {
+        ...data,
+        birthday: data.birthday || null,
+        anniversary: data.anniversary || null,
+        openingBalance: Number(data.openingBalance) || 0,
+      };
 
-    if (isEditMode) {
-      await apiHelper.put(`/accounts/${editData.id}`, finalPayload);
-      toast.success("Account updated successfully!");
-    } else {
-      await apiHelper.post("/accounts", finalPayload);
-      toast.success("Account created successfully!");
+      if (isEditMode) {
+        await apiHelper.put(`/accounts/${editData.id}`, finalPayload);
+        toast.success("Account updated successfully!");
+      } else {
+        await apiHelper.post("/accounts", finalPayload);
+        toast.success("Account created successfully!");
+      }
+
+      navigate("/usermaster/account");
+    } catch (error: any) {
+      console.log(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save account. Please try again.",
+      );
     }
-
-    navigate("/usermaster/account");
-  } catch (error: any) {
-    console.log(error);
-    toast.error(error.response?.data?.message || "Failed to save account. Please try again.");
-  }
-};
+  };
 
   // ─── Dynamic Location Data ──────────────────────────────────────────────────
   const countryOptions = useMemo(() => {
@@ -332,16 +332,17 @@ const NewAccount = () => {
   return (
     <div className="min-h-screen bg-white p-6 transition-colors duration-200 dark:bg-gray-900">
       {/* Header with Back Button */}
-      <div className="mb-6 flex items-center gap-4 border-b border-gray-200 pb-4 dark:border-gray-700">
-        <button
-          onClick={handleBack}
-          className="rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-        >
-          <ArrowLeftIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-        </button>
+      <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-700">
         <h2 className="text-xl font-bold text-gray-800 dark:text-white">
           {isEditMode ? "Edit Account" : "Add New Account"}
         </h2>
+        <button
+          onClick={handleBack}
+          className="bg-primary-600 hover:bg-primary-700 dark:bg-primary-800 dark:hover:bg-primary-700 flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-white transition-colors dark:text-white"
+        >
+          <ArrowLeftIcon className="h-4 w-4" />
+          <span>Back</span>
+        </button>
       </div>
 
       <form onSubmit={handleSubmit(onFormSubmit)}>
@@ -351,9 +352,18 @@ const NewAccount = () => {
           <div className="space-y-4">
             <div>
               <Input
-                label="Account Name"
-                placeholder="Cash account"
-                {...register("accountName", formValidationRules.accountName)}
+                label={
+                  <span>
+                    Account Name <span className="text-red-500">*</span>
+                  </span>
+                }
+                placeholder="Enter Account Name"
+                {...register("accountName", {
+                  ...formValidationRules.accountName,
+                  onChange: (e) => {
+                    setValue("printName", e.target.value);
+                  },
+                })}
                 error={errors?.accountName && errors.accountName.message}
               />
             </div>
@@ -361,13 +371,16 @@ const NewAccount = () => {
             <div>
               <Input
                 label="Print Name"
-                placeholder="Cash account"
+                placeholder="Print Name"
                 {...register("printName", formValidationRules.printName)}
-                error={errors?.printName && errors.printName.message}
+                readOnly
+                className="cursor-not-allowed bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300"
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium">Group</label>
+              <label className="mb-2 block text-sm font-medium">
+                Group <span className="text-red-500">*</span>
+              </label>
               <Controller
                 name="group"
                 control={control}
@@ -395,7 +408,11 @@ const NewAccount = () => {
             </div>
             <div>
               <Input
-                label="Opening Balance"
+                label={
+                  <span>
+                    Openin Balance <span className="text-red-500">*</span>
+                  </span>
+                }
                 placeholder="100000"
                 {...register(
                   "openingBalance",
@@ -406,7 +423,9 @@ const NewAccount = () => {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">Dr / Cr</label>
+              <label className="mb-2 block text-sm font-medium">
+                Dr / Cr <span className="text-red-500">*</span>
+              </label>
 
               <Controller
                 name="drCr"
@@ -658,7 +677,11 @@ const NewAccount = () => {
 
             <div>
               <Input
-                label="Mobile"
+                label={
+                  <span>
+                    Mobile <span className="text-red-500">*</span>
+                  </span>
+                }
                 placeholder="Mobile"
                 {...register("mobile", formValidationRules.mobile)}
                 error={errors?.mobile && errors.mobile.message}
@@ -667,7 +690,11 @@ const NewAccount = () => {
 
             <div>
               <Input
-                label="Email"
+                label={
+                  <span>
+                    Email <span className="text-red-500">*</span>
+                  </span>
+                }
                 placeholder="Email"
                 {...register("email", formValidationRules.email)}
                 error={errors?.email && errors.email.message}
@@ -775,13 +802,13 @@ const NewAccount = () => {
           <button
             type="button"
             onClick={handleBack}
-            className="rounded border border-gray-300 px-6 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="rounded cursor-pointer border border-gray-300 px-6 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="rounded bg-blue-600 px-6 py-2 text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+            className="rounded cursor-pointer bg-blue-600 px-6 py-2 text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
           >
             {isEditMode ? "Update" : "Save"}
           </button>
