@@ -3,7 +3,7 @@ import { NavigationTree } from "@/@types/navigation";
 export const stocktransfer: NavigationTree = {
   id: "stocktransfer",
   type: "root",
-  title: "Stock Transfer",
+  title: "Stock Verify",
   icon: "stocktransfer",
   childs: [
     {

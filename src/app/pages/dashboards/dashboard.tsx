@@ -31,6 +31,7 @@ import {
   DocumentArrowDownIcon,
 } from "@heroicons/react/20/solid";
 import { DatePicker } from "@/components/shared/form/Datepicker";
+import apiHelper from "@/utils/apiHelper";
 
 // ---------- Types ----------
 interface MainTableRow {
@@ -76,6 +77,40 @@ export default function Dashboard() {
   // Separate toggle states for each table
   const [modelToggle, setModelToggle] = React.useState<string>("hot");
   const [sourceToggle, setSourceToggle] = React.useState<string>("hot");
+
+
+  const [followUpCounts, setFollowUpCounts] = React.useState({
+    Pending: 0,
+    Attend: 0,
+    Delay: 0,
+    Upcoming: 0,
+  });
+
+const fetchFollowUpCounts = async () => {
+  try {
+    const res = await apiHelper.get("/followup/board");
+
+    console.log(res);
+
+    const counts = res.counts || {
+      Pending: 0,
+      Attend: 0,
+      Delay: 0,
+      Upcoming: 0,
+    };
+
+    setFollowUpCounts(counts);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+  React.useEffect(() => {
+    fetchFollowUpCounts();
+  }, []);
+
+  const totalFollowUps =
+    followUpCounts.Pending + followUpCounts.Attend + followUpCounts.Delay + followUpCounts.Upcoming;
 
   // Toggle options with colors for the sliding switch
   const toggleOptions = [
@@ -888,11 +923,11 @@ export default function Dashboard() {
               <div className="flex size-10 items-center justify-center rounded-lg bg-white/90">
                 <PhoneIcon className="text-this dark:text-this-light size-5" />
               </div>
-              <p className="mt-3 text-base font-medium text-white">
+             <p className="mt-3 text-base font-medium text-white">
                 Today Follow-ups
               </p>
               <div className="mt-auto pt-4">
-                <p className="text-xl font-medium text-white">100</p>
+                <p className="text-xl font-medium text-white">{totalFollowUps}</p>
               </div>
             </div>
 
@@ -900,9 +935,9 @@ export default function Dashboard() {
               <div className="flex size-10 items-center justify-center rounded-lg bg-white/90">
                 <ClockIcon className="text-this dark:text-this-light size-5" />
               </div>
-              <p className="mt-3 text-base font-medium text-white">Pending</p>
+             <p className="mt-3 text-base font-medium text-white">Pending</p>
               <div className="mt-auto pt-4">
-                <p className="text-xl font-medium text-white">40</p>
+                <p className="text-xl font-medium text-white">{followUpCounts.Pending}</p>
               </div>
             </div>
 
@@ -910,9 +945,9 @@ export default function Dashboard() {
               <div className="flex size-10 items-center justify-center rounded-lg bg-white/90">
                 <CheckCircleIcon className="text-this dark:text-this-light size-5" />
               </div>
-              <p className="mt-3 text-base font-medium text-white">Attend</p>
+             <p className="mt-3 text-base font-medium text-white">Attend</p>
               <div className="mt-auto pt-4">
-                <p className="text-xl font-medium text-white">60</p>
+                <p className="text-xl font-medium text-white">{followUpCounts.Attend}</p>
               </div>
             </div>
 
@@ -920,9 +955,9 @@ export default function Dashboard() {
               <div className="flex size-10 items-center justify-center rounded-lg bg-white/90">
                 <XCircleIcon className="text-this dark:text-this-light size-5" />
               </div>
-              <p className="mt-3 text-base font-medium text-white">Delay</p>
+            <p className="mt-3 text-base font-medium text-white">Delay</p>
               <div className="mt-auto pt-4">
-                <p className="text-xl font-medium text-white">125</p>
+                <p className="text-xl font-medium text-white">{followUpCounts.Delay}</p>
               </div>
             </div>
           </div>

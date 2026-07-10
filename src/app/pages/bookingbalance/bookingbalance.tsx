@@ -55,8 +55,7 @@ const COLORS = [
 
 const BookingBalance: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+const [dateRange, setDateRange] = useState<[string, string] | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(15);
   const [collapsed, setCollapsed] = useState(false);
@@ -109,54 +108,39 @@ const BookingBalance: React.FC = () => {
             Booking Balance
           </h2>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="relative flex items-center gap-0">
-              <CalendarDaysIcon className="absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <div className="dark:border-dark-600 dark:bg-dark-700 flex items-center gap-1 rounded-lg border border-gray-300 bg-white py-1.5 pr-2 pl-9">
-                <DatePicker
-                  placeholder="From Date"
-                  value={
-                    fromDate ? new Date(fromDate + "T00:00:00") : undefined
-                  }
-                  onChange={(dates) => {
-                    if (dates && dates.length > 0) {
-                      const date = dates[0];
-                      if (date instanceof Date && !isNaN(date.getTime())) {
-                        const year = date.getFullYear();
-                        const month = String(date.getMonth() + 1).padStart(
-                          2,
-                          "0",
-                        );
-                        const day = String(date.getDate()).padStart(2, "0");
-                        setFromDate(`${year}-${month}-${day}`);
-                      }
-                    }
-                  }}
-                  className="w-28 border-none p-0 text-sm outline-none"
-                />
-                <span className="text-gray-400">–</span>
-                <DatePicker
-                  placeholder="To Date"
-                  value={toDate ? new Date(toDate + "T00:00:00") : undefined}
-                  onChange={(dates) => {
-                    if (dates && dates.length > 0) {
-                      const date = dates[0];
-                      if (date instanceof Date && !isNaN(date.getTime())) {
-                        const year = date.getFullYear();
-                        const month = String(date.getMonth() + 1).padStart(
-                          2,
-                          "0",
-                        );
-                        const day = String(date.getDate()).padStart(2, "0");
-                        setToDate(`${year}-${month}-${day}`);
-                      }
-                    }
-                  }}
-                  className="w-28 border-none p-0 text-sm outline-none"
-                />
-              </div>
-            </div>
+     
 
-            {/* PDF Button - Icon only */}
+<div className="dark:border-dark-600 dark:bg-dark-700 flex items-center gap-1 rounded-lg border border-gray-300 bg-white py-1.5">
+  <DatePicker
+    options={{
+      mode: "range",
+      dateFormat: "d-m-Y", // Changed from "Y-m-d" to "d-m-y"
+      defaultDate: dateRange || undefined,
+    }}
+    placeholder="Choose date range..."
+    onChange={(dates) => {
+      if (dates && dates.length === 2) {
+        const [from, to] = dates;
+        if (from instanceof Date && !isNaN(from.getTime()) && 
+            to instanceof Date && !isNaN(to.getTime())) {
+          const formatDate = (date: Date) => {
+            const day = String(date.getDate()).padStart(2, "0");
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const year = String(date.getFullYear()); // Get last 2 digits of year
+            return `${day}-${month}-${year}`;
+          };
+          setDateRange([formatDate(from), formatDate(to)]);
+        }
+      } else {
+        setDateRange(null);
+      }
+    }}
+    className="w-64 border-none p-0 text-sm outline-none"
+  />
+</div>
+
+
+         {/* PDF Button - Icon only */}
             <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
               <RiFilePdfFill className="h-4 w-4" />
             </button>

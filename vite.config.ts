@@ -4,12 +4,12 @@ import svgr from "vite-plugin-svgr";
 import path from "path";
 import tailwindcss from "@tailwindcss/vite";
 
-export default defineConfig({
-  base: "/branch/",
+export default defineConfig(({ mode }) => ({
+  base: mode === "capacitor" ? "/" : "/branch/",
   plugins: [react(), svgr(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.join(__dirname, "src"),
     },
   },
-});
+}));
