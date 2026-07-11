@@ -109,8 +109,7 @@ const fetchFollowUpCounts = async () => {
     fetchFollowUpCounts();
   }, []);
 
-  const totalFollowUps =
-    followUpCounts.Pending + followUpCounts.Attend + followUpCounts.Delay + followUpCounts.Upcoming;
+ const totalFollowUps = followUpCounts.Pending + followUpCounts.Attend;
 
   // Toggle options with colors for the sliding switch
   const toggleOptions = [

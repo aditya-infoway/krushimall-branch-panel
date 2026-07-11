@@ -1,155 +1,123 @@
-// Import Dependencies
+// BranchProfile.tsx or General.tsx
 import { PhoneIcon, XMarkIcon } from "@heroicons/react/20/solid";
-import { EnvelopeIcon, UserIcon } from "@heroicons/react/24/outline";
-import { useState, useEffect } from "react";
+import {
+  EnvelopeIcon,
+  UserIcon,
+  BuildingOfficeIcon,
+} from "@heroicons/react/24/outline";
+import { useState, useEffect, useMemo } from "react";
 import { HiPencil } from "react-icons/hi";
-import { PencilSquareIcon } from "@heroicons/react/24/outline";
-// Local Imports
-import { PreviewImg } from "@/components/shared/PreviewImg";
+import { PencilSquareIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Avatar, Button, Input, Upload } from "@/components/ui";
-import axios from "@/utils/axios";
 import apiHelper from "@/utils/apiHelper";
 import Select from "react-select";
 import { Country, State, City } from "country-state-city";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
+import { useAuthContext } from "@/app/contexts/auth/context";
 
 export default function General() {
+  console.log("GENERAL COMPONENT RENDERED");
+  const savedUser = JSON.parse(localStorage.getItem("branchUser") || "{}");
+  const id = savedUser?.id;
+  const navigate = useNavigate();
+
   const [avatar, setAvatar] = useState<File | null>(null);
-  const [company, setCompany] = useState<any>(null);
+  const [branch, setBranch] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Location states
   const [country, setCountry] = useState("");
   const [state, setState] = useState("");
   const [city, setCity] = useState("");
   const [district, setDistrict] = useState("");
   const [stateCode, setStateCode] = useState("");
-  const [prefixes, setPrefixes] = useState<any[]>([]);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [newPrefix, setNewPrefix] = useState({
-    prefixFor: "",
-    prefix: "",
-  });
-  const countryOptions = Country.getAllCountries().map((country) => ({
-    value: country.isoCode,
-    label: country.name,
-  }));
-  const stateOptions = State.getStatesOfCountry(country).map((state) => ({
-    value: state.isoCode,
-    label: state.name,
-    state,
-  }));
-  const cityOptions = City.getCitiesOfState(country, state).map((city) => ({
-    value: city.name,
-    label: city.name,
-  }));
-  const prefixForOptions = [
-  { value: "CUSTOMER", label: "CUSTOMER" },
-   { value: "CONTRA", label: "CONTRA" },
-  { value: "ACCESSORIES_PURCHASE", label: "ACCESSORIES_PURCHASE" },
-   { value: "BANK_PAYMENT", label: "BANK_PAYMENT" },
-  { value: "CASH_PAYMENT", label: "CASH_PAYMENT" },
-  { value: "PURCHASE", label: "PURCHASE" },
-  { value: "VEHICLE", label: "VEHICLE" },
-  { value: "QUOTATION", label: "QUOTATION" },
-  { value: "LEAD", label: "LEAD" },
-  { value: "JOBCARD", label: "JOB CARD" },
-  { value: "INVOICE", label: "INVOICE" },
-];
-// const prefixForOptions = [
-//   "CUSTOMER",
-//   "PURCHASE",
-//   "VEHICLE",
-//   "QUOTATION",
-//   "LEAD",
-//   "JOBCARD",
-//   "INVOICE",
-// ].map((item) => ({
-//   value: item,
-//   label: item,
-//   isDisabled: prefixes.some(
-//     (p) => p.prefixFor === item && p.id !== editingId
-//   ),
-// }));
-  useEffect(() => {
-    fetchCompany();
-    fetchPrefixes();
+
+  // Country/State/City options
+  const countryOptions = useMemo(() => {
+    return Country.getAllCountries().map((country) => ({
+      value: country.isoCode,
+      label: country.name,
+    }));
   }, []);
-  const fetchPrefixes = async () => {
-    try {
-      const res = await axios.get("/profile-prefix");
 
-      setPrefixes(res.data.data || []);
-    } catch (error) {
-      console.error(error);
+  const stateOptions = useMemo(() => {
+    if (!country) return [];
+    return State.getStatesOfCountry(country).map((state) => ({
+      value: state.isoCode,
+      label: state.name,
+      state,
+    }));
+  }, [country]);
+
+  const cityOptions = useMemo(() => {
+    if (!country || !state) return [];
+    return City.getCitiesOfState(country, state).map((city) => ({
+      value: city.name,
+      label: city.name,
+    }));
+  }, [country, state]);
+  const fetchBranch = async () => {
+    try {
+      setLoading(true);
+
+      const response = await apiHelper.get(`/branch/${id}`);
+
+      console.log("API Response:", response);
+
+      setCountry(response.countryCode || "");
+      setState(response.stateCode || "");
+      setStateCode(response.stateCode || "");
+      setCity(response.city || "");
+      setDistrict(response.district || "");
+
+      setBranch(response);
+    } catch (err) {
+      console.log("API ERROR", err);
+    } finally {
+      console.log("Finally executed");
+      setLoading(false);
     }
   };
-  const fetchCompany = async () => {
-    try {
-      const response = await axios.get("/company");
 
-      const data = response.data.data[0];
-
-      setCompany(data);
-
-      setCountry(data.country || "");
-      setState(data.state || "");
-      setCity(data.city || "");
-      setDistrict(data.district || "");
-      setStateCode(data.stateCode || "");
-    } catch (error) {
-      console.error(error);
+  useEffect(() => {
+    if (id) {
+      fetchBranch();
     }
-  };
-  const handleSavePrefix = async () => {
-    try {
-      if (editingId) {
-        await axios.put(`/profile-prefix/${editingId}`, newPrefix);
-      } else {
-        await axios.post("/profile-prefix", newPrefix);
-      }
+  }, [id]);
 
-      setNewPrefix({
-        prefixFor: "",
-        prefix: "",
-      });
-
-      setEditingId(null);
-
-      fetchPrefixes();
-    } catch (error) {
-      console.error(error);
-    }
-  };
-  const handleEditPrefix = (item: any) => {
-    setEditingId(item.id);
-
-    setNewPrefix({
-      prefixFor: item.prefixFor,
-      prefix: item.prefix,
-    });
-  };
-  // const handleDeletePrefix = async (id: number) => {
-  //   try {
-  //     await axios.delete(`/profile-prefix/${id}`);
-
-  //     fetchPrefixes();
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // };
   const handleSave = async () => {
     try {
       const formData = new FormData();
 
-      Object.keys(company).forEach((key) => {
-        if (company[key] !== undefined && company[key] !== null) {
-          formData.append(key, company[key]);
+      // Append all branch fields (skip nested objects / handled separately)
+      Object.keys(branch).forEach((key) => {
+        if (
+          key === "manager" ||
+          key === "managerId" ||
+          key === "company" ||
+          key === "financialYear" ||
+          key === "createdAt" ||
+          key === "updatedAt"
+        )
+          return;
+        if (branch[key] !== undefined && branch[key] !== null) {
+          formData.append(key, String(branch[key]));
         }
       });
 
+      // Manager id sent exactly once
+      const managerId = branch.manager?.id ?? branch.managerId;
+      if (managerId) {
+        formData.append("managerId", String(managerId));
+      }
       if (avatar) {
         formData.append("logo", avatar);
       }
 
-      await axios.put(`/company/${company.id}`, formData, {
+      await apiHelper.put(`/branch/${branch.id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -157,55 +125,50 @@ export default function General() {
 
       setIsEditing(false);
       setAvatar(null);
+      await fetchBranch();
+      toast.success("Branch updated successfully");
+    } catch (error: any) {
+      console.log("Status:", error.response?.status);
+      console.log("Response:", error.response?.data);
+      console.log("Error:", error);
 
-      fetchCompany();
-
-      alert("Company updated successfully");
-    } catch (error) {
-      console.error(error);
+      toast.error(error.response?.data?.message || "Failed to update branch");
     }
   };
+
   const customSelectStyles = {
     control: (provided: any, state: any) => ({
       ...provided,
       backgroundColor: "transparent",
-
       borderColor: state.isFocused
         ? "var(--color-primary-600)"
         : "var(--color-dark-450)",
-
       boxShadow: "none",
       minHeight: "42px",
-
       "&:hover": {
         borderColor: state.isFocused
           ? "var(--color-primary-600)"
           : "var(--color-dark-400)",
       },
     }),
-
     singleValue: (provided: any) => ({
       ...provided,
       color: "var(--color-dark-100)",
     }),
-
     input: (provided: any) => ({
       ...provided,
       color: "var(--color-dark-100)",
     }),
-
     placeholder: (provided: any) => ({
       ...provided,
       color: "var(--color-gray-400)",
     }),
-
     menu: (provided: any) => ({
       ...provided,
       backgroundColor: "var(--color-dark-700)",
       border: "1px solid var(--color-dark-450)",
       borderRadius: "0.75rem",
     }),
-
     option: (provided: any, state: any) => ({
       ...provided,
       backgroundColor: state.isSelected
@@ -215,21 +178,59 @@ export default function General() {
           : "var(--color-dark-700)",
       color: "#fff",
     }),
-
     dropdownIndicator: (provided: any) => ({
       ...provided,
       color: "var(--color-gray-400)",
     }),
-
     indicatorSeparator: () => ({
       display: "none",
     }),
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="text-gray-500 dark:text-gray-400">
+          Loading branch details...
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !branch) {
+    return (
+      <div className="flex h-64 flex-col items-center justify-center space-y-4">
+        <div className="text-center text-red-500 dark:text-red-400">
+          <p className="text-lg font-semibold">{error || "Branch not found"}</p>
+          <p className="mt-2 text-sm text-gray-500">
+            The branch you're looking for doesn't exist or has been removed.
+          </p>
+        </div>
+        <Button onClick={() => navigate("/branches")}>
+          <ArrowLeftIcon className="mr-1.5 size-4.5" />
+          Back to Branches
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-3xl 2xl:max-w-5xl">
+      {/* Back button */}
+      <button
+        onClick={() => navigate("/branches")}
+        className="mb-4 inline-flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+      >
+        <ArrowLeftIcon className="mr-1.5 size-4" />
+        Back to Branches
+      </button>
+
+      {/* Header with Avatar */}
       <div className="flex items-center justify-between">
-        <h5 className="dark:text-dark-50 read-only: text-lg font-medium text-gray-800">
-          {company?.companyName || "Company Name"}
+        <h5 className="dark:text-dark-50 text-lg font-medium text-gray-800">
+          {branch?.branchName || "Branch Profile"}
         </h5>
 
         <div className="mt-4 flex flex-col space-y-1.5">
@@ -238,8 +239,8 @@ export default function General() {
             src={
               avatar
                 ? URL.createObjectURL(avatar)
-                : company?.logo
-                  ? apiHelper.getImageUrl(company.logo)
+                : branch?.logo
+                  ? apiHelper.getImageUrl(branch.logo)
                   : "/images/avatar/avatar-20.jpg"
             }
             classNames={{
@@ -280,76 +281,133 @@ export default function General() {
           />
         </div>
       </div>
+
       <div className="dark:bg-dark-500 my-5 h-px bg-gray-200" />
 
+      {/* Form Fields */}
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 [&_.prefix]:pointer-events-none">
+        {/* Branch Code */}
         <Input
-          label="Company Name"
-          value={company?.companyName || ""}
+          label="Branch Code"
+          value={branch?.branchCode || ""}
           readOnly={!isEditing}
           onChange={(e) =>
-            setCompany({
-              ...company,
-              companyName: e.target.value,
+            setBranch({
+              ...branch,
+              branchCode: e.target.value,
+            })
+          }
+          className="rounded-xl"
+          prefix={<BuildingOfficeIcon className="size-4.5" />}
+        />
+
+        {/* Branch Name */}
+        <Input
+          label="Branch Name"
+          value={branch?.branchName || ""}
+          readOnly={!isEditing}
+          onChange={(e) =>
+            setBranch({
+              ...branch,
+              branchName: e.target.value,
             })
           }
           className="rounded-xl"
           prefix={<UserIcon className="size-4.5" />}
         />
+
+        {/* Branch Type */}
+        <Input
+          label="Branch Type"
+          value={branch?.branchType || ""}
+          readOnly={!isEditing}
+          onChange={(e) =>
+            setBranch({
+              ...branch,
+              branchType: e.target.value,
+            })
+          }
+          className="rounded-xl"
+          prefix={<BuildingOfficeIcon className="size-4.5" />}
+        />
+
+        {/* Manager Name */}
+        <Input
+          label="Manager Name"
+          value={branch?.manager?.accountName || ""}
+          readOnly={!isEditing}
+          onChange={(e) =>
+            setBranch({
+              ...branch,
+              manager: {
+                ...branch.manager,
+                accountName: e.target.value,
+              },
+            })
+          }
+          className="rounded-xl"
+          prefix={<UserIcon className="size-4.5" />}
+        />
+
+        {/* Mobile Number */}
         <Input
           label="Mobile Number"
-          value={company?.mobileNumber || ""}
+          value={branch?.mobileNo || ""}
           readOnly={!isEditing}
           onChange={(e) =>
-            setCompany({
-              ...company,
-              mobileNumber: e.target.value,
+            setBranch({
+              ...branch,
+              mobileNo: e.target.value,
             })
           }
           className="rounded-xl"
           prefix={<PhoneIcon className="size-4.5" />}
         />
 
+        {/* Gmail ID */}
         <Input
-          label="Phone Number"
-          value={company?.phoneNumber || ""}
+          label="Gmail ID"
+          value={branch?.gmailId || ""}
           readOnly={!isEditing}
           onChange={(e) =>
-            setCompany({
-              ...company,
-              phoneNumber: e.target.value,
+            setBranch({
+              ...branch,
+              gmailId: e.target.value,
             })
           }
           className="rounded-xl"
-          prefix={<PhoneIcon className="size-4.5" />}
+          prefix={<EnvelopeIcon className="size-4.5" />}
         />
 
+        {/* GST Number */}
         <Input
           label="GST Number"
-          value={company?.gstNumber || ""}
+          value={branch?.gstNo || ""}
           readOnly={!isEditing}
           onChange={(e) =>
-            setCompany({
-              ...company,
-              gstNumber: e.target.value,
+            setBranch({
+              ...branch,
+              gstNo: e.target.value,
             })
           }
           className="rounded-xl"
         />
 
+        {/* PAN Card Number */}
         <Input
-          label="PAN Number"
-          value={company?.panNumber || ""}
+          label="PAN Card Number"
+          value={branch?.panCardNo || ""}
           readOnly={!isEditing}
           onChange={(e) =>
-            setCompany({
-              ...company,
-              panNumber: e.target.value,
+            setBranch({
+              ...branch,
+              panCardNo: e.target.value,
             })
           }
           className="rounded-xl"
         />
 
+        {/* Country */}
         <div>
           <label className="mb-1 inline-block">Country</label>
           <Select
@@ -357,21 +415,27 @@ export default function General() {
             classNamePrefix="react-select"
             options={countryOptions}
             styles={customSelectStyles}
-            value={countryOptions.find((c) => c.value === company?.country)}
+            value={countryOptions.find((c) => c.value === branch?.countryCode)}
             onChange={(selected: any) => {
               setCountry(selected?.value || "");
-
-              setCompany({
-                ...company,
-                country: selected?.value || "",
+              setBranch({
+                ...branch,
+                countryCode: selected?.value || "",
+                country: selected?.label || "",
+                stateCode: "",
                 state: "",
                 district: "",
                 city: "",
               });
+              setState("");
+              setStateCode("");
+              setDistrict("");
+              setCity("");
             }}
           />
         </div>
 
+        {/* State */}
         <div>
           <label className="mb-1 inline-block">State</label>
           <Select
@@ -379,27 +443,32 @@ export default function General() {
             classNamePrefix="react-select"
             options={stateOptions}
             styles={customSelectStyles}
-            value={stateOptions.find((s) => s.value === company?.state)}
+            value={stateOptions.find((s) => s.value === state)}
             onChange={(selected: any) => {
               setState(selected?.value || "");
               setStateCode(selected?.state?.isoCode || "");
-
-              setCompany({
-                ...company,
-                state: selected?.value || "",
-                stateCode: selected?.state?.isoCode || "",
+              setBranch({
+                ...branch,
+                stateCode: selected?.value || "",
+                state: selected?.label || "",
+                district: "",
+                city: "",
               });
+              setDistrict("");
+              setCity("");
             }}
           />
         </div>
 
+        {/* State Code (Readonly) */}
         <Input
           label="State Code"
-          value={company?.stateCode || ""}
+          value={branch?.stateCode || ""}
           readOnly
           className="rounded-xl"
         />
 
+        {/* District */}
         <div>
           <label className="mb-1 inline-block">District</label>
           <Select
@@ -407,18 +476,18 @@ export default function General() {
             classNamePrefix="react-select"
             options={cityOptions}
             styles={customSelectStyles}
-            value={cityOptions.find((d) => d.value === company?.district)}
+            value={cityOptions.find((d) => d.value === branch?.district)}
             onChange={(selected: any) => {
               setDistrict(selected?.value || "");
-
-              setCompany({
-                ...company,
+              setBranch({
+                ...branch,
                 district: selected?.value || "",
               });
             }}
           />
         </div>
 
+        {/* City */}
         <div>
           <label className="mb-1 inline-block">City</label>
           <Select
@@ -426,328 +495,82 @@ export default function General() {
             classNamePrefix="react-select"
             options={cityOptions}
             styles={customSelectStyles}
-            value={cityOptions.find((c) => c.value === company?.city)}
+            value={cityOptions.find((c) => c.value === branch?.city)}
             onChange={(selected: any) => {
               setCity(selected?.value || "");
-
-              setCompany({
-                ...company,
+              setBranch({
+                ...branch,
                 city: selected?.value || "",
               });
             }}
           />
         </div>
+
+        {/* PIN Code */}
         <Input
-          label="Pincode"
-          value={company?.pincode || ""}
+          label="PIN Code"
+          value={branch?.pinCode || ""}
           readOnly={!isEditing}
           onChange={(e) =>
-            setCompany({
-              ...company,
-              pincode: e.target.value,
+            setBranch({
+              ...branch,
+              pinCode: e.target.value,
             })
           }
           className="rounded-xl"
         />
 
+        {/* Address Line 1 */}
         <Input
           label="Address Line 1"
-          value={company?.addressLine1 || ""}
+          value={branch?.address1 || ""}
           readOnly={!isEditing}
           onChange={(e) =>
-            setCompany({
-              ...company,
-              addressLine1: e.target.value,
+            setBranch({
+              ...branch,
+              address1: e.target.value,
             })
           }
           className="rounded-xl"
         />
 
+        {/* Address Line 2 */}
         <Input
           label="Address Line 2"
-          value={company?.addressLine2 || ""}
+          value={branch?.address2 || ""}
           readOnly={!isEditing}
           onChange={(e) =>
-            setCompany({
-              ...company,
-              addressLine2: e.target.value,
+            setBranch({
+              ...branch,
+              address2: e.target.value,
             })
           }
-          className="rounded-xl"
-        />
-
-        <Input
-          label="Bank Name"
-          value={company?.bankName || ""}
-          readOnly={!isEditing}
-          onChange={(e) =>
-            setCompany({
-              ...company,
-              bankName: e.target.value,
-            })
-          }
-          className="rounded-xl"
-        />
-
-        <Input
-          label="Bank Holder Name"
-          value={company?.bankHolderName || ""}
-          readOnly={!isEditing}
-          onChange={(e) =>
-            setCompany({
-              ...company,
-              bankHolderName: e.target.value,
-            })
-          }
-          className="rounded-xl"
-        />
-
-        <Input
-          label="IFSC Code"
-          value={company?.ifscCode || ""}
-          readOnly={!isEditing}
-          onChange={(e) =>
-            setCompany({
-              ...company,
-              ifscCode: e.target.value,
-            })
-          }
-          className="rounded-xl"
-        />
-
-        <Input
-          label="Branch Location"
-          value={company?.branchLocation || ""}
-          readOnly={!isEditing}
-          onChange={(e) =>
-            setCompany({
-              ...company,
-              branchLocation: e.target.value,
-            })
-          }
-          className="rounded-xl"
-        />
-
-        <Input
-          label="Created At"
-          value={
-            company?.createdAt
-              ? new Date(company.createdAt).toLocaleDateString()
-              : ""
-          }
-          readOnly
-          className="rounded-xl"
-        />
-        <Input
-          label="Financial Year"
-          value={company?.financialYears?.[0]?.financialYear || ""}
-          readOnly
           className="rounded-xl"
         />
       </div>
 
+      {/* Action Buttons */}
       <div className="mt-8 flex justify-end gap-3">
         {!isEditing ? (
           <Button color="primary" onClick={() => setIsEditing(true)}>
-           <PencilSquareIcon className="size-4" />
+            <PencilSquareIcon className="size-4" />
           </Button>
         ) : (
           <>
             <Button
               onClick={() => {
                 setIsEditing(false);
-                fetchCompany(); // restore original data
+                fetchBranch();
               }}
             >
               Cancel
             </Button>
-
             <Button color="primary" onClick={handleSave}>
               Save
             </Button>
           </>
         )}
       </div>
-      <div className="dark:bg-dark-500 my-7 h-px bg-gray-200" />
-      <div className="mt-8">
-        <h3 className="mb-4 text-lg font-semibold">Prefix Settings</h3>
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {/* <Input
-            label="Prefix For"
-            value={newPrefix.prefixFor}
-            onChange={(e) =>
-              setNewPrefix({
-                ...newPrefix,
-                prefixFor: e.target.value.toUpperCase(),
-              })
-            }
-            placeholder="CUSTOMER"
-          /> */}
-          <div>
-  <label className="mb-1 inline-block">
-    Prefix For
-  </label>
-
-  <Select
-    classNamePrefix="react-select"
-    styles={customSelectStyles}
-    options={prefixForOptions}
-    value={prefixForOptions.find(
-      (item) => item.value === newPrefix.prefixFor
-    )}
-    onChange={(selected: any) =>
-      setNewPrefix({
-        ...newPrefix,
-        prefixFor: selected?.value || "",
-      })
-    }
-    placeholder="Select Prefix"
-  />
-</div>
-
-          <Input
-            label="Prefix"
-            value={newPrefix.prefix}
-            onChange={(e) =>
-              setNewPrefix({
-                ...newPrefix,
-                prefix: e.target.value.toUpperCase(),
-              })
-            }
-            placeholder="CUS"
-          />
-
-          <div className="flex items-end">
-            <Button color="primary" onClick={handleSavePrefix}>
-              {editingId ? "Update Prefix" : "Add Prefix"}
-            </Button>
-          </div>
-        </div>
-      </div>
-      <div className="mt-6 overflow-x-auto">
-        <table className="w-full border border-gray-700">
-          <thead>
-            <tr>
-              <th className="border border-gray-700 p-3 text-left">
-                Prefix For
-              </th>
-
-              <th className="border border-gray-700 p-3 text-left">Prefix</th>
-
-              <th className="border border-gray-700 p-3 text-center">Action</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {prefixes.map((item) => (
-              <tr key={item.id}>
-                <td className="border border-gray-700 p-3">{item.prefixFor}</td>
-
-                <td className="border border-gray-700 p-3">{item.prefix}</td>
-
-                <td className="border border-gray-700 p-3 text-center">
-                  <Button
-                    isIcon
-                    color="primary"
-                    onClick={() => handleEditPrefix(item)}
-                    className="size-8 rounded-lg"
-                  >
-                    <PencilSquareIcon className="size-4" />
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
-}
-{
-  /* <div>
-        <div>
-          <p className="dark:text-dark-100 text-base font-medium text-gray-800">
-            Linked Accounts
-          </p>
-          <p className="mt-0.5">
-            Manage your linked accounts and their permissions.
-          </p>
-        </div>
-        <div>
-          <div className="mt-4 flex items-center justify-between space-x-2">
-            <div className="flex min-w-0 items-center space-x-4">
-              <div className="size-12">
-                <img
-                  className="h-full w-full"
-                  src="/images/logos/google.svg"
-                  alt="logo"
-                />
-              </div>
-              <p className="truncate font-medium">Sign In with Google</p>
-            </div>
-            <Button
-              className="text-xs-plus h-8 rounded-full px-3"
-              variant="outlined"
-            >
-              Connect
-            </Button>
-          </div>
-          <div className="mt-4 flex items-center justify-between space-x-2">
-            <div className="flex min-w-0 items-center space-x-4">
-              <div className="size-12">
-                <img
-                  className="h-full w-full"
-                  src="/images/logos/github-round.svg"
-                  alt="logo"
-                />
-              </div>
-              <p className="truncate font-medium">Sign In with Github</p>
-            </div>
-            <Button
-              className="text-xs-plus h-8 rounded-full px-3"
-              variant="outlined"
-            >
-              Connect
-            </Button>
-          </div>
-          <div className="mt-4 flex items-center justify-between space-x-2">
-            <div className="flex min-w-0 items-center space-x-4">
-              <div className="size-12">
-                <img
-                  className="h-full w-full"
-                  src="/images/logos/instagram-round.svg"
-                  alt="logo"
-                />
-              </div>
-              <p className="truncate font-medium">Sign In with Instagram</p>
-            </div>
-            <Button
-              className="text-xs-plus h-8 rounded-full px-3"
-              variant="outlined"
-            >
-              Connect
-            </Button>
-          </div>
-          <div className="mt-4 flex items-center justify-between space-x-2">
-            <div className="flex min-w-0 items-center space-x-4">
-              <div className="size-12">
-                <img
-                  className="h-full w-full"
-                  src="/images/logos/discord-round.svg"
-                  alt="logo"
-                />
-              </div>
-              <p className="truncate font-medium">Sign In with Discord</p>
-            </div>
-            <Button
-              className="text-xs-plus h-8 rounded-full px-3"
-              variant="outlined"
-            >
-              {" "}
-              Connect
-            </Button>
-          </div>
-        </div>
-      </div> */
 }

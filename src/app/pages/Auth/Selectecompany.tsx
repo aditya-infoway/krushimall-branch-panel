@@ -336,16 +336,7 @@ export default function Selectcomapny() {
               </table>
             </div>
 
-            {companies.length === 0 && (
-              <div className="mt-5">
-                <button
-                  onClick={() => setShowForm(true)}
-                  className="bg-primary-500 hover:bg-primary-600 w-full rounded-lg py-3 font-medium text-white"
-                >
-                  + Create Company
-                </button>
-              </div>
-            )}
+          
           </>
         ) : (
           <div className="flex-1 overflow-auto rounded-lg border p-6">
