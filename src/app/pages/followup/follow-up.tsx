@@ -32,6 +32,8 @@ import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Timepicker } from "@/components/shared/form/Timepicker";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import { toast } from "sonner";
+import { toLocalDateString } from "@/utils/date";
+
 const columns = [
   {
     title: "New",
@@ -190,11 +192,11 @@ export default function Followup() {
       fetchLead();
     }
   }, [id]);
-  useEffect(() => {
-    if (lead?.followUpDate) {
-      setNextDate(new Date(lead.followUpDate).toISOString().split("T")[0]);
-    }
-  }, [lead]);
+ useEffect(() => {
+  if (lead?.followUpDate) {
+    setNextDate(toLocalDateString(lead.followUpDate));
+  }
+}, [lead]);
 
   const handleSaveFollowup = async () => {
     if (!validateForm()) {
@@ -238,11 +240,11 @@ export default function Followup() {
       item.expectedPurchaseDate ? new Date(item.expectedPurchaseDate) : null,
     );
 
-    setNextDate(
-      item.nextScheduledDate
-        ? new Date(item.nextScheduledDate).toISOString().split("T")[0]
-        : "",
-    );
+   setNextDate(
+  item.nextScheduledDate
+    ? toLocalDateString(item.nextScheduledDate)
+    : "",
+);
 
     setCallTime(item.callTime || "");
 

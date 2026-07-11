@@ -51,6 +51,8 @@ interface GridCard {
   badge: number;
 }
 
+
+
 const FollowUpCard: React.FC<{
   lead: any;
   onView: (id: number) => void;
@@ -75,11 +77,7 @@ const FollowUpCard: React.FC<{
               Ex. Date
             </span>
           </div>
-          <Badge
-            variant="outlined"
-            color="primary"
-            className="rounded-full whitespace-nowrap"
-          >
+          <Badge variant="outlined" color="primary" className="rounded-full whitespace-nowrap">
             {lead.expectedPurchaseDate
               ? new Date(lead.expectedPurchaseDate).toLocaleDateString("en-GB")
               : "-"}
@@ -93,12 +91,8 @@ const FollowUpCard: React.FC<{
               L-Follow-up Date
             </span>
           </div>
-          <Badge
-            variant="outlined"
-            color="primary"
-            className="rounded-full whitespace-nowrap"
-          >
-            {lead.latestFollowUp?.nextScheduledDate || lead.followUpDate
+          <Badge variant="outlined" color="primary" className="rounded-full whitespace-nowrap">
+            {(lead.latestFollowUp?.nextScheduledDate || lead.followUpDate)
               ? new Date(
                   lead.latestFollowUp?.nextScheduledDate || lead.followUpDate,
                 ).toLocaleDateString("en-GB")
@@ -113,11 +107,7 @@ const FollowUpCard: React.FC<{
               Call Response
             </span>
           </div>
-          <Badge
-            variant="outlined"
-            color="success"
-            className="rounded-full whitespace-nowrap"
-          >
+          <Badge variant="outlined" color="success" className="rounded-full whitespace-nowrap">
             {lead.latestFollowUp?.callResponse || "New"}
           </Badge>
         </div>
@@ -163,34 +153,31 @@ const TodayFollowUps: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [collapsed, setCollapsed] = useState(false);
 
+
+
   const [board, setBoard] = useState<{
-    Pending: any[];
-    Attend: any[];
-    Delay: any[];
-    Upcoming: any[];
-  }>({ Pending: [], Attend: [], Delay: [], Upcoming: [] });
-  const [loading, setLoading] = useState(true);
+  Pending: any[]; Attend: any[]; Delay: any[]; Upcoming: any[];
+}>({ Pending: [], Attend: [], Delay: [], Upcoming: [] });
+const [loading, setLoading] = useState(true);
 
-  const fetchBoard = async () => {
-    try {
-      setLoading(true);
-      const res = await apiHelper.get(`/followup/board?t=${Date.now()}`);
-      setBoard(
-        res.data || { Pending: [], Attend: [], Delay: [], Upcoming: [] },
-      );
-    } catch (error) {
-      console.error("Board fetch error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchBoard = async () => {
+  try {
+    setLoading(true);
+    const res = await apiHelper.get(`/followup/board?t=${Date.now()}`);
+    setBoard(res.data || { Pending: [], Attend: [], Delay: [], Upcoming: [] });
+  } catch (error) {
+    console.error("Board fetch error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
-  useEffect(() => {
-    fetchBoard();
-  }, []);
+useEffect(() => {
+  fetchBoard();
+}, []);
 
   // Sample data - empty for now
-  const flattenBoard = () => [
+ const flattenBoard = () => [
     ...board.Pending.map((l: any) => ({ ...l, bucket: "Pending" })),
     ...board.Attend.map((l: any) => ({ ...l, bucket: "Attend" })),
     ...board.Delay.map((l: any) => ({ ...l, bucket: "Delay" })),
@@ -246,10 +233,13 @@ const TodayFollowUps: React.FC = () => {
     navigate(`/followups/follow-up/${id}`);
   };
 
-  const handleHistoryClick = (id: number) => {
-    console.log("clicked", id);
-    navigate(`/followups/history/${id}`);
-  };
+ const handleHistoryClick = (id: number) => {
+  console.log("clicked", id);
+  navigate(`/followups/history/${id}`);
+};
+
+
+
 
   return (
     <div className="dark:bg-dark-800 min-h-screen bg-gray-50 p-4 md:p-6">
@@ -308,6 +298,7 @@ const TodayFollowUps: React.FC = () => {
           <RiListUnordered className="text-lg" />
           Table
         </button>
+       
       </div>
 
       {/* Table View */}
@@ -394,7 +385,7 @@ const TodayFollowUps: React.FC = () => {
                       </td>
                     </tr>
                   ) : (
-                    currentData.map((item: any, index: number) => {
+                   currentData.map((item: any, index: number) => {
                       const bucketColor: Record<string, string> = {
                         Pending: "bg-orange-100 text-orange-600",
                         Delay: "bg-red-100 text-red-600",
@@ -417,9 +408,7 @@ const TodayFollowUps: React.FC = () => {
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
                             {item.dmsEnquiryDate
-                              ? new Date(
-                                  item.dmsEnquiryDate,
-                                ).toLocaleDateString("en-GB")
+                              ? new Date(item.dmsEnquiryDate).toLocaleDateString("en-GB")
                               : "-"}
                           </td>
                           <td className="px-4 py-3 font-medium whitespace-nowrap text-gray-900 dark:text-white">
@@ -448,9 +437,7 @@ const TodayFollowUps: React.FC = () => {
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
                             {item.followUpDate
-                              ? new Date(item.followUpDate).toLocaleDateString(
-                                  "en-GB",
-                                )
+                              ? new Date(item.followUpDate).toLocaleDateString("en-GB")
                               : "-"}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
@@ -463,9 +450,7 @@ const TodayFollowUps: React.FC = () => {
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
                             {item.updatedAt
-                              ? new Date(item.updatedAt).toLocaleDateString(
-                                  "en-GB",
-                                )
+                              ? new Date(item.updatedAt).toLocaleDateString("en-GB")
                               : "-"}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
@@ -582,11 +567,11 @@ const TodayFollowUps: React.FC = () => {
                   Pending
                 </span>
               </div>
-              <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-semibold text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">
+<span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-semibold text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">
                 {board.Pending.length}
               </span>
             </div>
-            <div className="max-h-[500px] min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+           <div className="min-h-0 max-h-[500px] flex-1 space-y-3 overflow-y-auto pr-1">
               {board.Pending.length === 0 ? (
                 <div className="flex h-[300px] items-center justify-center">
                   <span className="text-sm text-gray-400 dark:text-gray-500">
@@ -595,19 +580,14 @@ const TodayFollowUps: React.FC = () => {
                 </div>
               ) : (
                 board.Pending.map((lead: any) => (
-                  <FollowUpCard
-                    key={lead.id}
-                    lead={lead}
-                    onView={handleViewClick}
-                    onHistory={handleHistoryClick}
-                  />
+                  <FollowUpCard key={lead.id} lead={lead} onView={handleViewClick} onHistory={handleHistoryClick} />
                 ))
               )}
             </div>
           </div>
 
           {/* Delay Column */}
-
+       
           <div className="dark:bg-dark-600 min-h-[400px] rounded-xl bg-gray-100 p-4">
             <div className="dark:bg-dark-700 mb-3 flex items-center justify-between rounded-lg bg-white px-4 py-2 shadow-sm">
               <div className="flex items-center gap-2">
@@ -622,7 +602,7 @@ const TodayFollowUps: React.FC = () => {
                 {board.Delay.length}
               </span>
             </div>
-            <div className="max-h-[500px] min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+            <div className="min-h-0 max-h-[500px] flex-1 space-y-3 overflow-y-auto pr-1">
               {board.Delay.length === 0 ? (
                 <div className="flex h-[300px] items-center justify-center">
                   <span className="text-sm text-gray-400 dark:text-gray-500">
@@ -631,12 +611,7 @@ const TodayFollowUps: React.FC = () => {
                 </div>
               ) : (
                 board.Delay.map((lead: any) => (
-                  <FollowUpCard
-                    key={lead.id}
-                    lead={lead}
-                    onView={handleViewClick}
-                    onHistory={handleHistoryClick}
-                  />
+                  <FollowUpCard key={lead.id} lead={lead} onView={handleViewClick} onHistory={handleHistoryClick} />
                 ))
               )}
             </div>
@@ -653,11 +628,11 @@ const TodayFollowUps: React.FC = () => {
                   Attend
                 </span>
               </div>
-              <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-600 dark:bg-green-900/30 dark:text-green-400">
+            <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-600 dark:bg-green-900/30 dark:text-green-400">
                 {board.Attend.length}
               </span>
             </div>
-            <div className="max-h-[500px] min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+            <div className="min-h-0 max-h-[500px] flex-1 space-y-3 overflow-y-auto pr-1">
               {board.Attend.length === 0 ? (
                 <div className="flex h-[300px] items-center justify-center">
                   <span className="text-sm text-gray-400 dark:text-gray-500">
@@ -666,12 +641,7 @@ const TodayFollowUps: React.FC = () => {
                 </div>
               ) : (
                 board.Attend.map((lead: any) => (
-                  <FollowUpCard
-                    key={lead.id}
-                    lead={lead}
-                    onView={handleViewClick}
-                    onHistory={handleHistoryClick}
-                  />
+                  <FollowUpCard key={lead.id} lead={lead} onView={handleViewClick} onHistory={handleHistoryClick} />
                 ))
               )}
             </div>
@@ -688,11 +658,11 @@ const TodayFollowUps: React.FC = () => {
                   Upcoming
                 </span>
               </div>
-              <span className="rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-semibold text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400">
+             <span className="rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-semibold text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400">
                 {board.Upcoming.length}
               </span>
             </div>
-            <div className="max-h-[500px] min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+            <div className="min-h-0 max-h-[500px] flex-1 space-y-3 overflow-y-auto pr-1">
               {board.Upcoming.length === 0 ? (
                 <div className="flex h-[300px] items-center justify-center">
                   <span className="text-sm text-gray-400 dark:text-gray-500">
@@ -701,12 +671,7 @@ const TodayFollowUps: React.FC = () => {
                 </div>
               ) : (
                 board.Upcoming.map((lead: any) => (
-                  <FollowUpCard
-                    key={lead.id}
-                    lead={lead}
-                    onView={handleViewClick}
-                    onHistory={handleHistoryClick}
-                  />
+                  <FollowUpCard key={lead.id} lead={lead} onView={handleViewClick} onHistory={handleHistoryClick} />
                 ))
               )}
             </div>
