@@ -89,15 +89,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           // const response = await axios.get<{ user: User }>("/user/profile");
           // const { user } = response.data;
-const storedUser = localStorage.getItem("branchUser");
+          const storedUser = localStorage.getItem("branchUser");
 
-dispatch({
-  type: "INITIALIZE",
-  payload: {
-    isAuthenticated: true,
-    user: storedUser ? JSON.parse(storedUser) : null,
-  },
-});
+          dispatch({
+            type: "INITIALIZE",
+            payload: {
+              isAuthenticated: true,
+              user: storedUser ? JSON.parse(storedUser) : null,
+            },
+          });
         } else {
           dispatch({
             type: "INITIALIZE",
@@ -133,10 +133,10 @@ dispatch({
 
       const { token, user } = response;
 
-  setSession(token);
+      setSession(token);
 
-// Save complete user/branch
-localStorage.setItem("branchUser", JSON.stringify(user));
+      // Save complete user/branch
+      localStorage.setItem("branchUser", JSON.stringify(user));
 
       dispatch({
         type: "LOGIN_SUCCESS",
@@ -158,12 +158,11 @@ localStorage.setItem("branchUser", JSON.stringify(user));
     }
   };
 
-
- const logout = async () => {
-  localStorage.removeItem("branchUser");
-  setSession(null);
-  dispatch({ type: "LOGOUT" });
-};
+  const logout = async () => {
+    localStorage.removeItem("branchUser");
+    setSession(null);
+    dispatch({ type: "LOGOUT" });
+  };
 
   if (!children) {
     return null;

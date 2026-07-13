@@ -427,9 +427,9 @@ const DynamicReport: React.FC = () => {
         <div className="mt-3 flex flex-wrap items-center gap-2 sm:mt-0">
           {/* Date Picker */}
           <div className="flex items-center gap-2">
-            <DatePicker placeholder="From Date" className="w-36" />
+            <DatePicker placeholder="From Date" className="w-36" options={{ disableMobile: true }} />
             <span className="text-gray-400">to</span>
-            <DatePicker placeholder="To Date" className="w-36" />
+            <DatePicker placeholder="To Date" className="w-36" options={{ disableMobile: true }} />
           </div>
 
           {/* Action Buttons Group */}

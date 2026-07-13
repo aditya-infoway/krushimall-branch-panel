@@ -93,7 +93,7 @@ export default function Appearance() {
   }, [theme.notification?.isExpanded]);
 
   return (
-    <div className="w-full max-w-3xl 2xl:max-w-5xl">
+    <div className="w-full">
       <h5 className="dark:text-dark-50 text-lg font-medium text-gray-800">
         Appearance
       </h5>

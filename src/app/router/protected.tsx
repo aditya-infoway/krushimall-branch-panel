@@ -585,10 +585,9 @@ const protectedRoutes: RouteObject = {
             },
           ],
         },
-      ],
-    },
 
-    {
+
+        {
       path: "accessories",
       children: [
         {
@@ -615,52 +614,51 @@ const protectedRoutes: RouteObject = {
           }),
         },
 
-        // {
-        //   path: ":id",
-        //   lazy: async () => ({
-        //     Component: (
-        //       await import("@/app/pages/purchase/accessories/edit")
-        //     ).default,
-        //   }),
-        // },
       ],
     },
 
-    // The app layout supports only the main layout. Avoid using it for other layouts.
+
     {
-      Component: AppLayout,
+      path: "settings",
+      lazy: async () => ({
+        Component: (await import("@/app/pages/settings/Layout")).default,
+      }),
       children: [
         {
-          path: "settings",
+          index: true,
+          element: <Navigate to="general" replace />,
+        },
+        {
+          path: "general",
           lazy: async () => ({
-            Component: (await import("@/app/pages/settings/Layout")).default,
+            Component: (
+              await import("@/app/pages/settings/sections/General")
+            ).default,
           }),
-          children: [
-            {
-              index: true,
-              element: <Navigate to="/settings/general" />,
-            },
-            {
-              path: "general",
-              lazy: async () => ({
-                Component: (
-                  await import("@/app/pages/settings/sections/General")
-                ).default,
-              }),
-            },
-            {
-              path: "appearance",
-              lazy: async () => ({
-                Component: (
-                  await import("@/app/pages/settings/sections/Appearance")
-                ).default,
-              }),
-            },
-          ],
+        },
+        {
+          path: "appearance",
+          lazy: async () => ({
+            Component: (
+              await import("@/app/pages/settings/sections/Appearance")
+            ).default,
+          }),
         },
       ],
     },
+
+      ],
+    },
+
+    
+
+
+    
   ],
-};
+}
+
+
+    
+
 
 export { protectedRoutes };

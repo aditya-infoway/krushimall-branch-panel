@@ -181,9 +181,6 @@
   color: var(--color-gray-400) !important;
 }
 
-
-
-
 /* Custom Scrollbar Styles */
 ::-webkit-scrollbar {
   width: 1px;

@@ -420,7 +420,6 @@ const closing = Number(selected?.closingBalance || 0);
           </div>
         </div>
         {/* Filter Section */}
-        {/* Filter Section */}
         <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {/* Search */}
           <div className="relative">
@@ -490,6 +489,7 @@ const closing = Number(selected?.closingBalance || 0);
             <DatePicker
               placeholder="From Date"
               value={fromDate ? new Date(fromDate + "T00:00:00") : undefined}
+              options={{ disableMobile: true }}
               onChange={(dates) => {
                 if (dates && dates.length > 0) {
                   const date = dates[0];
@@ -510,6 +510,7 @@ const closing = Number(selected?.closingBalance || 0);
             <DatePicker
               placeholder="To Date"
               value={toDate ? new Date(toDate + "T00:00:00") : undefined}
+              options={{ disableMobile: true }}
               onChange={(dates) => {
                 if (dates && dates.length > 0) {
                   const date = dates[0];
@@ -594,8 +595,8 @@ const closing = Number(selected?.closingBalance || 0);
                       key={index}
                       className="dark:hover:bg-dark-600 transition-colors hover:bg-gray-50"
                     >
-                      <td className="px-3 py-2.5 text-gray-500 dark:text-gray-400">
-                        {row.sr}
+                     <td className="px-3 py-2.5 text-gray-500 dark:text-gray-400">
+                        {(currentPage - 1) * rowsPerPage + index + 1}
                       </td>
                       <td className="px-3 py-2.5 text-gray-900 dark:text-white">
                         {new Date(row.date).toLocaleDateString("en-GB")}

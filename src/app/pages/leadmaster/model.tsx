@@ -1385,6 +1385,7 @@ function ReviewLeadSummaryStep({
             placeholder="DD-MM-YYYY"
             options={{
               dateFormat: "d-m-Y", // ← Fix here too
+              disableMobile: true,
             }}
           />
         </div>

@@ -253,13 +253,13 @@ function CustomCombobox<TValue = DataItem>(
                   leaveTo="opacity-0 translate-y-2"
                   afterLeave={() => setQuery("")}
                 >
-                <ComboboxOptions
-  anchor={{ to: "bottom start", gap: 8 }}
-  style={{
-    width: inputWidth,
-  }}
-  className="z-10 max-h-60 overflow-y-auto rounded-lg border border-gray-300 bg-white py-1 shadow-lg dark:border-dark-500 dark:bg-dark-750"
->
+                  <ComboboxOptions
+                    anchor={{ to: "bottom start", gap: 8 }}
+                    style={{
+                      width: inputWidth,
+                    }}
+                    className="dark:border-dark-500 dark:bg-dark-750 z-10 max-h-60 overflow-y-auto rounded-lg border border-gray-300 bg-white py-1 shadow-lg"
+                  >
                     {filteredData.length === 0 && query !== "" ? (
                       <div className="dark:text-dark-100 relative cursor-default px-4 py-2 text-gray-800 select-none">
                         Nothing found for {query}
