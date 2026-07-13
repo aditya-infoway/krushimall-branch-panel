@@ -142,13 +142,13 @@ export default function General() {
       backgroundColor: "transparent",
       borderColor: state.isFocused
         ? "var(--color-primary-600)"
-        : "var(--color-dark-450)",
-      boxShadow: "none",
+        : "var(--color-gray-300)",
+      boxShadow: state.isFocused
+        ? "0 0 0 1px var(--color-primary-600)"
+        : "none",
       minHeight: "42px",
       "&:hover": {
-        borderColor: state.isFocused
-          ? "var(--color-primary-600)"
-          : "var(--color-dark-400)",
+        borderColor: "var(--color-primary-500)",
       },
     }),
     singleValue: (provided: any) => ({
@@ -157,7 +157,7 @@ export default function General() {
     }),
     input: (provided: any) => ({
       ...provided,
-      color: "var(--color-dark-100)",
+      color: "var(--color-gray-100)",
     }),
     placeholder: (provided: any) => ({
       ...provided,
@@ -217,11 +217,11 @@ export default function General() {
   }
 
   return (
-    <div className="w-full max-w-3xl 2xl:max-w-5xl">
+    <div className="w-full">
       {/* Back button */}
       <button
-        onClick={() => navigate("/branches")}
-        className="mb-4 inline-flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+        onClick={() => navigate(-1)}
+        className="mb-4 inline-flex cursor-pointer items-center text-sm text-gray-800 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
       >
         <ArrowLeftIcon className="mr-1.5 size-4" />
         Back to Branches

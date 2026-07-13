@@ -74,28 +74,37 @@ const links: LinkItem[] = [
 
 export function Profile() {
   const { logout } = useAuthContext();
-  const [company, setCompany] = useState<any>(null);
+
+const [branch, setBranch] = useState<any>(null);
 
   useEffect(() => {
-    fetchCompany();
+    fetchBranch();
   }, []);
 
-  const fetchCompany = async () => {
-    try {
-      const response = await apiHelper.get("/company");
-      // Handle different response structures
-      const companyData =
-        response?.data?.data?.[0] || response?.data?.[0] || response;
-      setCompany(companyData);
-    } catch (error) {
-      console.error("Failed to fetch company:", error);
-    }
-  };
 
-  const getCompanyLogo = () => {
-    if (!company?.logo) return "/images/avatar/avatar-12.jpg";
-    return apiHelper.getImageUrl(company.logo);
-  };
+const fetchBranch = async () => {
+  try {
+    const savedUser = JSON.parse(localStorage.getItem("branchUser") || "{}");
+    const id = savedUser?.id;
+    
+    if (!id) {
+      console.warn("No branch ID found");
+      return;
+    }
+    
+    const response = await apiHelper.get(`/branch/${id}`);
+    const branchData = response?.data || response;
+    setBranch(branchData);
+  } catch (error) {
+    console.error("Failed to fetch branch:", error);
+  }
+};
+
+
+const getBranchLogo = () => {
+  if (!branch?.logo) return "/images/avatar/avatar-12.jpg";
+  return apiHelper.getImageUrl(branch.logo);
+};
 
   return (
     <Popover className="relative flex">
@@ -103,7 +112,8 @@ export function Profile() {
         as={Avatar}
         size={9}
         role="button"
-        src={getCompanyLogo()}
+        src={getBranchLogo()} 
+
         indicator={
           <AvatarDot
             color="success"
@@ -127,13 +137,13 @@ export function Profile() {
           {({ close }: { close: () => void }) => (
             <>
               <div className="dark:bg-dark-800 flex items-center gap-4 rounded-t-lg bg-gray-100 px-4 py-5">
-                <Avatar size={14} src={getCompanyLogo()} />
+                <Avatar size={14} src={getBranchLogo()} />
                 <div>
                   <Link
                     className="hover:text-primary-600 focus:text-primary-600 dark:text-dark-100 dark:hover:text-primary-400"
                     to="/settings/general"
                   >
-                    {company?.companyName || "Company Name"}
+                     {branch?.branchName || "Branch"} 
                   </Link>
 
                   {/* <p className="dark:text-dark-300 mt-0.5 text-xs text-gray-400">

@@ -252,6 +252,7 @@ const LedgerDetails: React.FC = () => {
             <div className="w-36">
               <DatePicker
                 placeholder="From Date"
+                options={{ disableMobile: true }}
                 value={fromDate}
                 onChange={setFromDate}
               />
@@ -264,6 +265,7 @@ const LedgerDetails: React.FC = () => {
             <div className="w-36">
               <DatePicker
                 placeholder="To Date"
+                options={{ disableMobile: true }}
                 value={toDate}
                 onChange={setToDate}
               />

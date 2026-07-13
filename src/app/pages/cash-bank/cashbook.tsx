@@ -319,6 +319,7 @@ useEffect(() => {
           <div>
             <DatePicker
               placeholder="From Date"
+              options={{ disableMobile: true }}
               value={fromDate ? new Date(fromDate + "T00:00:00") : undefined}
               onChange={(dates) => {
                 if (dates && dates.length > 0) {
@@ -340,6 +341,7 @@ useEffect(() => {
             <DatePicker
               placeholder="To Date"
               value={toDate ? new Date(toDate + "T00:00:00") : undefined}
+              options={{ disableMobile: true }}
               onChange={(dates) => {
                 if (dates && dates.length > 0) {
                   const date = dates[0];
@@ -413,8 +415,8 @@ useEffect(() => {
                       key={index}
                       className="dark:hover:bg-dark-600 transition-colors hover:bg-gray-50"
                     >
-                      <td className="px-3 py-2.5 text-gray-500 dark:text-gray-400">
-                        {row.sr}
+                    <td className="px-3 py-2.5 text-gray-500 dark:text-gray-400">
+                        {(currentPage - 1) * rowsPerPage + index + 1}
                       </td>
                       <td className="px-3 py-2.5 text-gray-900 dark:text-white">
                      {new Date(row.date).toLocaleDateString("en-GB")}
