@@ -122,11 +122,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     init();
   }, []);
 
+
+
+  
   const login = async (credentials: {
     email: string;
     password: string;
   }): Promise<boolean> => {
     dispatch({ type: "LOGIN_REQUEST" });
+    console.log("Credentials:", credentials);
 
     try {
       const response = await apiHelper.post("/branch/login", credentials);
