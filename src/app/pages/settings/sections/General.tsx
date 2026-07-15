@@ -136,57 +136,127 @@ export default function General() {
     }
   };
 
+  const isDark = () => {
+    if (typeof document === "undefined") return false;
+    return document.documentElement.classList.contains("dark");
+  };
+
   const customSelectStyles = {
     control: (provided: any, state: any) => ({
       ...provided,
       backgroundColor: "transparent",
       borderColor: state.isFocused
         ? "var(--color-primary-600)"
-        : "var(--color-gray-300)",
+        : isDark()
+          ? "var(--color-dark-450)"
+          : "var(--color-gray-300)",
       boxShadow: state.isFocused
         ? "0 0 0 1px var(--color-primary-600)"
         : "none",
       minHeight: "42px",
+      opacity: 1,
       "&:hover": {
-        borderColor: "var(--color-primary-500)",
+        borderColor: state.isFocused
+          ? "var(--color-primary-600)"
+          : isDark()
+            ? "var(--color-dark-400)"
+            : "var(--color-gray-400)",
       },
     }),
-    singleValue: (provided: any) => ({
+
+    valueContainer: (provided: any) => ({
       ...provided,
-      color: "var(--color-dark-100)",
+      color: isDark() ? "var(--color-dark-100)" : "var(--color-gray-800)",
     }),
+
+    singleValue: (provided: any, state: any) => ({
+      ...provided,
+      color: state.isDisabled
+        ? isDark()
+          ? "var(--color-dark-100)"
+          : "var(--color-gray-800)"
+        : isDark()
+          ? "var(--color-dark-100)"
+          : "var(--color-gray-800)",
+      opacity: 1,
+    }),
+
     input: (provided: any) => ({
       ...provided,
-      color: "var(--color-gray-100)",
+      color: isDark() ? "var(--color-dark-100)" : "var(--color-gray-800)",
     }),
+
     placeholder: (provided: any) => ({
       ...provided,
       color: "var(--color-gray-400)",
     }),
+
     menu: (provided: any) => ({
       ...provided,
-      backgroundColor: "var(--color-dark-700)",
-      border: "1px solid var(--color-dark-450)",
+      backgroundColor: isDark() ? "var(--color-dark-700)" : "#ffffff",
+      border: isDark()
+        ? "1px solid var(--color-dark-450)"
+        : "1px solid var(--color-gray-300)",
       borderRadius: "0.75rem",
+      overflow: "hidden",
     }),
+
+    menuList: (provided: any) => ({
+      ...provided,
+      padding: 0,
+      // Custom scrollbar styles
+      "::-webkit-scrollbar": {
+        width: "6px",
+      },
+      "::-webkit-scrollbar-track": {
+        background: isDark() ? "var(--color-dark-600)" : "#f3f4f6",
+      },
+      "::-webkit-scrollbar-thumb": {
+        background: isDark() ? "var(--color-primary-600)" : "#d1d5db",
+        borderRadius: "10px",
+      },
+      "::-webkit-scrollbar-thumb:hover": {
+        background: isDark() ? "var(--color-primary-500)" : "#9ca3af",
+      },
+      scrollbarWidth: "thin",
+      scrollbarColor: isDark()
+        ? "var(--color-primary-600) var(--color-dark-600)"
+        : "#d1d5db #f3f4f6",
+    }),
+
     option: (provided: any, state: any) => ({
       ...provided,
       backgroundColor: state.isSelected
         ? "var(--color-primary-600)"
         : state.isFocused
-          ? "var(--color-dark-600)"
-          : "var(--color-dark-700)",
-      color: "#fff",
+          ? isDark()
+            ? "var(--color-dark-600)"
+            : "var(--color-gray-100)"
+          : isDark()
+            ? "var(--color-dark-700)"
+            : "#ffffff",
+      color: state.isSelected
+        ? "#ffffff"
+        : isDark()
+          ? "#ffffff"
+          : "var(--color-gray-800)",
+      cursor: "pointer",
     }),
+
     dropdownIndicator: (provided: any) => ({
       ...provided,
-      color: "var(--color-gray-400)",
+      color: isDark() ? "var(--color-gray-400)" : "var(--color-gray-500)",
     }),
+
+    clearIndicator: (provided: any) => ({
+      ...provided,
+      color: isDark() ? "var(--color-gray-400)" : "var(--color-gray-500)",
+    }),
+
     indicatorSeparator: () => ({
       display: "none",
     }),
   };
-
   // Loading state
   if (loading) {
     return (
@@ -408,58 +478,93 @@ export default function General() {
         />
 
         {/* Country */}
+
         <div>
           <label className="mb-1 inline-block">Country</label>
-          <Select
-            isDisabled={!isEditing}
-            classNamePrefix="react-select"
-            options={countryOptions}
-            styles={customSelectStyles}
-            value={countryOptions.find((c) => c.value === branch?.countryCode)}
-            onChange={(selected: any) => {
-              setCountry(selected?.value || "");
-              setBranch({
-                ...branch,
-                countryCode: selected?.value || "",
-                country: selected?.label || "",
-                stateCode: "",
-                state: "",
-                district: "",
-                city: "",
-              });
-              setState("");
-              setStateCode("");
-              setDistrict("");
-              setCity("");
-            }}
-          />
+          {isEditing ? (
+            <Select
+              classNamePrefix="react-select"
+              options={countryOptions}
+              styles={customSelectStyles}
+              value={countryOptions.find(
+                (c) => c.value === branch?.countryCode,
+              )}
+              onChange={(selected: any) => {
+                setCountry(selected?.value || "");
+                setBranch({
+                  ...branch,
+                  countryCode: selected?.value || "",
+                  country: selected?.label || "",
+                  stateCode: "",
+                  state: "",
+                  district: "",
+                  city: "",
+                });
+                setState("");
+                setStateCode("");
+                setDistrict("");
+                setCity("");
+              }}
+            />
+          ) : (
+            <div
+              className="flex h-[42px] items-center rounded-xl px-3"
+              style={{
+                border: isDark()
+                  ? "1px solid var(--color-dark-500)"
+                  : "1px solid var(--color-gray-300)",
+                backgroundColor: "transparent",
+                color: isDark()
+                  ? "var(--color-dark-100)"
+                  : "var(--color-gray-800)",
+              }}
+            >
+              {countryOptions.find((c) => c.value === branch?.countryCode)
+                ?.label || "-"}
+            </div>
+          )}
         </div>
 
         {/* State */}
         <div>
           <label className="mb-1 inline-block">State</label>
-          <Select
-            isDisabled={!isEditing}
-            classNamePrefix="react-select"
-            options={stateOptions}
-            styles={customSelectStyles}
-            value={stateOptions.find((s) => s.value === state)}
-            onChange={(selected: any) => {
-              setState(selected?.value || "");
-              setStateCode(selected?.state?.isoCode || "");
-              setBranch({
-                ...branch,
-                stateCode: selected?.value || "",
-                state: selected?.label || "",
-                district: "",
-                city: "",
-              });
-              setDistrict("");
-              setCity("");
-            }}
-          />
+          {isEditing ? (
+            <Select
+              classNamePrefix="react-select"
+              options={stateOptions}
+              styles={customSelectStyles}
+              value={stateOptions.find((s) => s.value === state)}
+              onChange={(selected: any) => {
+                setState(selected?.value || "");
+                setStateCode(selected?.state?.isoCode || "");
+                setBranch({
+                  ...branch,
+                  stateCode: selected?.value || "",
+                  state: selected?.label || "",
+                  district: "",
+                  city: "",
+                });
+                setDistrict("");
+                setCity("");
+              }}
+            />
+          ) : (
+            <div
+              className="flex h-[42px] items-center rounded-xl px-3"
+              style={{
+                border: isDark()
+                  ? "1px solid var(--color-dark-500)"
+                  : "1px solid var(--color-gray-300)",
+                backgroundColor: "transparent",
+                color: isDark()
+                  ? "var(--color-dark-100)"
+                  : "var(--color-gray-800)",
+              }}
+            >
+              {stateOptions.find((s) => s.value === state)?.label || "-"}
+            </div>
+          )}
         </div>
-
         {/* State Code (Readonly) */}
         <Input
           label="State Code"
@@ -469,43 +574,76 @@ export default function General() {
         />
 
         {/* District */}
+        {/* District */}
         <div>
           <label className="mb-1 inline-block">District</label>
-          <Select
-            isDisabled={!isEditing}
-            classNamePrefix="react-select"
-            options={cityOptions}
-            styles={customSelectStyles}
-            value={cityOptions.find((d) => d.value === branch?.district)}
-            onChange={(selected: any) => {
-              setDistrict(selected?.value || "");
-              setBranch({
-                ...branch,
-                district: selected?.value || "",
-              });
-            }}
-          />
+          {isEditing ? (
+            <Select
+              classNamePrefix="react-select"
+              options={cityOptions}
+              styles={customSelectStyles}
+              value={cityOptions.find((d) => d.value === branch?.district)}
+              onChange={(selected: any) => {
+                setDistrict(selected?.value || "");
+                setBranch({
+                  ...branch,
+                  district: selected?.value || "",
+                });
+              }}
+            />
+          ) : (
+            <div
+              className="flex h-[42px] items-center rounded-xl px-3"
+              style={{
+                border: isDark()
+                  ? "1px solid var(--color-dark-500)"
+                  : "1px solid var(--color-gray-300)",
+                backgroundColor: "transparent",
+                color: isDark()
+                  ? "var(--color-dark-100)"
+                  : "var(--color-gray-800)",
+              }}
+            >
+              {cityOptions.find((d) => d.value === branch?.district)?.label ||
+                "-"}
+            </div>
+          )}
         </div>
-
+        {/* City */}
         {/* City */}
         <div>
           <label className="mb-1 inline-block">City</label>
-          <Select
-            isDisabled={!isEditing}
-            classNamePrefix="react-select"
-            options={cityOptions}
-            styles={customSelectStyles}
-            value={cityOptions.find((c) => c.value === branch?.city)}
-            onChange={(selected: any) => {
-              setCity(selected?.value || "");
-              setBranch({
-                ...branch,
-                city: selected?.value || "",
-              });
-            }}
-          />
+          {isEditing ? (
+            <Select
+              classNamePrefix="react-select"
+              options={cityOptions}
+              styles={customSelectStyles}
+              value={cityOptions.find((c) => c.value === branch?.city)}
+              onChange={(selected: any) => {
+                setCity(selected?.value || "");
+                setBranch({
+                  ...branch,
+                  city: selected?.value || "",
+                });
+              }}
+            />
+          ) : (
+            <div
+              className="flex h-[42px] items-center rounded-xl px-3"
+              style={{
+                border: isDark()
+                  ? "1px solid var(--color-dark-500)"
+                  : "1px solid var(--color-gray-300)",
+                backgroundColor: "transparent",
+                color: isDark()
+                  ? "var(--color-dark-100)"
+                  : "var(--color-gray-800)",
+              }}
+            >
+              {cityOptions.find((c) => c.value === branch?.city)?.label || "-"}
+            </div>
+          )}
         </div>
-
         {/* PIN Code */}
         <Input
           label="PIN Code"
