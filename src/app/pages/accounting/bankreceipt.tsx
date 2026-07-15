@@ -6,6 +6,7 @@ import {
   X,
   Plus,
   Download,
+  Printer,
   Trash2,
   Edit,
   ChevronsUpDown,
@@ -27,7 +28,7 @@ import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { toast } from "sonner";
 // import { Combobox } from "@/components/shared/form/StyledCombobox";
-import { Input, Radio, Textarea } from "@/components/ui";
+import { Input, Radio, Textarea, Checkbox } from "@/components/ui";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import apiHelper from "@/utils/apiHelper";
 type EntryType = "Manual" | "Lead Cancel" | "Job Card";
@@ -537,6 +538,23 @@ const downloadExcel = async () => {
     console.log(err);
   }
 };
+
+
+
+
+ const handlePrint = async (item: BankReceipt) => {
+  try {
+    const blob = await apiHelper.getBlob(`/bank-receipt/${item.id}/print`);
+    const url = window.URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+  } catch (err) {
+    console.log(err);
+    toast.error("Failed to generate receipt PDF");
+  }
+};
+
+
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Upper Actions Control Toolbar Layout */}
@@ -669,14 +687,13 @@ const downloadExcel = async () => {
           <table className="w-full min-w-[1400px] text-left [&_.table-th]:font-semibold">
             <thead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <tr>
-                <th className="w-10 px-2 py-3.5 text-center">
-                  <input
-                    type="checkbox"
-                    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-                    checked={isAllPageSelected}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                  />
-                </th>
+               <th className="w-10 px-2 py-3.5 text-center">
+  <Checkbox
+    checked={isAllPageSelected}
+    onChange={(e: any) => handleSelectAll(e.target.checked)}
+    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+  />
+</th>
                 <th className="w-12 px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   S.No
                 </th>
@@ -719,7 +736,9 @@ const downloadExcel = async () => {
                 <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Created By
                 </th>
-               
+                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Action
+                </th>
               </tr>
             </thead>
 
@@ -732,13 +751,12 @@ const downloadExcel = async () => {
                     className={`${isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""} dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
                   >
                     <td className="px-2 py-3 text-center">
-                      <input
-                        type="checkbox"
-                        className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-                        checked={isRowSelected}
-                        onChange={() => handleSelectRow(item.id)}
-                      />
-                    </td>
+  <Checkbox
+    checked={isRowSelected}
+    onChange={() => handleSelectRow(item.id)}
+    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+  />
+</td>
                     <td className="px-3 py-3 text-sm font-medium whitespace-nowrap text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </td>
@@ -804,6 +822,16 @@ const downloadExcel = async () => {
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.createdBy}
                     </td>
+                     <td className="py-3 text-center whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => handlePrint(item)}
+                        className="dark:hover:bg-dark-600 dark:text-dark-200 text-primary-500 hover:bg-primary-600 cursor-pointer inline-flex size-8 items-center justify-center rounded-lg transition-colors hover:text-white"
+                        title="Print Receipt"
+                      >
+                        <Printer className="size-4" />
+                      </button>
+                    </td>
                                      </tr>
                 );
               })}
@@ -811,7 +839,7 @@ const downloadExcel = async () => {
               {currentItems.length === 0 && (
                 <tr>
                   <td
-                    colSpan={16}
+                    colSpan={17}
                     className="py-12 text-center text-gray-400 dark:text-gray-500"
                   >
                     No bank receipts found
@@ -1354,14 +1382,14 @@ const downloadExcel = async () => {
                     setShowDrawer(false);
                     setErrors({});
                   }}
-                  className="dark:bg-dark-600 dark:hover:bg-dark-500 rounded-lg bg-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-300 dark:text-gray-300"
+                  className="dark:bg-dark-600 dark:hover:bg-dark-500 cursor-pointer rounded-lg bg-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-300 dark:text-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  className="bg-primary-600 hover:bg-primary-700 rounded-lg px-6 py-2.5 text-sm font-semibold text-white"
+                  className="bg-primary-600 hover:bg-primary-700 cursor-pointer rounded-lg px-6 py-2.5 text-sm font-semibold text-white"
                 >
                   {editId !== null ? "Update" : "Add"} Bank Receipt
                 </button>

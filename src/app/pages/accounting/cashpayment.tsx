@@ -1,34 +1,12 @@
 import { useState, useEffect } from "react";
 import {
-  // Tractor,
-  // MapPin,
-  // Heart,
-  // Star,
-  // Fuel,
-  // Gauge,
-  // Calendar,
   ChevronLeft,
   ChevronRight,
-  // Sparkles,
-  // ArrowRight,
-  // BadgeCheck,
-  // Shield,
-  // Clock,
-  // Phone,
-  // Users,
-  // ShoppingBag,
-  // Package,
   Search,
   // SlidersHorizontal,
   Check,
   Filter,
   ChevronDown,
-  // User,
-  // Mail,
-  // MessageSquare,
-  // Send,
-  // HelpCircle,
-  // MessageCircle,
   X,
   Plus,
   Download,
@@ -53,10 +31,9 @@ import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 // import { Combobox } from "@/components/shared/form/StyledCombobox";
 import { Combobox } from "@/components/shared/form/Combobox";
-import { Input, Radio, Textarea } from "@/components/ui";
+import { Input, Radio, Textarea, Checkbox } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper";
 import { toast } from "sonner";
-
 
 type EntryType = "Manual" | "Purchase" | "Lead Cancel";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
@@ -322,7 +299,7 @@ export default function CashPayment() {
 
     setForm({
       ...initialForm,
-       date: [new Date()],
+      date: [new Date()],
     });
 
     await getVoucherNo();
@@ -387,39 +364,44 @@ export default function CashPayment() {
     setSelectedIds([]);
   };
 
- const handleSubmit = async () => {
-  if (!validateForm()) return;
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
 
-  try {
-    const payload = {
-      companyId,
-      financialYearId,
-      date: form.date || new Date(),
-      cashAccountId: form.cashAccount.value,
-      oppAccountId: form.oppAccount.value,
-      purchaseId: form.type === "Purchase" && purchaseBill ? purchaseBill.value : null,
-      leadId: form.type === "Lead Cancel" && form.leadNo ? form.leadNo.id : null,
-      amount: Number(form.amount),
-      narration: form.narration,
-    };
-    console.log(payload);
-    
-    if (editId !== null) {
-      await apiHelper.put(`/cash-payment/${editId}`, payload);
-      toast.success("Cash payment updated successfully!");
-    } else {
-      await apiHelper.post("/cash-payment", payload);
-      toast.success("Cash payment added successfully!");
+    try {
+      const payload = {
+        companyId,
+        financialYearId,
+        date: form.date || new Date(),
+        cashAccountId: form.cashAccount.value,
+        oppAccountId: form.oppAccount.value,
+        purchaseId:
+          form.type === "Purchase" && purchaseBill ? purchaseBill.value : null,
+        leadId:
+          form.type === "Lead Cancel" && form.leadNo ? form.leadNo.id : null,
+        amount: Number(form.amount),
+        narration: form.narration,
+      };
+      console.log(payload);
+
+      if (editId !== null) {
+        await apiHelper.put(`/cash-payment/${editId}`, payload);
+        toast.success("Cash payment updated successfully!");
+      } else {
+        await apiHelper.post("/cash-payment", payload);
+        toast.success("Cash payment added successfully!");
+      }
+
+      setShowDrawer(false);
+      await getCashPayments();
+      await getVoucherNo();
+    } catch (error: any) {
+      console.log(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save cash payment. Please try again.",
+      );
     }
-
-    setShowDrawer(false);
-    await getCashPayments();
-    await getVoucherNo();
-  } catch (error: any) {
-    console.log(error);
-    toast.error(error.response?.data?.message || "Failed to save cash payment. Please try again.");
-  }
-};
+  };
   const isAllPageSelected =
     currentItems.length > 0 &&
     currentItems.every((item) => selectedIds.includes(item.id));
@@ -446,25 +428,25 @@ export default function CashPayment() {
   useEffect(() => {
     setCurrentPage(1);
   }, [filterType, filterDateFrom, filterDateTo, search]);
-const handleExportExcel = async () => {
-  try {
-    const blob = await apiHelper.getBlob("/cash-payment/export/excel");
+  const handleExportExcel = async () => {
+    try {
+      const blob = await apiHelper.getBlob("/cash-payment/export/excel");
 
-    const url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(blob);
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "CashPaymentRegister.xlsx";
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "CashPaymentRegister.xlsx";
 
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
 
-    window.URL.revokeObjectURL(url);
-  } catch (err) {
-    console.log(err);
-  }
-};
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.log(err);
+    }
+  };
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Upper Actions Control Toolbar Layout */}
@@ -479,47 +461,47 @@ const handleExportExcel = async () => {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
-  {/* Left side - Filter and icons */}
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={() => setShowFilterBar(!showFilterBar)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-        showFilterBar
-          ? "dark:bg-dark-600 dark:border-dark-500 border-red-200 bg-red-50 text-red-600 dark:text-white"
-          : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-      }`}
-    >
-      <Filter className="size-4.5" />
-      <span className="hidden sm:inline">Filter</span>
-    </button>
+          {/* Left side - Filter and icons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilterBar(!showFilterBar)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                showFilterBar
+                  ? "dark:bg-dark-600 dark:border-dark-500 border-red-200 bg-red-50 text-red-600 dark:text-white"
+                  : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <Filter className="size-4.5" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
 
-    <button
-      type="button"
-      onClick={handleExportExcel}
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFileExcel2Fill className="text-lg text-green-500" />
-    </button>
+            <button
+              type="button"
+              onClick={handleExportExcel}
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFileExcel2Fill className="text-lg text-green-500" />
+            </button>
 
-    <button
-      type="button"
-      className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-    >
-      <RiFilePdfFill className="text-lg text-red-500" />
-    </button>
-  </div>
+            <button
+              type="button"
+              className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <RiFilePdfFill className="text-lg text-red-500" />
+            </button>
+          </div>
 
-  {/* Right side - Add Cash Payment button */}
-  <button
-    type="button"
-    onClick={handleAdd}
-    className="bg-primary-600 hover:bg-primary-700 inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors whitespace-nowrap"
-  >
-    <Plus className="size-4.5" />
-    Add Cash Payment
-  </button>
-</div>
+          {/* Right side - Add Cash Payment button */}
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="bg-primary-600 hover:bg-primary-700 inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap text-white transition-colors"
+          >
+            <Plus className="size-4.5" />
+            Add Cash Payment
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -584,45 +566,43 @@ const handleExportExcel = async () => {
           <table className="w-full min-w-250 text-left [&_.table-th]:font-semibold">
             <thead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <tr>
-                <th className="w-10 py-3.5 text-center">
-                  <input
-                    type="checkbox"
-                    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                <th className="w-10 px-3 py-3.5 text-center">
+                  <Checkbox
                     checked={isAllPageSelected}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    onChange={(e: any) => handleSelectAll(e.target.checked)}
+                    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
                   />
                 </th>
-                <th className="w-12 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                <th className="w-12 px-3 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   S.No
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Date
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Voucher No.
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Type
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Cash Account
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Opp. Account
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Amount
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Narration
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Created Type
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Created By
                 </th>
-               
               </tr>
             </thead>
 
@@ -634,50 +614,48 @@ const handleExportExcel = async () => {
                     key={item.id}
                     className={`${isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""} dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
                   >
-                    <td className="py-3 text-center">
-                      <input
-                        type="checkbox"
-                        className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                    <td className="px-3 py-3 text-center">
+                      <Checkbox
                         checked={isRowSelected}
                         onChange={() => handleSelectRow(item.id)}
+                        className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
                       />
                     </td>
-                    <td className="py-3 text-sm font-medium text-gray-500">
+                    <td className="py-3 px-3 text-sm font-medium text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </td>
-                    <td className="py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
                       {new Date(item.date).toLocaleDateString("en-GB")}
                     </td>
-                    <td className="py-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
                       {item.voucherNo}
                     </td>
-                    <td className="py-3 whitespace-nowrap">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       <span className="bg-primary-500 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold">
                         {item.type}
                       </span>
                     </td>
-                    <td className="py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
                       {item.cashAccount}
                     </td>
-                    <td className="py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
                       {item.oppAccount}
                     </td>
-                    <td className="py-3 text-sm font-semibold whitespace-nowrap text-gray-900 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm font-semibold whitespace-nowrap text-gray-900 dark:text-gray-400">
                       ₹
                       {item.amount.toLocaleString("en-IN", {
                         minimumFractionDigits: 2,
                       })}
                     </td>
-                    <td className="py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.narration}
                     </td>
-                    <td className="py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.createdType}
                     </td>
-                    <td className="py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.createdBy}
                     </td>
-                   
                   </tr>
                 );
               })}
@@ -807,8 +785,6 @@ const handleExportExcel = async () => {
           </div>
         )}
       </div>
-
-    
 
       {/* Right Drawer */}
       <Transition appear show={showDrawer} as={Fragment}>
@@ -1090,14 +1066,14 @@ const handleExportExcel = async () => {
                     setShowDrawer(false);
                     setErrors({});
                   }}
-                  className="dark:bg-dark-600 dark:hover:bg-dark-500 rounded-lg bg-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-300 dark:text-gray-300"
+                  className="dark:bg-dark-600 dark:hover:bg-dark-500 cursor-pointer rounded-lg bg-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-300 dark:text-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  className="bg-primary-600 hover:bg-primary-700 rounded-lg px-6 py-2.5 text-sm font-semibold text-white"
+                  className="bg-primary-600 hover:bg-primary-700 cursor-pointer rounded-lg px-6 py-2.5 text-sm font-semibold text-white"
                 >
                   {editId !== null ? "Update" : "Add"} Cash Payment
                 </button>

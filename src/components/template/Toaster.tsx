@@ -14,7 +14,8 @@ export default function Toaster() {
     <SonnerToaster
       theme={isDark ? "dark" : "light"}
       offset="16px"
-      position={notification?.position || defaultTheme?.notification?.position}
+       position="top-right"
+      // position={notification?.position || defaultTheme?.notification?.position}
       expand={
         notification?.isExpanded || defaultTheme?.notification?.isExpanded
       }
