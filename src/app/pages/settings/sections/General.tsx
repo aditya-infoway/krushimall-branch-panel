@@ -13,7 +13,7 @@ import apiHelper from "@/utils/apiHelper";
 import Select from "react-select";
 import { Country, State, City } from "country-state-city";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import { useAuthContext } from "@/app/contexts/auth/context";
 
 export default function General() {
@@ -85,6 +85,8 @@ export default function General() {
   useEffect(() => {
     if (id) {
       fetchBranch();
+    } else {
+      toast.error("Branch ID not found");
     }
   }, [id]);
 
@@ -699,6 +701,7 @@ export default function General() {
               onClick={() => {
                 setIsEditing(false);
                 fetchBranch();
+                toast.info("Changes discarded");
               }}
             >
               Cancel

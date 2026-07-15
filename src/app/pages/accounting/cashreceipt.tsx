@@ -1,37 +1,16 @@
 import { useState, useEffect } from "react";
 import {
-  // Tractor,
-  // MapPin,
-  // Heart,
-  // Star,
-  // Fuel,
-  // Gauge,
-  // Calendar,
   ChevronLeft,
   ChevronRight,
-  // Sparkles,
-  // ArrowRight,
-  // BadgeCheck,
-  // Shield,
-  // Clock,
-  // Phone,
-  // Users,
-  // ShoppingBag,
-  // Package,
   Search,
   // SlidersHorizontal,
   Check,
   Filter,
   ChevronDown,
-  // User,
-  // Mail,
-  // MessageSquare,
-  // Send,
-  // HelpCircle,
-  // MessageCircle,
   X,
   Plus,
   Download,
+  Printer,
   // RefreshCw,
   Trash2,
   // Eye,
@@ -52,10 +31,9 @@ import {
 import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 // import { Combobox } from "@/components/shared/form/StyledCombobox";
-import { Input, Radio, Textarea } from "@/components/ui";
+import { Input, Radio, Textarea, Checkbox } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper";
 import { toast } from "sonner";
-
 
 type EntryType = "Manual" | "Lead" | "Job Card";
 import { Combobox } from "@/components/shared/form/Combobox";
@@ -165,14 +143,14 @@ export default function CashReceipt() {
     const matchesType = filterType === "All" || r.type === filterType;
     return matchesSearch && matchesType;
   });
-const [companyId, setCompanyId] = useState<number | null>(null);
-const [financialYearId, setFinancialYearId] = useState<number | null>(null);
+  const [companyId, setCompanyId] = useState<number | null>(null);
+  const [financialYearId, setFinancialYearId] = useState<number | null>(null);
   const totalItems = filteredRows.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
-const [leadOptions, setLeadOptions] = useState<any[]>([]);
+  const [leadOptions, setLeadOptions] = useState<any[]>([]);
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -196,86 +174,86 @@ const [leadOptions, setLeadOptions] = useState<any[]>([]);
     return Object.keys(newErrors).length === 0;
   };
   const getLeads = async () => {
-  try {
-    const res = await apiHelper.get("/leads");
+    try {
+      const res = await apiHelper.get("/leads");
 
-    const leads = res.data || [];
+      const leads = res.data || [];
 
-    const options = leads.map((item: any) => ({
-      value: item.id,
-      label: `${item.quotationNo} - ${item.customer?.accountName || ""}`,
-      quotationNo: item.quotationNo,
-      customerName: item.customer?.accountName || "",
-      mobile: item.customer?.mobile || "",
-      customerId: item.customer?.id,
-    }));
+      const options = leads.map((item: any) => ({
+        value: item.id,
+        label: `${item.quotationNo} - ${item.customer?.accountName || ""}`,
+        quotationNo: item.quotationNo,
+        customerName: item.customer?.accountName || "",
+        mobile: item.customer?.mobile || "",
+        customerId: item.customer?.id,
+      }));
 
-    setLeadOptions(options);
-  } catch (err) {
-    console.log(err);
-  }
-};
+      setLeadOptions(options);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
-useEffect(() => {
-  getLeads();
-}, []);
+  useEffect(() => {
+    getLeads();
+  }, []);
   const getCompany = async () => {
-  try {
-    const res = await apiHelper.get("/company");
+    try {
+      const res = await apiHelper.get("/company");
 
-    if (!res.data || res.data.length === 0) {
-      return;
+      if (!res.data || res.data.length === 0) {
+        return;
+      }
+
+      const company = res.data[0];
+
+      setCompanyId(company.id);
+
+      if (company.financialYears?.length > 0) {
+        setFinancialYearId(company.financialYears[0].id);
+      }
+    } catch (err) {
+      console.log(err);
     }
+  };
+  useEffect(() => {
+    getCompany();
+  }, []);
+  const getCashReceipts = async () => {
+    try {
+      const res = await apiHelper.get("/cash-receipt");
 
-    const company = res.data[0];
+      const data = res.map((item: any) => ({
+        ...item,
+        cashAccount: item.cashAccount?.accountName || "",
+        oppAccount: item.oppAccount?.accountName || "",
+      }));
 
-    setCompanyId(company.id);
-
-    if (company.financialYears?.length > 0) {
-      setFinancialYearId(company.financialYears[0].id);
+      setRows(data);
+    } catch (err) {
+      console.log(err);
     }
-  } catch (err) {
-    console.log(err);
-  }
-};
-useEffect(() => {
-  getCompany();
-}, []);
-const getCashReceipts = async () => {
-  try {
-    const res = await apiHelper.get("/cash-receipt");
+  };
 
-    const data = res.map((item: any) => ({
-      ...item,
-      cashAccount: item.cashAccount?.accountName || "",
-      oppAccount: item.oppAccount?.accountName || "",
-    }));
+  useEffect(() => {
+    getCashReceipts();
+  }, []);
+  const getVoucherNo = async () => {
+    try {
+      const res = await apiHelper.get("/cash-receipt/voucher");
 
-    setRows(data);
-  } catch (err) {
-    console.log(err);
-  }
-};
+      console.log("Voucher API:", res);
 
-useEffect(() => {
-  getCashReceipts();
-}, []);
-const getVoucherNo = async () => {
-  try {
-    const res = await apiHelper.get("/cash-receipt/voucher");
+      const voucherNo = res?.data?.voucherNo ?? res?.voucherNo ?? "";
 
-    console.log("Voucher API:", res);
-
-    const voucherNo = res?.data?.voucherNo ?? res?.voucherNo ?? "";
-
-    setForm((prev) => ({
-      ...prev,
-      voucherNo,
-    }));
-  } catch (err) {
-    console.log(err);
-  }
-};
+      setForm((prev) => ({
+        ...prev,
+        voucherNo,
+      }));
+    } catch (err) {
+      console.log(err);
+    }
+  };
   const getAccounts = async () => {
     try {
       const res = await apiHelper.get("/accounts");
@@ -317,17 +295,17 @@ const getVoucherNo = async () => {
   useEffect(() => {
     getAccounts();
   }, []);
-const handleAdd = async () => {
-  setEditId(null);
-  setErrors({});
-  setForm({
-    ...initialForm,
-    date: new Date(),
-  });
+  const handleAdd = async () => {
+    setEditId(null);
+    setErrors({});
+    setForm({
+      ...initialForm,
+      date: new Date(),
+    });
 
-  await getVoucherNo();
-  setShowDrawer(true);
-};
+    await getVoucherNo();
+    setShowDrawer(true);
+  };
 
   const handleEdit = (item: CashReceipt) => {
     setEditId(item.id);
@@ -401,7 +379,6 @@ const handleAdd = async () => {
   ];
 
   // Add after LEADS and JOB_CARDS
- 
 
   const jobCardOptions = JOB_CARDS.map((job) => ({
     value: job.jobCardNo,
@@ -425,38 +402,41 @@ const handleAdd = async () => {
     };
   });
 
-const handleSubmit = async () => {
-  if (!validateForm()) return;
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
 
-  try {
-    const payload = {
-      companyId,
-      financialYearId,
-      voucherNo: form.voucherNo,
-      date: form.date,
-      type: form.type,
-      cashAccountId: form.cashAccount.value,
-      oppAccountId: form.oppAccount.value,
-      leadId: form.type === "Lead" ? Number(form.leadNo) : null,
-      amount: Number(form.amount),
-      narration: form.narration,
-    };
+    try {
+      const payload = {
+        companyId,
+        financialYearId,
+        voucherNo: form.voucherNo,
+        date: form.date,
+        type: form.type,
+        cashAccountId: form.cashAccount.value,
+        oppAccountId: form.oppAccount.value,
+        leadId: form.type === "Lead" ? Number(form.leadNo) : null,
+        amount: Number(form.amount),
+        narration: form.narration,
+      };
 
-    if (editId) {
-      await apiHelper.put(`/cash-receipt/${editId}`, payload);
-      toast.success("Cash receipt updated successfully!");
-    } else {
-      await apiHelper.post("/cash-receipt", payload);
-      toast.success("Cash receipt added successfully!");
+      if (editId) {
+        await apiHelper.put(`/cash-receipt/${editId}`, payload);
+        toast.success("Cash receipt updated successfully!");
+      } else {
+        await apiHelper.post("/cash-receipt", payload);
+        toast.success("Cash receipt added successfully!");
+      }
+
+      setShowDrawer(false);
+      await getCashReceipts();
+    } catch (error: any) {
+      console.log(error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save cash receipt. Please try again.",
+      );
     }
-
-    setShowDrawer(false);
-    await getCashReceipts();
-  } catch (error: any) {
-    console.log(error);
-    toast.error(error.response?.data?.message || "Failed to save cash receipt. Please try again.");
-  }
-};
+  };
   const isAllPageSelected =
     currentItems.length > 0 &&
     currentItems.every((item) => selectedIds.includes(item.id));
@@ -483,27 +463,38 @@ const handleSubmit = async () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [filterType, filterDateFrom, filterDateTo, search]);
-const downloadExcel = async () => {
-  try {
-    const blob = await apiHelper.getBlob(
-      "/cash-receipt/export/excel"
-    );
+  const downloadExcel = async () => {
+    try {
+      const blob = await apiHelper.getBlob("/cash-receipt/export/excel");
 
-    const url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(blob);
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "CashReceiptRegister.xlsx";
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "CashReceiptRegister.xlsx";
 
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
 
-    window.URL.revokeObjectURL(url);
-  } catch (err) {
-    console.log(err);
-  }
-};
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handlePrint = async (item: CashReceipt) => {
+    try {
+      const blob = await apiHelper.getBlob(`/cash-receipt/${item.id}/print`);
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+    } catch (err) {
+      console.log(err);
+      toast.error("Failed to generate receipt PDF");
+    }
+  };
+
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Upper Actions Control Toolbar Layout */}
@@ -532,17 +523,18 @@ const downloadExcel = async () => {
           </button>
 
           <button
-            type="button"   onClick={downloadExcel}
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
+            type="button"
+            onClick={downloadExcel}
+            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
           >
-         <RiFileExcel2Fill className="text-lg text-green-500" />
+            <RiFileExcel2Fill className="text-lg text-green-500" />
           </button>
 
           <button
             type="button"
-            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
+            className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
           >
-           <RiFilePdfFill className="text-lg text-red-500" />
+            <RiFilePdfFill className="text-lg text-red-500" />
           </button>
 
           <button
@@ -619,45 +611,46 @@ const downloadExcel = async () => {
           <table className="w-full min-w-250 text-left [&_.table-th]:font-semibold">
             <thead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <tr>
-                <th className="w-10 py-3.5 text-center">
-                  <input
-                    type="checkbox"
-                    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                <th className="w-10 px-3 py-3.5 text-center">
+                  <Checkbox
                     checked={isAllPageSelected}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    onChange={(e: any) => handleSelectAll(e.target.checked)}
+                    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
                   />
                 </th>
-                <th className="w-12 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                <th className="w-12 px-3 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   S.No
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Date
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Voucher No.
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Type
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Cash Account
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Opp. Account
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Amount
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Narration
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Created Type
                 </th>
-                <th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   Created By
                 </th>
-               
+                <th className="px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Action
+                </th>
               </tr>
             </thead>
 
@@ -669,58 +662,66 @@ const downloadExcel = async () => {
                     key={item.id}
                     className={`${isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""} dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
                   >
-                    <td className="py-3 text-center">
-                      <input
-                        type="checkbox"
-                        className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                    <td className="px-3 py-3 text-center">
+                      <Checkbox
                         checked={isRowSelected}
                         onChange={() => handleSelectRow(item.id)}
+                        className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
                       />
                     </td>
-                    <td className="py-3 text-sm font-medium text-gray-500">
+                    <td className="py-3 px-3 text-sm font-medium text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </td>
-                    <td className="py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
-                        {new Date(item.date).toLocaleDateString("en-GB")}
+                    <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
+                      {new Date(item.date).toLocaleDateString("en-GB")}
                     </td>
-                    <td className="py-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
+                    <td className="py-3 px-3 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
                       {item.voucherNo}
                     </td>
-                    <td className="py-3 whitespace-nowrap">
+                    <td className="py-3 px-3 whitespace-nowrap">
                       <span
                         className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
                           item.type === "Manual"
                             ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                             : item.type === "Lead"
-                              ? "bg-primary-500 text-white dark:bg-red-primary-500 dark:text-white"
-                              : "bg-primary-500 text-white dark:bg-primary-500 dark:text-white"
+                              ? "bg-primary-500 dark:bg-red-primary-500 text-white dark:text-white"
+                              : "bg-primary-500 dark:bg-primary-500 text-white dark:text-white"
                         }`}
                       >
                         {item.type}
                       </span>
                     </td>
-                    <td className="py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
+                    <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
                       {item.cashAccount}
                     </td>
-                    <td className="py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
+                    <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
                       {item.oppAccount}
                     </td>
-                    <td className="py-3 text-sm font-semibold whitespace-nowrap text-gray-900 dark:text-gray-400">
+                    <td className="py-3 px-3 text-sm font-semibold whitespace-nowrap text-gray-900 dark:text-gray-400">
                       ₹
                       {item.amount.toLocaleString("en-IN", {
                         minimumFractionDigits: 2,
                       })}
                     </td>
-                    <td className="py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                    <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.narration}
                     </td>
-                    <td className="py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                    <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.createdType}
                     </td>
-                      <td className="py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                    <td className="py-3 px-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                       {item.createdBy}
                     </td>
-                    
+                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => handlePrint(item)}
+                        className="dark:hover:bg-dark-600 dark:text-dark-200 text-primary-500 hover:bg-primary-600 inline-flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:text-white"
+                        title="Print Receipt"
+                      >
+                        <Printer className="size-4" />
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
@@ -728,7 +729,7 @@ const downloadExcel = async () => {
               {currentItems.length === 0 && (
                 <tr>
                   <td
-                    colSpan={11}
+                    colSpan={12}
                     className="py-12 text-center text-gray-400 dark:text-gray-500"
                   >
                     No cash receipts found
@@ -851,7 +852,6 @@ const downloadExcel = async () => {
         )}
       </div>
 
-    
       {/* Right Drawer */}
       <Transition appear show={showDrawer} as={Fragment}>
         <Dialog
@@ -939,41 +939,42 @@ const downloadExcel = async () => {
                   {/* Right side - Combobox */}
                   <div className="w-full sm:max-w-sm">
                     {form.type === "Lead" && (
-                     <Combobox
-  data={leadOptions}
-  displayField="label"
-  value={form.leadNo}
-onChange={(selected: any) => {
-  const customerAccount = oppAccounts.find(
-    (acc: any) => Number(acc.value) === Number(selected.customerId)
-  );
+                      <Combobox
+                        data={leadOptions}
+                        displayField="label"
+                        value={form.leadNo}
+                        onChange={(selected: any) => {
+                          const customerAccount = oppAccounts.find(
+                            (acc: any) =>
+                              Number(acc.value) === Number(selected.customerId),
+                          );
 
-  setForm((prev) => ({
-    ...prev,
-    leadNo: selected,        // object store કરો
-    oppAccount: customerAccount || null,
-  }));
-}}
-  placeholder="Search Quotation No / Customer"
-  searchFields={["quotationNo", "customerName", "mobile"]}
-  columns={[
-    {
-      header: "Quotation No",
-      field: "quotationNo",
-      width: "1.5fr",
-    },
-    {
-      header: "Customer",
-      field: "customerName",
-      width: "2fr",
-    },
-    {
-      header: "Mobile",
-      field: "mobile",
-      width: "1.5fr",
-    },
-  ]}
-/>
+                          setForm((prev) => ({
+                            ...prev,
+                            leadNo: selected, // object store કરો
+                            oppAccount: customerAccount || null,
+                          }));
+                        }}
+                        placeholder="Search Quotation No / Customer"
+                        searchFields={["quotationNo", "customerName", "mobile"]}
+                        columns={[
+                          {
+                            header: "Quotation No",
+                            field: "quotationNo",
+                            width: "1.5fr",
+                          },
+                          {
+                            header: "Customer",
+                            field: "customerName",
+                            width: "2fr",
+                          },
+                          {
+                            header: "Mobile",
+                            field: "mobile",
+                            width: "1.5fr",
+                          },
+                        ]}
+                      />
                     )}
 
                     {form.type === "Job Card" && (
@@ -1063,27 +1064,30 @@ onChange={(selected: any) => {
                 {/* Row 2: Opp. Account | Amount */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                   <div className="mb-1.5 flex items-center justify-between">
-  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-    Opp. Account <span className="text-red-500">*</span>
-  </label>
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Opp. Account <span className="text-red-500">*</span>
+                      </label>
 
-  {form.oppAccount && (
-    <span
-      className={`text-sm font-semibold ${
-        form.oppAccount.balanceType === "Dr"
-          ? "text-green-600"
-          : "text-red-600"
-      }`}
-    >
-      Balance : ₹
-      {Number(form.oppAccount.balance || 0).toLocaleString("en-IN", {
-        minimumFractionDigits: 2,
-      })}{" "}
-      {form.oppAccount.balanceType}
-    </span>
-  )}
-</div>
+                      {form.oppAccount && (
+                        <span
+                          className={`text-sm font-semibold ${
+                            form.oppAccount.balanceType === "Dr"
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          Balance : ₹
+                          {Number(form.oppAccount.balance || 0).toLocaleString(
+                            "en-IN",
+                            {
+                              minimumFractionDigits: 2,
+                            },
+                          )}{" "}
+                          {form.oppAccount.balanceType}
+                        </span>
+                      )}
+                    </div>
                     <Combobox
                       data={oppAccounts}
                       displayField="label"
@@ -1095,7 +1099,7 @@ onChange={(selected: any) => {
                           setErrors({ ...errors, oppAccount: "" });
                         }
                       }}
-                        disabled={form.type === "Lead"}
+                      disabled={form.type === "Lead"}
                       placeholder="Search Opp. Account"
                       searchFields={["label", "mobile"]}
                       columns={[
@@ -1157,14 +1161,14 @@ onChange={(selected: any) => {
                     setShowDrawer(false);
                     setErrors({});
                   }}
-                  className="dark:bg-dark-600 dark:hover:bg-dark-500 rounded-lg bg-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-300 dark:text-gray-300"
+                  className="dark:bg-dark-600 dark:hover:bg-dark-500 cursor-pointer rounded-lg bg-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-300 dark:text-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  className="bg-primary-600 hover:bg-primary-700 rounded-lg px-6 py-2.5 text-sm font-semibold text-white"
+                  className="bg-primary-600 hover:bg-primary-700 cursor-pointer rounded-lg px-6 py-2.5 text-sm font-semibold text-white"
                 >
                   {editId !== null ? "Update" : "Add"} Cash Receipt
                 </button>

@@ -27,7 +27,7 @@ import {
 import { Fragment } from "react";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Combobox } from "@/components/shared/form/StyledCombobox";
-import { Input, Textarea } from "@/components/ui";
+import { Input, Textarea, Checkbox } from "@/components/ui";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import { toast } from "sonner";
 
@@ -361,14 +361,13 @@ export default function Contra() {
           <table className="w-full min-w-[1000px] text-left [&_.table-th]:font-semibold">
             <thead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <tr>
-                <th className="w-10 px-2 py-3.5 text-center">
-                  <input
-                    type="checkbox"
-                    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-                    checked={isAllPageSelected}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                  />
-                </th>
+               <th className="w-10 px-2 py-3.5 text-center">
+  <Checkbox
+    checked={isAllPageSelected}
+    onChange={(e: any) => handleSelectAll(e.target.checked)}
+    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+  />
+</th>
                 <th className="w-12 px-3 py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
                   S.No
                 </th>
@@ -410,14 +409,13 @@ export default function Contra() {
                     key={item.id}
                     className={`${isRowSelected ? "dark:bg-dark-600/30 bg-gray-50/50" : ""} dark:hover:bg-dark-700/40 transition-colors hover:bg-gray-50/30`}
                   >
-                    <td className="px-2 py-3 text-center">
-                      <input
-                        type="checkbox"
-                        className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-                        checked={isRowSelected}
-                        onChange={() => handleSelectRow(item.id)}
-                      />
-                    </td>
+                   <td className="px-2 py-3 text-center">
+  <Checkbox
+    checked={isRowSelected}
+    onChange={() => handleSelectRow(item.id)}
+    className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+  />
+</td>
                     <td className="px-3 py-3 text-sm font-medium whitespace-nowrap text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </td>
@@ -815,14 +813,14 @@ export default function Contra() {
                     setShowModal(false);
                     setErrors({});
                   }}
-                  className="dark:bg-dark-600 dark:hover:bg-dark-500 rounded-lg bg-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-300 dark:text-gray-300"
+                  className="dark:bg-dark-600 dark:hover:bg-dark-500 cursor-pointer rounded-lg bg-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-300 dark:text-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  className="bg-primary-600 hover:bg-primary-700 rounded-lg px-6 py-2.5 text-sm font-semibold text-white"
+                  className="bg-primary-600 hover:bg-primary-700 cursor-pointer rounded-lg px-6 py-2.5 text-sm font-semibold text-white"
                 >
                   Submit
                 </button>

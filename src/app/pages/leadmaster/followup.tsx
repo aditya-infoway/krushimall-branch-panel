@@ -7,6 +7,7 @@ import {
   ArrowsRightLeftIcon,
   ArrowPathIcon,
   ChatBubbleLeftEllipsisIcon,
+  ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
 import { useEffect, useState, Fragment } from "react";
 import apiHelper from "@/utils/apiHelper";
@@ -270,12 +271,13 @@ export default function Followup() {
           </p>
         </div>
 
-        <button
-          onClick={() => history.back()}
-          className="bg-primary-500 hover:bg-primary-600 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors"
-        >
-          Back
-        </button>
+           <button
+  onClick={() => history.back()}
+  className="bg-primary-500 hover:bg-primary-600 cursor-pointer flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors"
+>
+  <ArrowLeftIcon className="h-4 w-4" />
+  <span>Back</span>
+</button>
       </div>
 
       {/* Kanban Board */}
