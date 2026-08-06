@@ -17,10 +17,13 @@ import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Combobox } from "@/components/shared/form/Combobox";
 import { Checkbox } from "@/components/ui/Form/Checkbox";
 import { FiEdit2 } from "react-icons/fi";
+import Select from "react-select";
+// import type { OptionProps } from "react-select";
+import { toast } from "sonner";
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
-
+import apiHelper from "@/utils/apiHelper";
 interface VehicleCharges {
   exShowroomPrice: string;
   insurance: string;
@@ -56,6 +59,16 @@ interface HypothecationDetails {
   loanRoi: string;
   marginMoney: string;
   paymentStatus: PaymentStatus;
+  narration: string;
+  // ADD
+  cashAmount: string;
+  bankAmount: string;
+  cashAccountId: string;
+  bankAccountId: string;
+  paymentMode: string;
+  chequeNo: string;
+  chequeDate: string;
+  clearDate: string;
   assignBy: string;
   bankOfFinance: string;
 }
@@ -66,11 +79,12 @@ interface ExchangeDetails {
   existingVehicleYear: string;
   customerExpectedPrice: string;
   marketPrice: string;
-  exchangeBonus: string;
-  smiplShares: string;
+  chassisNo: string;
+  companyShare: string;
   dealerShares: string;
-  valueAddAccessories: string;
+  rcNo: string;
   insurance: string;
+  vehicleNo: string;
 }
 
 interface PaymentDetails {
@@ -159,13 +173,78 @@ const fieldGrid = "grid grid-cols-2 gap-3 p-4 lg:grid-cols-1 xl:grid-cols-2";
 const Order: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [selectedAccessories, setSelectedAccessories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const OrderVehicleOption = (props: any) => {
+    const { data, innerRef, innerProps, isFocused, isSelected } = props;
 
-  useEffect(() => {
-    if (id) {
-      console.log("Lead ID:", id);
-    }
-  }, [id]);
+    const inwardDate = data.inwardDate ?? data.inWardDate ?? "";
 
+    const motorNo = data.motorNo ?? data.engineNo ?? "";
+
+    return (
+      <div
+        ref={innerRef}
+        {...innerProps}
+        className={`cursor-pointer border-b px-3 py-2 text-xs ${
+          isFocused || isSelected
+            ? "bg-primary-600 text-white"
+            : "bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100"
+        }`}
+      >
+        <div className="flex items-start justify-between gap-4">
+          {/* LEFT SIDE */}
+          <div className="space-y-0.5">
+            {/* Chassis No always show */}
+            <p>
+              <span className="font-semibold">Chassis No:</span>{" "}
+              {data.chassisNo}
+            </p>
+
+            {/* Show only if available */}
+            {data.batteryNo && (
+              <p>
+                <span className="font-semibold">Battery No:</span>{" "}
+                {data.batteryNo}
+              </p>
+            )}
+
+            {/* Show only if available */}
+            {data.keyNo && (
+              <p>
+                <span className="font-semibold">Key No:</span> {data.keyNo}
+              </p>
+            )}
+          </div>
+
+          {/* RIGHT SIDE */}
+          <div className="space-y-0.5 text-right">
+            {/* Show only if available */}
+            {inwardDate && (
+              <p>
+                <span className="font-semibold">Inward Date:</span>{" "}
+                {new Date(inwardDate).toLocaleDateString("en-GB")}
+              </p>
+            )}
+
+            {/* Directly show API calculated ageDay */}
+            {data.ageDay !== null && data.ageDay !== undefined && (
+              <p>
+                <span className="font-semibold">Days:</span> {data.ageDay}
+              </p>
+            )}
+
+            {/* Show only if available */}
+            {motorNo && (
+              <p>
+                <span className="font-semibold">Motor No:</span> {motorNo}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
   const [vehicleCharges, setVehicleCharges] = useState<VehicleCharges>({
     exShowroomPrice: "",
     insurance: "",
@@ -198,6 +277,15 @@ const Order: React.FC = () => {
     loanRoi: "0",
     marginMoney: "0",
     paymentStatus: "pending",
+    paymentMode: "UPI",
+    chequeNo: "",
+    chequeDate: "",
+    clearDate: "",
+    cashAmount: "",
+    bankAmount: "",
+    cashAccountId: "",
+    bankAccountId: "",
+    narration: "",
     assignBy: "",
     bankOfFinance: "",
   });
@@ -208,11 +296,12 @@ const Order: React.FC = () => {
     existingVehicleYear: "",
     customerExpectedPrice: "0",
     marketPrice: "0",
-    exchangeBonus: "0",
-    smiplShares: "0",
+    chassisNo: "",
+    companyShare: "0",
     dealerShares: "0",
-    valueAddAccessories: "0",
-    insurance: "0",
+    rcNo: "",
+    insurance: "",
+    vehicleNo: "",
   });
 
   const [payment, setPayment] = useState<PaymentDetails>({
@@ -248,16 +337,416 @@ const Order: React.FC = () => {
     mirrorSet: false,
     other: false,
   });
+  const [financeOptions, setFinanceOptions] = useState<any[]>([]);
+  const [vehicleOptions, setVehicleOptions] = useState<any[]>([]);
+  const [cashAccountOptions, setCashAccountOptions] = useState<any[]>([]);
+  const [companyId, setCompanyId] = useState<number | null>(null);
 
+  const [financialYearId, setFinancialYearId] = useState<number | null>(null);
+  const [bankAccountOptions, setBankAccountOptions] = useState<any[]>([]);
+  type BankerOption = {
+    id: number;
+    banker: string;
+    status: string;
+  };
+  const getCompany = () => {
+    const savedCompanyId =
+      sessionStorage.getItem("companyId") || localStorage.getItem("companyId");
+
+    const savedFinancialYearId =
+      sessionStorage.getItem("financialYearId") ||
+      localStorage.getItem("financialYearId");
+
+    console.log("SAVED COMPANY ID:", savedCompanyId);
+
+    console.log("SAVED FINANCIAL YEAR ID:", savedFinancialYearId);
+
+    if (savedCompanyId) {
+      setCompanyId(Number(savedCompanyId));
+    }
+
+    if (savedFinancialYearId) {
+      setFinancialYearId(Number(savedFinancialYearId));
+    }
+  };
+  const fetchPaymentAccounts = async () => {
+    try {
+      const response = await apiHelper.get("/accounts");
+
+      const accounts = Array.isArray(response.data)
+        ? response.data
+        : Array.isArray(response.data)
+          ? response.data
+          : [];
+
+      console.log("ALL ACCOUNTS:", accounts);
+
+      const cashAccounts = accounts
+        .filter((item: any) => {
+          const groupName = String(
+            item.group?.groupName ?? item.groupName ?? item.group ?? "",
+          ).toLowerCase();
+
+          return groupName.includes("cash");
+        })
+        .map((item: any) => ({
+          id: String(item.id),
+
+          name: item.accountName ?? item.name ?? "",
+        }));
+
+      const bankAccounts = accounts
+        .filter((item: any) => {
+          const groupName = String(
+            item.group?.groupName ?? item.groupName ?? item.group ?? "",
+          ).toLowerCase();
+
+          return groupName.includes("bank");
+        })
+        .map((item: any) => ({
+          id: String(item.id),
+
+          name: item.accountName ?? item.name ?? "",
+        }));
+
+      setCashAccountOptions(cashAccounts);
+
+      setBankAccountOptions(bankAccounts);
+
+      console.log("CASH ACCOUNTS:", cashAccounts);
+
+      console.log("BANK ACCOUNTS:", bankAccounts);
+    } catch (error) {
+      console.error("GET ACCOUNT ERROR:", error);
+    }
+  };
+  const [bankOptions, setBankOptions] = useState<BankerOption[]>([]);
+  const getBankers = async () => {
+    try {
+      const response = await apiHelper.get("/bankers");
+
+      const activeBankers = (response.data || []).filter(
+        (item: BankerOption) => item.status === "ACTIVE",
+      );
+
+      setBankOptions(activeBankers);
+    } catch (error: any) {
+      console.error("Banker API error response:", error.response?.data);
+
+      setBankOptions([]);
+    }
+  };
+  useEffect(() => {
+    getCompany();
+    getBankers();
+    fetchPaymentAccounts();
+  }, []);
+  const fetchVehicleInventory = async () => {
+    try {
+      const res = await apiHelper.get("/purchases/tractor-inventory");
+
+      const data = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+          ? res.data
+          : [];
+
+      const mappedVehicles = data
+        // Remove already booked chassis
+        .filter(
+          (item: any) =>
+            String(item.status ?? "")
+              .trim()
+              .toLowerCase() !== "booked",
+        )
+        .map((item: any) => ({
+          id: String(item.id ?? item.tractorId ?? item.purchaseItemId),
+
+          chassisNo: item.chassisNo ?? "",
+
+          batteryNo: item.batteryNo ?? "",
+
+          keyNo: item.keyNo ?? item.keyNumber ?? "",
+
+          engineNo: item.engineNo ?? item.motorNo ?? "",
+
+          inwardDate: item.inwardDate ?? item.inWardDate ?? "",
+
+          ageDay: item.ageDay ?? item.ageday ?? null,
+
+          model: item.model ?? item.modelName ?? "",
+
+          variant: item.variant ?? item.variantName ?? "",
+
+          colour: item.colour ?? item.color ?? "",
+
+          // Keep inventory status
+          status: item.status ?? "",
+        }));
+
+      setVehicleOptions(mappedVehicles);
+    } catch (error) {
+      console.error("GET TRACTOR INVENTORY ERROR:", error);
+    }
+  };
   const totalValue = 0;
+  const fetchFinances = async () => {
+    try {
+      const res = await apiHelper.get("/finances");
 
-  const bankOptions = [
-    { id: "hdfc", name: "HDFC Bank" },
-    { id: "icici", name: "ICICI Bank" },
-    { id: "sbi", name: "State Bank of India" },
-    { id: "axis", name: "Axis Bank" },
-    { id: "kotak", name: "Kotak Mahindra Bank" },
-  ];
+      const data = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+          ? res.data
+          : [];
+
+      const mappedFinances = data.map((item: any) => ({
+        id: String(item.id),
+
+        // Finance Account: Kashyap
+        name: item.account?.accountName ?? "",
+
+        // Employee: tushar
+        employeeName: item.employeeName ?? "",
+
+        status: item.status ?? "",
+      }));
+
+      console.log("FINANCE OPTIONS:", mappedFinances);
+
+      setFinanceOptions(mappedFinances);
+    } catch (error) {
+      console.error("GET FINANCE ERROR:", error);
+    }
+  };
+  useEffect(() => {
+    fetchFinances();
+    fetchVehicleInventory();
+  }, []);
+  const [grandTotal, setGrandTotal] = useState("0");
+
+  useEffect(() => {
+    if (!id) return;
+
+    const getLeadDetails = async () => {
+      try {
+        setLoading(true);
+
+        const response = await apiHelper.get(`/leads/${id}`);
+
+        console.log("CREATE ORDER LEAD RESPONSE:", response.data);
+
+        const lead = response.data?.data || response.data;
+        setGrandTotal(String(Number(lead?.quotationGrandTotal) || 0));
+        // ==========================================
+        // 1. VEHICLE CHARGES
+        // ==========================================
+        const variant = lead?.showroomVariant;
+
+        // Base amounts
+        const exShowroomPrice = Number(variant?.exShowroomPrice ?? 0);
+
+        const insurancePrice = Number(variant?.insurance ?? 0);
+
+        const rtoCharge = Number(variant?.rtoCharge ?? 0);
+
+        // Tax percentages
+        const exShowroomTaxPercent = Number(variant?.exShowroomTaxPercent ?? 0);
+
+        const insuranceTaxPercent = Number(variant?.insuranceTaxPercent ?? 0);
+
+        const rtoTaxPercent = Number(variant?.rtoTaxPercent ?? 0);
+
+        // Final amounts including tax
+        const exShowroomWithTax =
+          exShowroomPrice + (exShowroomPrice * exShowroomTaxPercent) / 100;
+
+        const insuranceWithTax =
+          insurancePrice + (insurancePrice * insuranceTaxPercent) / 100;
+
+        const rtoWithTax = rtoCharge + (rtoCharge * rtoTaxPercent) / 100;
+
+        setVehicleCharges((prev) => ({
+          ...prev,
+
+          // Price already includes tax
+          exShowroomPrice: exShowroomWithTax.toFixed(2),
+
+          // Insurance already includes tax
+          insurance: insuranceWithTax.toFixed(2),
+
+          // RTO already includes tax
+          rtoOtherCharge: rtoWithTax.toFixed(2),
+        }));
+
+        // ==========================================
+        // SELECTED ACCESSORIES
+        // ==========================================
+     const accessories = lead?.hasQuotationHistory
+  ? (lead?.selectedAccessories || [])
+  : (lead?.showroomVariant?.accessories || []);
+        setSelectedAccessories(
+          Array.isArray(accessories)
+            ? accessories.map((item: any) => {
+                const price = Number(
+                  item?.price ??
+                    item?.salePrice ??
+                    item?.amount ??
+                    item?.accessory?.price ??
+                    item?.accessory?.salePrice ??
+                    0,
+                );
+
+                const qty = Number(item?.qty ?? 1);
+
+                const taxPercent = Number(item?.taxPercent ?? 0);
+
+                // Price × Quantity
+                const subTotal = price * qty;
+
+                // Accessory tax
+                const taxAmount = (subTotal * taxPercent) / 100;
+
+                // Final accessory amount with tax
+                const totalPrice =
+                  Number(item?.totalPrice) || subTotal + taxAmount;
+
+                const accessoryId =
+                  item?.accessoryId ?? item?.accessory?.id ?? item?.id;
+
+                return {
+                  id: accessoryId,
+                  accessoryId: accessoryId,
+
+                  name:
+                    item?.accessoryName ??
+                    item?.itemName ??
+                    item?.name ??
+                    item?.accessory?.itemName ??
+                    item?.accessory?.accessoryName ??
+                    "Accessory",
+
+                  price,
+                  qty,
+                  taxPercent,
+                  totalPrice,
+                };
+              })
+            : [],
+        );
+
+        // ==========================================
+        // 2. MODEL, VARIANT AND COLOUR
+        // ==========================================
+        setAllotment((prev) => ({
+          ...prev,
+
+          model:
+            lead?.model?.modelName ??
+            lead?.model?.name ??
+            lead?.modelName ??
+            lead?.model ??
+            "",
+
+          variant:
+            lead?.showroomVariant?.variantName ??
+            lead?.showroomVariant?.name ??
+            lead?.variant?.variantName ??
+            lead?.variant?.name ??
+            lead?.variantName ??
+            "",
+
+          colour:
+            lead?.colour?.colourName ??
+            lead?.colour?.name ??
+            lead?.color?.name ??
+            lead?.colourName ??
+            lead?.colorName ??
+            "",
+        }));
+
+        // ==========================================
+        // 3. FINANCE DETAILS
+        // ==========================================
+        const finance = lead?.financeDetails ?? lead?.finance ?? lead;
+
+        setHypothecation((prev) => ({
+          ...prev,
+
+          type:
+            finance?.financeType?.toLowerCase() === "bank" ? "bank" : "finance",
+
+          financeDoneBy: String(finance?.financeDoneBy ?? ""),
+
+          financeAmount: String(finance?.financeAmount ?? 0),
+
+          emi: String(finance?.emi ?? 0),
+
+          tenureMonths: String(finance?.tenureMonths ?? finance?.tenure ?? 0),
+
+          apronCharge: String(
+            finance?.processingCharge ?? finance?.apronCharge ?? 0,
+          ),
+
+          loanRoi: String(finance?.loanROI ?? finance?.loanRoi ?? 0),
+
+          marginMoney: String(finance?.marginMoney ?? 0),
+
+          bankOfFinance: finance?.bankOfFinance ?? finance?.bankName ?? "",
+
+          assignBy: finance?.assignBy ?? "",
+        }));
+
+        // ==========================================
+        // 4. EXCHANGE DETAILS
+        // ==========================================
+        // ==========================================
+        // 4. EXCHANGE DETAILS
+        // ==========================================
+
+        const exchangeDetails =
+          lead?.exchangeDetails ?? lead?.financeData ?? lead?.exchange ?? lead;
+
+        setExchange((prev) => ({
+          ...prev,
+
+          existingCustomerModel: exchangeDetails?.existingCustomerModel ?? "",
+
+          existingCustomerVariant:
+            exchangeDetails?.existingCustomerVariant ?? "",
+
+          existingVehicleYear: exchangeDetails?.existingVehicleYear ?? "",
+
+          customerExpectedPrice: String(
+            exchangeDetails?.customerExpectedPrice ?? 0,
+          ),
+
+          marketPrice: String(exchangeDetails?.marketPrice ?? 0),
+
+          chassisNo: exchangeDetails?.chassisNo ?? "",
+
+          companyShare: String(exchangeDetails?.companyShare ?? 0),
+
+          dealerShares: String(exchangeDetails?.dealerShares ?? 0),
+
+          rcNo: exchangeDetails?.rcNo ?? "",
+
+          insurance:
+            exchangeDetails?.insurance != null
+              ? String(exchangeDetails.insurance)
+              : "",
+
+          vehicleNo: exchangeDetails?.vehicleNo ?? "",
+        }));
+      } catch (error) {
+        console.error("GET CREATE ORDER LEAD ERROR:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getLeadDetails();
+  }, [id]);
 
   const brokerOptions = [
     { id: "broker1", name: "Broker A" },
@@ -265,11 +754,11 @@ const Order: React.FC = () => {
     { id: "broker3", name: "Broker C" },
   ];
 
-  const employeeOptions = [
-    { id: "emp1", name: "Employee 1" },
-    { id: "emp2", name: "Employee 2" },
-    { id: "emp3", name: "Employee 3" },
-  ];
+  // const employeeOptions = [
+  //   { id: "emp1", name: "Employee 1" },
+  //   { id: "emp2", name: "Employee 2" },
+  //   { id: "emp3", name: "Employee 3" },
+  // ];
 
   const relationOptions = [
     { id: "father", name: "Father" },
@@ -280,12 +769,240 @@ const Order: React.FC = () => {
     { id: "other", name: "Other" },
   ];
 
-  const financeDoneByOptions = [
-    { id: "self", name: "Self" },
-    { id: "dealer", name: "Dealer" },
-    { id: "dsa", name: "DSA" },
-  ];
+  // const financeDoneByOptions = [
+  //   { id: "self", name: "Self" },
+  //   { id: "dealer", name: "Dealer" },
+  //   { id: "dsa", name: "DSA" },
+  // ];
+  const matchingVehicleOptions = vehicleOptions.filter((vehicle: any) => {
+    const vehicleModel = String(vehicle.model ?? "")
+      .trim()
+      .toLowerCase();
 
+    const vehicleVariant = String(vehicle.variant ?? "")
+      .trim()
+      .toLowerCase();
+
+    const vehicleColour = String(vehicle.colour ?? "")
+      .trim()
+      .toLowerCase();
+
+    const leadModel = String(allotment.model ?? "")
+      .trim()
+      .toLowerCase();
+
+    const leadVariant = String(allotment.variant ?? "")
+      .trim()
+      .toLowerCase();
+
+    const leadColour = String(allotment.colour ?? "")
+      .trim()
+      .toLowerCase();
+
+    return (
+      vehicleModel === leadModel &&
+      vehicleVariant === leadVariant &&
+      vehicleColour === leadColour
+    );
+  });
+  // ─── 1) Add a new state near your other useState declarations ───────────────
+  // (place this next to `const [payment, setPayment] = useState<PaymentDetails>({...})`)
+
+  // ─── 2) Inside the `getLeadDetails` effect, REPLACE this block: ─────────────
+  //
+  //   setPayment((prev) => ({
+  //     ...prev,
+  //     invoiceAmount: String(Number(lead?.quotationGrandTotal) || 0),
+  //   }));
+  //
+  // WITH this: ──────────────────────────────────────────────────────────────
+
+  // ─── 3) Replace the payment-calculation useEffect with this: ────────────────
+
+  useEffect(() => {
+    // Company Share + Dealer Share
+    const companyShare = Number(exchange.companyShare) || 0;
+
+    const dealerShare = Number(exchange.dealerShares) || 0;
+
+    // Exchange Discount
+    const exchangeDiscount = companyShare + dealerShare;
+
+    // Raw Quotation Grand Total (never changes here)
+    const total = Number(grandTotal) || 0;
+
+    // Invoice Amount = Total - Exchange Discount
+    const invoiceAmount = Math.max(total - exchangeDiscount, 0);
+
+    setPayment((prev) => ({
+      ...prev,
+
+      // Company Share + Dealer Share
+      exchangeDiscount: String(exchangeDiscount),
+
+      // Total = raw Quotation Grand Total
+      total: String(total),
+
+      // Invoice Amount = Total - Exchange Discount
+      invoiceAmount: String(invoiceAmount),
+
+      // Received Amount = Exchange Discount
+      receivedAmount: String(exchangeDiscount),
+
+      // Pending Amount = Invoice Amount
+      pendingAmount: String(invoiceAmount),
+    }));
+  }, [exchange.companyShare, exchange.dealerShares, grandTotal]);
+  const handleCreateOrder = async () => {
+    try {
+      // =====================================
+      // BASIC VALIDATION
+      // =====================================
+
+      if (!id) {
+        toast.error("Lead ID is missing");
+        return;
+      }
+
+      if (!companyId) {
+        toast.error("Company ID not found");
+        return;
+      }
+
+      if (!financialYearId) {
+        toast.error("Financial Year ID not found");
+        return;
+      }
+
+      if (!allotment.chassisNo) {
+        toast.error("Please select chassis number");
+        return;
+      }
+
+      // =====================================
+      // PAYMENT AMOUNTS
+      // =====================================
+
+      const marginAmount = Number(hypothecation.marginMoney) || 0;
+
+      const cashAmount = Number(hypothecation.cashAmount) || 0;
+
+      const bankAmount = Number(hypothecation.bankAmount) || 0;
+
+      // =====================================
+      // PAYMENT VALIDATION
+      // =====================================
+
+      if (hypothecation.paymentStatus === "received") {
+        if (cashAmount + bankAmount !== marginAmount) {
+          toast.error(
+            "Cash Amount + Bank Amount must be equal to Margin Money",
+          );
+
+          return;
+        }
+
+        // Cash Account validation
+        if (cashAmount > 0 && !hypothecation.cashAccountId) {
+          toast.error("Please select Cash Account");
+
+          return;
+        }
+
+        // Bank Account validation
+        if (bankAmount > 0 && !hypothecation.bankAccountId) {
+          toast.error("Please select Bank Account");
+
+          return;
+        }
+
+        // Payment Mode validation
+        if (bankAmount > 0 && !hypothecation.paymentMode) {
+          toast.error("Please select Payment Mode");
+
+          return;
+        }
+
+        // Cheque validation
+        if (bankAmount > 0 && hypothecation.paymentMode === "CHEQUE") {
+          if (!hypothecation.chequeNo) {
+            toast.error("Please enter Cheque Number");
+
+            return;
+          }
+
+          if (!hypothecation.chequeDate) {
+            toast.error("Please select Cheque Date");
+
+            return;
+          }
+        }
+      }
+
+      // Start loading only after
+      // all validations are successful
+      setLoading(true);
+
+      // =====================================
+      // CREATE PAYLOAD
+      // =====================================
+
+      const payload = {
+        companyId: Number(companyId),
+
+        financialYearId: Number(financialYearId),
+
+        leadId: Number(id),
+
+        vehicleCharges,
+
+        allotment,
+
+        hypothecation: {
+          ...hypothecation,
+
+          cashAmount: String(cashAmount),
+
+          bankAmount: String(bankAmount),
+        },
+
+        exchange,
+
+        payment,
+
+        broker,
+
+        delivery,
+        selectedAccessories,
+      };
+
+      console.log("CREATE ORDER PAYLOAD:", payload);
+
+      // =====================================
+      // CREATE ORDER API
+      // =====================================
+
+      const response = await apiHelper.post("/orders", payload);
+
+      console.log("CREATE ORDER RESPONSE:", response.data);
+
+      // Success toaster
+      toast.success(response.data?.message || "Order created successfully");
+
+      // Give toaster some time
+      // before changing the page
+      setTimeout(() => {
+        navigate(-1);
+      }, 800);
+    } catch (error: any) {
+      console.error("CREATE ORDER ERROR:", error);
+
+      // Backend error toaster
+      toast.error(error.response?.data?.message || "Unable to create order");
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="dark:bg-dark-900 min-h-screen bg-gray-50 p-4">
       {/* Title row */}
@@ -359,7 +1076,8 @@ const Order: React.FC = () => {
                 }
               />
             </Field>
-            <Field>
+
+            {/* <Field>
               <Input
                 label="Road Side Assistance"
                 placeholder="Enter Road Side Assistance"
@@ -423,7 +1141,7 @@ const Order: React.FC = () => {
                   }))
                 }
               />
-            </Field>
+            </Field> */}
             <Field>
               <Input
                 label="RTO Other Charge"
@@ -437,6 +1155,15 @@ const Order: React.FC = () => {
                 }
               />
             </Field>
+            {selectedAccessories.map((item, index) => (
+              <Field key={item.id ?? index}>
+                <Input
+                  label={item.name}
+                  value={Number(item.totalPrice ?? 0).toFixed(2)}
+                  readOnly
+                />
+              </Field>
+            ))}
           </div>
         </Card>
 
@@ -479,21 +1206,62 @@ const Order: React.FC = () => {
                   }
                 />
               </Field>
+            </div>
+            <Field>
               <Field>
-                <Input
-                  label="Chassis No"
-                  value={allotment.chassisNo}
-                  placeholder="Select Vehicle"
-                  onChange={(e) =>
-                    setAllotment((s) => ({
-                      ...s,
-                      chassisNo: e.target.value,
-                    }))
+                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Chassis No
+                </label>
+
+                <Select
+                  options={matchingVehicleOptions}
+                  value={
+                    matchingVehicleOptions.find(
+                      (vehicle: any) =>
+                        String(vehicle.chassisNo) ===
+                        String(allotment.chassisNo),
+                    ) || null
                   }
+                  getOptionValue={(vehicle: any) =>
+                    String(vehicle.id ?? vehicle.chassisNo)
+                  }
+                  getOptionLabel={(vehicle: any) => vehicle.chassisNo || ""}
+                  components={{
+                    Option: OrderVehicleOption,
+                  }}
+                  onChange={(vehicle: any) => {
+                    setAllotment((prev) => ({
+                      ...prev,
+
+                      chassisNo: vehicle?.chassisNo ?? "",
+                    }));
+                  }}
+                  placeholder="Select Vehicle"
+                  isSearchable
+                  isClearable
+                  noOptionsMessage={() => "No matching chassis found"}
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                  styles={{
+                    menuPortal: (base: any) => ({
+                      ...base,
+                      zIndex: 99999,
+                    }),
+
+                    menu: (base: any) => ({
+                      ...base,
+                      overflow: "hidden",
+                    }),
+
+                    menuList: (base: any) => ({
+                      ...base,
+                      maxHeight: "300px",
+                      padding: 0,
+                    }),
+                  }}
                 />
               </Field>
-            </div>
-
+            </Field>
             <p className="pt-1 text-xs font-semibold text-gray-500 dark:text-gray-400">
               Insurance Details
             </p>
@@ -593,23 +1361,27 @@ const Order: React.FC = () => {
 
             {hypothecation.type === "bank" ? (
               <Field>
-                <Combobox
-                  label="Bank Of Finance"
-                  data={bankOptions}
-                  displayField="name"
-                  value={
-                    bankOptions.find(
-                      (b) => b.name === hypothecation.bankOfFinance,
-                    ) || null
-                  }
-                  onChange={(val: any) =>
-                    setHypothecation((s) => ({
-                      ...s,
-                      bankOfFinance: val?.name || "",
-                    }))
-                  }
-                  placeholder="Select Bank"
-                />
+                <Field>
+                  <Field>
+                    <Combobox
+                      label="Bank Of Finance"
+                      data={bankOptions}
+                      displayField="banker"
+                      value={
+                        bankOptions.find(
+                          (item) => item.banker === hypothecation.bankOfFinance,
+                        ) || null
+                      }
+                      onChange={(val: BankerOption | null) =>
+                        setHypothecation((prev) => ({
+                          ...prev,
+                          bankOfFinance: val?.banker || "",
+                        }))
+                      }
+                      placeholder="Select Bank"
+                    />
+                  </Field>
+                </Field>
               </Field>
             ) : (
               <>
@@ -617,20 +1389,40 @@ const Order: React.FC = () => {
                   <Field>
                     <Combobox
                       label="Finance Done By"
-                      data={financeDoneByOptions}
+                      data={financeOptions}
                       displayField="name"
                       value={
-                        financeDoneByOptions.find(
-                          (f) => f.name === hypothecation.financeDoneBy,
+                        financeOptions.find(
+                          (item: any) =>
+                            String(item.id) ===
+                            String(hypothecation.financeDoneBy),
                         ) || null
                       }
-                      onChange={(val: any) =>
-                        setHypothecation((s) => ({
-                          ...s,
-                          financeDoneBy: val?.name || "",
-                        }))
-                      }
-                      placeholder="Select"
+                      onChange={(item: any) => {
+                        setHypothecation((prev) => ({
+                          ...prev,
+
+                          financeDoneBy:
+                            item?.id != null ? String(item.id) : "",
+
+                          // Selected finance employee
+                          assignBy: item?.employeeName || "",
+                        }));
+                      }}
+                      placeholder="Select Finance"
+                      searchFields={["name", "employeeName"]}
+                      columns={[
+                        {
+                          header: "Finance Name",
+                          field: "name",
+                          width: "2fr",
+                        },
+                        {
+                          header: "Employee Name",
+                          field: "employeeName",
+                          width: "1.5fr",
+                        },
+                      ]}
                     />
                   </Field>
                   <Field>
@@ -738,9 +1530,18 @@ const Order: React.FC = () => {
                             name="paymentStatus"
                             checked={hypothecation.paymentStatus === "received"}
                             onChange={() =>
-                              setHypothecation((s) => ({
-                                ...s,
+                              setHypothecation((prev) => ({
+                                ...prev,
+
                                 paymentStatus: "received",
+
+                                // Initially show full Margin Money in Cash Amount
+                                cashAmount: String(
+                                  Number(prev.marginMoney) || 0,
+                                ),
+
+                                // Initially Bank Amount is zero
+                                bankAmount: "0",
                               }))
                             }
                             className="dark:bg-dark-800 h-4 w-4 text-[#003399] focus:ring-[#003399]"
@@ -750,23 +1551,326 @@ const Order: React.FC = () => {
                       </div>
                     </div>
                   </Field>
-                  =
                 </div>
+                {/* Show when Received is selected */}
+                {hypothecation.paymentStatus === "received" && (
+                  <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                    {/* =========================
+        CASH PAYMENT SECTION
+    ========================== */}
+                    <div className="rounded-lg border border-gray-700 p-4">
+                      <div className="space-y-3">
+                        {/* Cash Amount */}
+                        <Field>
+                          <Input
+                            label="Cash Amount"
+                            type="number"
+                            min="0"
+                            placeholder="Enter Cash Amount"
+                            value={hypothecation.cashAmount}
+                            onChange={(e) => {
+                              const cashValue = e.target.value;
 
+                              setHypothecation((prev) => {
+                                const marginAmount =
+                                  Number(prev.marginMoney) || 0;
+
+                                const cashAmount = Number(cashValue) || 0;
+
+                                const calculatedBankAmount = Math.max(
+                                  marginAmount - cashAmount,
+                                  0,
+                                );
+
+                                return {
+                                  ...prev,
+
+                                  cashAmount: cashValue,
+
+                                  bankAmount: String(calculatedBankAmount),
+
+                                  // Clear selected bank
+                                  // when bank amount is zero
+                                  bankAccountId:
+                                    calculatedBankAmount > 0
+                                      ? prev.bankAccountId
+                                      : "",
+                                };
+                              });
+                            }}
+                          />
+                        </Field>
+
+                        {/* Cash Account */}
+                        <Field>
+                          <Combobox
+                            label="Cash Account"
+                            data={cashAccountOptions}
+                            displayField="name"
+                            value={
+                              cashAccountOptions.find(
+                                (item: any) =>
+                                  String(item.id) ===
+                                  String(hypothecation.cashAccountId),
+                              ) || null
+                            }
+                            onChange={(item: any) =>
+                              setHypothecation((prev) => ({
+                                ...prev,
+
+                                cashAccountId:
+                                  item?.id != null ? String(item.id) : "",
+                              }))
+                            }
+                            placeholder="Select Cash Account"
+                          />
+                        </Field>
+
+                        {/* Cash Narration */}
+                        <Field>
+                          <Input
+                            label="Narration"
+                            type="text"
+                            value={hypothecation.narration}
+                            onChange={(e) =>
+                              setHypothecation((prev) => ({
+                                ...prev,
+
+                                narration: e.target.value,
+                              }))
+                            }
+                            placeholder="Enter cash payment narration"
+                          />
+                        </Field>
+                      </div>
+                    </div>
+
+                    {/* =========================
+        BANK PAYMENT SECTION
+    ========================== */}
+                    {/* =========================
+    BANK PAYMENT SECTION
+========================== */}
+                    <div className="rounded-lg border border-gray-700 p-4">
+                      <div className="space-y-3">
+                        {/* Bank Amount - Always Show */}
+                        <Field>
+                          <Input
+                            label="Bank Amount"
+                            type="number"
+                            value={hypothecation.bankAmount}
+                            placeholder="Auto calculated"
+                            readOnly
+                          />
+                        </Field>
+
+                        {/* Show bank details only when Bank Amount > 0 */}
+                        {Number(hypothecation.bankAmount) > 0 && (
+                          <>
+                            {/* Bank Account */}
+                            <Field>
+                              <Combobox
+                                label="Bank Account"
+                                data={bankAccountOptions}
+                                displayField="name"
+                                value={
+                                  bankAccountOptions.find(
+                                    (item: any) =>
+                                      String(item.id) ===
+                                      String(hypothecation.bankAccountId),
+                                  ) || null
+                                }
+                                onChange={(item: any) =>
+                                  setHypothecation((prev) => ({
+                                    ...prev,
+
+                                    bankAccountId:
+                                      item?.id != null ? String(item.id) : "",
+                                  }))
+                                }
+                                placeholder="Select Bank Account"
+                              />
+                            </Field>
+
+                            {/* Payment Mode */}
+                            {/* Payment Mode */}
+                            <Field>
+                              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Payment Mode
+                              </label>
+
+                              <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                                {["UPI", "NEFT", "CHEQUE", "RTGS", "IMPS"].map(
+                                  (mode) => (
+                                    <label
+                                      key={mode}
+                                      className="flex cursor-pointer items-center gap-1.5"
+                                    >
+                                      <input
+                                        type="radio"
+                                        name="bankPaymentMode"
+                                        value={mode}
+                                        checked={
+                                          hypothecation.paymentMode === mode
+                                        }
+                                        onChange={(e) => {
+                                          const paymentMode = e.target.value;
+
+                                          setHypothecation((prev) => ({
+                                            ...prev,
+
+                                            paymentMode,
+
+                                            // Clear cheque details when
+                                            // payment mode is not Cheque
+                                            chequeNo:
+                                              paymentMode === "CHEQUE"
+                                                ? prev.chequeNo
+                                                : "",
+
+                                            chequeDate:
+                                              paymentMode === "CHEQUE"
+                                                ? prev.chequeDate
+                                                : "",
+
+                                            clearDate:
+                                              paymentMode === "CHEQUE"
+                                                ? prev.clearDate
+                                                : "",
+                                          }));
+                                        }}
+                                        className="accent-primary-600 h-4 w-4 cursor-pointer"
+                                      />
+
+                                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                                        {mode === "CHEQUE" ? "Cheque" : mode}
+                                      </span>
+                                    </label>
+                                  ),
+                                )}
+                              </div>
+                            </Field>
+
+                            {/* Show only when Cheque is selected */}
+                            {hypothecation.paymentMode === "CHEQUE" && (
+                              <div className="space-y-3 rounded-lg border border-gray-700 p-3">
+                                {/* Cheque No */}
+                                <Field>
+                                  <Input
+                                    label="Cheque No"
+                                    type="text"
+                                    value={hypothecation.chequeNo}
+                                    onChange={(e) =>
+                                      setHypothecation((prev) => ({
+                                        ...prev,
+
+                                        chequeNo: e.target.value,
+                                      }))
+                                    }
+                                    placeholder="Enter Cheque No"
+                                  />
+                                </Field>
+
+                                {/* Cheque Date */}
+                                {/* Cheque Date */}
+                                <Field>
+                                  <DatePicker
+                                    label="Cheque Date"
+                                    placeholder="Select cheque date..."
+                                    value={hypothecation.chequeDate}
+                                    options={{
+                                      disableMobile: true,
+                                      dateFormat: "d-m-Y",
+                                    }}
+                                    onChange={(dates) => {
+                                      const selectedDate = dates?.[0];
+
+                                      setHypothecation((prev) => ({
+                                        ...prev,
+
+                                        chequeDate: selectedDate
+                                          ? selectedDate.toISOString()
+                                          : "",
+                                      }));
+                                    }}
+                                  />
+                                </Field>
+
+                                {/* Clear Date */}
+                                <Field>
+                                  <DatePicker
+                                    label="Clear Date"
+                                    placeholder="Select clear date..."
+                                    value={hypothecation.clearDate}
+                                    options={{
+                                      disableMobile: true,
+                                      dateFormat: "d-m-Y",
+                                    }}
+                                    onChange={(dates) => {
+                                      const selectedDate = dates?.[0];
+
+                                      setHypothecation((prev) => ({
+                                        ...prev,
+
+                                        clearDate: selectedDate
+                                          ? selectedDate.toISOString()
+                                          : "",
+                                      }));
+                                    }}
+                                  />
+                                </Field>
+                              </div>
+                            )}
+
+                            {/* Bank Narration */}
+                            <Field>
+                              <Input
+                                label="Narration"
+                                type="text"
+                                value={hypothecation.narration}
+                                onChange={(e) =>
+                                  setHypothecation((prev) => ({
+                                    ...prev,
+
+                                    narration: e.target.value,
+                                  }))
+                                }
+                                placeholder="Enter bank payment narration"
+                              />
+                            </Field>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <Field>
                   <Combobox
                     label="Assign By"
-                    data={employeeOptions}
+                    data={[
+                      {
+                        id: "finance-employee",
+                        name:
+                          financeOptions.find(
+                            (item: any) =>
+                              String(item.id) ===
+                              String(hypothecation.financeDoneBy),
+                          )?.employeeName || "",
+                      },
+                    ].filter((item) => item.name)}
                     displayField="name"
                     value={
-                      employeeOptions.find(
-                        (e) => e.name === hypothecation.assignBy,
-                      ) || null
+                      hypothecation.assignBy
+                        ? {
+                            id: "finance-employee",
+                            name: hypothecation.assignBy,
+                          }
+                        : null
                     }
-                    onChange={(val: any) =>
-                      setHypothecation((s) => ({
-                        ...s,
-                        assignBy: val?.name || "",
+                    onChange={(employee: any) =>
+                      setHypothecation((prev) => ({
+                        ...prev,
+                        assignBy: employee?.name || "",
                       }))
                     }
                     placeholder="Select Employee"
@@ -784,12 +1888,13 @@ const Order: React.FC = () => {
             title="Exchange Details"
             colorClass="bg-amber-600"
           />
+
           <div className={fieldGrid}>
             <Field>
               <Input
                 label="Existing Customer Model"
                 value={exchange.existingCustomerModel}
-                placeholder="Enter Customer Model"
+                placeholder="Enter Existing Customer Model"
                 onChange={(e) =>
                   setExchange((s) => ({
                     ...s,
@@ -798,11 +1903,12 @@ const Order: React.FC = () => {
                 }
               />
             </Field>
+
             <Field>
               <Input
                 label="Existing Customer Variant"
                 value={exchange.existingCustomerVariant}
-                placeholder="Enter Customer Variant"
+                placeholder="Enter Existing Customer Variant"
                 onChange={(e) =>
                   setExchange((s) => ({
                     ...s,
@@ -811,6 +1917,7 @@ const Order: React.FC = () => {
                 }
               />
             </Field>
+
             <Field>
               <Input
                 label="Existing Vehicle Year"
@@ -824,6 +1931,7 @@ const Order: React.FC = () => {
                 }
               />
             </Field>
+
             <Field>
               <Input
                 label="Customer Expected Price"
@@ -837,78 +1945,106 @@ const Order: React.FC = () => {
                 }
               />
             </Field>
+
             <Field>
               <Input
                 label="Market Price"
                 value={exchange.marketPrice}
                 placeholder="Enter Market Price"
                 onChange={(e) =>
-                  setExchange((s) => ({ ...s, marketPrice: e.target.value }))
-                }
-              />
-            </Field>
-            <Field>
-              <Input
-                label="Exchange Bonus"
-                value={exchange.exchangeBonus}
-                placeholder="Enter Exchange Bonus"
-                onChange={(e) =>
                   setExchange((s) => ({
                     ...s,
-                    exchangeBonus: e.target.value,
+                    marketPrice: e.target.value,
                   }))
                 }
               />
             </Field>
+
             <Field>
               <Input
-                label="SMIPL Shares"
-                value={exchange.smiplShares}
-                placeholder="Enter SMIPL Shares"
+                label="Chassis No"
+                value={exchange.chassisNo}
+                placeholder="Enter Chassis No"
                 onChange={(e) =>
-                  setExchange((s) => ({ ...s, smiplShares: e.target.value }))
+                  setExchange((s) => ({
+                    ...s,
+                    chassisNo: e.target.value,
+                  }))
                 }
               />
             </Field>
+
+            <Field>
+              <Input
+                label="Company Share"
+                value={exchange.companyShare}
+                placeholder="Enter Company Share"
+                onChange={(e) =>
+                  setExchange((s) => ({
+                    ...s,
+                    companyShare: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+
             <Field>
               <Input
                 label="Dealer Shares"
                 value={exchange.dealerShares}
                 placeholder="Enter Dealer Shares"
                 onChange={(e) =>
-                  setExchange((s) => ({ ...s, dealerShares: e.target.value }))
-                }
-              />
-            </Field>
-            <Field>
-              <Input
-                label="Value Add Accessories"
-                value={exchange.valueAddAccessories}
-                placeholder="Enter Accessories Value"
-                onChange={(e) =>
                   setExchange((s) => ({
                     ...s,
-                    valueAddAccessories: e.target.value,
+                    dealerShares: e.target.value,
                   }))
                 }
               />
             </Field>
+
             <Field>
               <Input
-                label="Insurance"
-                placeholder="Enter Insurance"
-                value={exchange.insurance}
+                label="RC No"
+                value={exchange.rcNo}
+                placeholder="Enter RC No"
                 onChange={(e) =>
-                  setExchange((s) => ({ ...s, insurance: e.target.value }))
+                  setExchange((s) => ({
+                    ...s,
+                    rcNo: e.target.value,
+                  }))
                 }
               />
             </Field>
-            <div className="col-span-2 mt-1 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">
-              Total Value: {totalValue}
-            </div>
+
+            <Field>
+              <Input
+                label="Insurance"
+                value={exchange.insurance}
+                placeholder="Enter Insurance"
+                onChange={(e) =>
+                  setExchange((s) => ({
+                    ...s,
+                    insurance: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+
+            <Field>
+              <Input
+                label="Vehicle No"
+                value={exchange.vehicleNo}
+                placeholder="Enter Vehicle No"
+                onChange={(e) =>
+                  setExchange((s) => ({
+                    ...s,
+                    vehicleNo: e.target.value,
+                  }))
+                }
+              />
+            </Field>
           </div>
         </Card>
-
         {/* 5. Payment Details - Rose */}
         <Card>
           <CardHeader
@@ -945,58 +2081,34 @@ const Order: React.FC = () => {
                 label="Exchange Discount"
                 value={payment.exchangeDiscount}
                 placeholder="Enter Exchange Discount"
-                onChange={(e) =>
-                  setPayment((s) => ({
-                    ...s,
-                    exchangeDiscount: e.target.value,
-                  }))
-                }
+                readOnly
               />
             </Field>
             <Field>
-              <Input
-                label="Invoice Amount"
-                value={payment.invoiceAmount}
-                placeholder="Enter Invoice Amount"
-                onChange={(e) =>
-                  setPayment((s) => ({
-                    ...s,
-                    invoiceAmount: e.target.value,
-                  }))
-                }
-              />
+              <Field>
+                <Input
+                  label="Invoice Amount"
+                  value={payment.invoiceAmount}
+                  placeholder="Quotation Grand Total"
+                  readOnly
+                />
+              </Field>
             </Field>
             <Field>
-              <Input
-                label="Total"
-                value={payment.total}
-                onChange={(e) =>
-                  setPayment((s) => ({ ...s, total: e.target.value }))
-                }
-              />
+              <Input label="Total" value={payment.total} readOnly />
             </Field>
             <Field>
               <Input
                 label="Received Amount"
                 value={payment.receivedAmount}
-                onChange={(e) =>
-                  setPayment((s) => ({
-                    ...s,
-                    receivedAmount: e.target.value,
-                  }))
-                }
+                readOnly
               />
             </Field>
             <Field>
               <Input
                 label="Pending Amount"
                 value={payment.pendingAmount}
-                onChange={(e) =>
-                  setPayment((s) => ({
-                    ...s,
-                    pendingAmount: e.target.value,
-                  }))
-                }
+                readOnly
               />
             </Field>
           </div>
@@ -1208,8 +2320,13 @@ const Order: React.FC = () => {
 
       {/* Submit Button - Bottom Center */}
       <div className="mt-8 flex justify-center">
-        <button className="rounded-lg bg-[#003399] px-8 py-2.5 text-sm font-medium text-white shadow-md transition-all duration-200 hover:bg-[#002277] hover:shadow-lg">
-          Create Order
+        <button
+          type="button"
+          onClick={handleCreateOrder}
+          disabled={loading}
+          className="rounded-lg bg-[#003399] px-8 py-2.5 text-sm font-medium text-white shadow-md transition-all duration-200 hover:bg-[#002277] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {loading ? "Creating..." : "Create Order"}
         </button>
       </div>
     </div>

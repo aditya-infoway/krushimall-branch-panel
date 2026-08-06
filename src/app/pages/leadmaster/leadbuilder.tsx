@@ -40,7 +40,10 @@ import { LeadDetailsModal } from "./model";
 import apiHelper, { getBaseUrl } from "@/utils/apiHelper";
 import { useNavigate } from "react-router";
 import { TestDriveModal } from "./testdrive";
-// ─── Types based on image_06d90a.jpg ────────────────────────
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+
 type Lead = {
   id: number;
   customerName: string;
@@ -95,6 +98,14 @@ export default function LeadBuilder() {
   const [selectedLeadId, setSelectedLeadId] = useState<number | undefined>(
     undefined,
   );
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmState, setConfirmState] = useState<
+    "pending" | "success" | "error"
+  >("pending");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+
   // Filter leads based on search
   const navigate = useNavigate();
   const filteredData = leadData.filter((lead: any) => {
@@ -129,8 +140,33 @@ export default function LeadBuilder() {
   useEffect(() => {
     fetchLeads();
   }, []);
+
   const handleDelete = (id: number) => {
-    console.log(`Deleting lead ${id}...`);
+    setDeleteTargetId(id);
+    setConfirmState("pending");
+    setShowConfirmModal(true);
+  };
+
+  const performDelete = async () => {
+    setConfirmLoading(true);
+    try {
+      if (deleteTargetId === null) return;
+      await apiHelper.delete(`/leads/${deleteTargetId}`);
+      toast.success("Lead deleted successfully!");
+      await fetchLeads();
+      setDeleteTargetId(null);
+      setConfirmState("success");
+      setTimeout(() => setShowConfirmModal(false), 1500);
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      setConfirmState("error");
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to delete lead. Please try again.",
+      );
+    } finally {
+      setConfirmLoading(false);
+    }
   };
 
   const handleEdit = (id: number) => {
@@ -157,11 +193,9 @@ export default function LeadBuilder() {
     setShowTestDriveModal(true);
   };
 
-const handleCreateOrder = (id: number) => {
-  navigate(`/leadmaster/order/${id}`);
-};
-
-
+  const handleCreateOrder = (id: number) => {
+    navigate(`/leadmaster/order/${id}`);
+  };
 
   const handleCreateBooking = (id: number) => {
     console.log(`Create booking for lead ${id}...`);
@@ -173,6 +207,15 @@ const handleCreateOrder = (id: number) => {
 
   const handleOrderBill = (id: number) => {
     window.open(`${getBaseUrl()}/api/leads/${id}/Quotation`, "_blank");
+  };
+  const handleDeliveryChallan = (leadId: number) => {
+    window.open(
+      `${getBaseUrl()}/api/orders/lead/${leadId}/delivery-challan`,
+      "_blank",
+    );
+  };
+  const handleEditQuotation = (id: number) => {
+    navigate(`/leadmaster/quotation/edit/${id}`);
   };
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
@@ -220,6 +263,7 @@ const handleCreateOrder = (id: number) => {
                 <Th className="w-45 min-w-45">Purchase Detail</Th>
                 <Th className="w-40 min-w-40 text-center">Update</Th>
                 <Th className="w-45 min-w-45 text-center">Process / Billing</Th>
+                <Th className="w-45 min-w-45 text-center">Print</Th>
                 <Th className="w-40 min-w-40">Status</Th>
                 <Th className="w-20 text-center">Action</Th>
               </Tr>
@@ -322,12 +366,30 @@ const handleCreateOrder = (id: number) => {
                         Payment
                       </button>
                       {/* Send Quotation: Yellow/Orange border */}
-                      <button
-                        onClick={() => handleOrderBill(lead.id)}
-                        className="w-full cursor-pointer rounded-full border border-yellow-500 py-0.5 text-[12px] text-yellow-600"
-                      >
-                        Send Quotation
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleOrderBill(lead.id)}
+                          className="flex-1 cursor-pointer rounded-full border border-yellow-500 py-1 px-2 text-[12px] text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+                        >
+                          Send Quotation
+                        </button>
+                        <button
+                          onClick={() => handleEditQuotation(lead.id)}
+                          disabled={!!lead.order}
+                          className={`flex h-8 w-8 items-center justify-center rounded-full border ${
+                            lead.order
+                              ? "cursor-not-allowed border-gray-500 bg-gray-500 text-gray-400"
+                              : "cursor-pointer border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                          }`}
+                          title={
+                            lead.order
+                              ? "Quotation cannot be edited after Order is created"
+                              : "Edit Quotation"
+                          }
+                        >
+                          <PencilSquareIcon className="h-4 w-4" />
+                        </button>
+                      </div>
                       {/* Test Drive: Red border */}
                       <button
                         onClick={() => handleTestDrive(lead.id)}
@@ -364,7 +426,32 @@ const handleCreateOrder = (id: number) => {
                       </button>
                     </div>
                   </Td>
-
+                  <Td>
+                    <div className="flex w-full flex-col gap-1.5">
+                      <button
+                        onClick={() => handleDeliveryChallan(lead.id)}
+                        className="w-full cursor-pointer rounded-md border border-emerald-500 py-0.5 text-[12px] text-emerald-600"
+                      >
+                        Delivery Challan
+                      </button>
+                      <button
+                        onClick={() => handleCreateBooking(lead.id)}
+                        className="w-full cursor-pointer rounded-md border border-red-500 py-0.5 text-[12px] text-red-600"
+                      >
+                        Create Booking
+                      </button>
+                      <button
+                        onClick={() => handleCancel(lead.id)}
+                        className="w-full cursor-pointer rounded-md border border-blue-900 py-0.5 text-[12px] text-blue-900"
+                      >
+                        Cancel
+                      </button>
+                      {/* Solid Red Button */}
+                      <button className="w-full cursor-pointer rounded-md border border-red-600 py-0.5 text-[12px] text-red-600">
+                        Order Bill
+                      </button>
+                    </div>
+                  </Td>
                   {/* Status Column - Vertical */}
                   <Td>
                     <div className="space-y-1">
@@ -381,7 +468,7 @@ const handleCreateOrder = (id: number) => {
                                 : "bg-sky-500"
                           }`}
                         >
-                          {lead.leadTemperature}
+                          {lead.leadStatus}
                         </span>
                       </div>
                       <div className="flex items-center gap-3 text-[12px]">
@@ -619,6 +706,38 @@ const handleCreateOrder = (id: number) => {
         onSuccess={() => {
           // Optional: Refresh leads or show success message
           fetchLeads();
+        }}
+      />
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setDeleteTargetId(null);
+          setConfirmState("pending");
+        }}
+        onOk={performDelete}
+        confirmLoading={confirmLoading}
+        state={confirmState}
+        messages={{
+          pending: {
+            Icon: ExclamationTriangleIcon,
+            title: "Are you sure?",
+            description:
+              "Are you sure you want to delete this lead? Once deleted, it cannot be restored.",
+            actionText: "Delete",
+          },
+          success: {
+            title: "Deleted Successfully",
+            description: "The lead has been deleted.",
+            actionText: "Done",
+          },
+          error: {
+            title: "Delete Failed",
+            description: "Failed to delete. Please try again.",
+            actionText: "Try Again",
+          },
         }}
       />
     </div>

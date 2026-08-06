@@ -152,7 +152,7 @@ const protectedRoutes: RouteObject = {
           ],
         },
 
-        {
+       {
           path: "leadmaster",
           children: [
             {
@@ -187,6 +187,46 @@ const protectedRoutes: RouteObject = {
                   }),
                 },
               ],
+            },
+            {
+              path: "quotation/edit/:id",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/leadmaster/quotationEdit")
+                ).default,
+              }),
+            },
+            {
+              path: "Quatationhistory",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/leadmaster/Quatationhistory")
+                ).default,
+              }),
+            },
+            {
+              path: "Quatationhistory/:id",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/leadmaster/QuotationHistoryDetails")
+                ).default,
+              }),
+            },
+              {
+              path: "testdrivehistory",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/leadmaster/textdrivehistory")
+                ).default,
+              }),
+            },
+            {
+              path: "testdrivehistory/:id",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/leadmaster/textdrivehistoryDetails")
+                ).default,
+              }),
             },
           ],
         },
