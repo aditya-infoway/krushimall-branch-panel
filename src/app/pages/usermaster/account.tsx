@@ -314,6 +314,12 @@ const Account = () => {
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   State
                 </Th>
+                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Created By
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Created Type
+                </Th>
                 <Th className="w-20 py-3.5 text-center text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Actions
                 </Th>
@@ -367,6 +373,14 @@ const Account = () => {
                     </Td>
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
                       {item.state}
+                    </Td>
+                     <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {
+                        item.createdBy ||
+                        "-"}
+                    </Td>
+                    <Td className="dark:text-dark-200 py-4 text-gray-600">
+                      {item.createdType}
                     </Td>
                     <Td className="py-4 text-center">
                       <Menu

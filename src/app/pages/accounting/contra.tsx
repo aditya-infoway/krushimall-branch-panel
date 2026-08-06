@@ -120,7 +120,7 @@ useEffect(() => {
      fetchContras();
     const fetchAccounts = async () => {
       try {
-        const res = await apiHelper.get("/accounts");
+       const res = await apiHelper.get("/accounts?scope=all");
        
         const accountData = (res.data || res.data).map((acc: any) => ({
           id: acc.id,

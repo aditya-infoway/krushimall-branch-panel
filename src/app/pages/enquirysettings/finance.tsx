@@ -30,13 +30,13 @@ import { Listbox } from "@/components/shared/form/StyledListbox";
 
 type Finance = {
   id: number;
-  finance: string;
+  employeeName: string;
   status: string;
   createdAt: string;
 };
 
 type FormValues = {
-  finance: string;
+  employeeName: string;
   status: string;
 };
 
@@ -82,7 +82,7 @@ const Finance = () => {
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
-      finance: "",
+      employeeName: "",
       status: "ACTIVE",
     },
   });
@@ -96,63 +96,64 @@ const Finance = () => {
   const formValidationRules = {
     finance: { required: "Finance name is required" },
   };
-  const getFinances = async () => {
-    try {
-      const response = await apiHelper.get("/finances");
-      setFinances(response.data || []);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+const getFinances = async () => {
+  try {
+    const response = await apiHelper.get("/finances");
+  
+    setFinances(response.data || []);
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   useEffect(() => {
     getFinances();
   }, []);
-  const handleOpenAddDrawer = () => {
-    setEditId(null);
-    reset({
-      finance: "",
-      status: "ACTIVE",
-    });
-    setShowDrawer(true);
-  };
+  // const handleOpenAddDrawer = () => {
+  //   setEditId(null);
+  //   reset({
+  //     finance: "",
+  //     status: "ACTIVE",
+  //   });
+  //   setShowDrawer(true);
+  // };
 
-  const handleOpenEditDrawer = (item: Finance) => {
-    setEditId(item.id);
-    reset({
-      finance: item.finance,
-      status: item.status,
-    });
-    setShowDrawer(true);
-  };
+  // const handleOpenEditDrawer = (item: Finance) => {
+  //   setEditId(item.id);
+  //   reset({
+  //     finance: item.finance,
+  //     status: item.status,
+  //   });
+  //   setShowDrawer(true);
+  // };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await apiHelper.delete(`/finances/${id}`);
-      getFinances();
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  // const handleDelete = async (id: number) => {
+  //   try {
+  //     await apiHelper.delete(`/finances/${id}`);
+  //     getFinances();
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
 
-  const handleBulkDelete = async () => {
-    try {
-      if (
-        window.confirm(
-          "Are you sure you want to delete selected enquiry types?",
-        )
-      ) {
-        await Promise.all(
-          selectedIds.map((id) => apiHelper.delete(`/finances/${id}`)),
-        );
+  // const handleBulkDelete = async () => {
+  //   try {
+  //     if (
+  //       window.confirm(
+  //         "Are you sure you want to delete selected enquiry types?",
+  //       )
+  //     ) {
+  //       await Promise.all(
+  //         selectedIds.map((id) => apiHelper.delete(`/finances/${id}`)),
+  //       );
 
-        setSelectedIds([]);
-        getFinances();
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  //       setSelectedIds([]);
+  //       getFinances();
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
 
   const handleToggleStatus = async (id: number) => {
     try {
@@ -188,9 +189,9 @@ const Finance = () => {
 
   // Filter data
   const filteredData = finances.filter((item) => {
-    const matchesSearch = item.finance
-      .toLowerCase()
-      .includes(search.toLowerCase());
+   const matchesSearch = (item.employeeName ?? "")
+  .toLowerCase()
+  .includes(search.toLowerCase());
 
     const matchesStatus =
       selectedStatusFilter === "All" || item.status === selectedStatusFilter;
@@ -360,7 +361,7 @@ const Finance = () => {
                       {indexOfFirstItem + index + 1}
                     </Td>
                     <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">
-                      {item.finance}
+                      {item.employeeName}
                     </Td>
                     <Td className="py-4">
                       <button

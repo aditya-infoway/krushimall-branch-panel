@@ -9,6 +9,8 @@ interface Company {
   id: number;
   companyName: string;
   financialYears: {
+        id: number;
+financialYear: string;
     fyStartDate: string;
     fyEndDate: string;
   }[];
@@ -43,7 +45,8 @@ export default function Selectcomapny() {
   const [formData, setFormData] = useState({
     companyName: "",
     logo: null as File | null,
-
+ email: "",
+  accountNumber: "",
     country: "",
     state: "",
     stateCode: "",
@@ -93,6 +96,8 @@ export default function Selectcomapny() {
   const [errors, setErrors] = useState({
     companyName: "",
     country: "",
+     email: "",
+  accountNumber: "",
     state: "",
     district: "",
     city: "",
@@ -109,7 +114,15 @@ export default function Selectcomapny() {
   const validateForm = () => {
     const newErrors = {
       companyName: !formData.companyName ? "Company Name is required" : "",
+email: !formData.email
+  ? "Email is required"
+  : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
+    ? "Enter a valid email"
+    : "",
 
+accountNumber: !formData.accountNumber
+  ? "Account Number is required"
+  : "",
       country: !country ? "Country is required" : "",
 
       state: !state ? "State is required" : "",
@@ -262,7 +275,29 @@ export default function Selectcomapny() {
     display: "none",
   }),
 };
+const handleSelectCompany = (company: Company) => {
+ 
 
+  const financialYear = company.financialYears?.[0];
+ 
+
+  if (!financialYear) {
+    alert("Financial year not found");
+    return;
+  }
+
+  sessionStorage.setItem("companyId", String(company.id));
+  sessionStorage.setItem("companyName", company.companyName);
+
+  sessionStorage.setItem("financialYearId", String(financialYear.id));
+  sessionStorage.setItem("financialYear", financialYear.financialYear);
+  sessionStorage.setItem("fyStartDate", financialYear.fyStartDate);
+  sessionStorage.setItem("fyEndDate", financialYear.fyEndDate);
+
+ 
+
+  navigate("/dashboards/dashboard");
+};
   return (
     <div className="dark:bg-dark-900 flex h-screen bg-gray-100">
       {/* Left Side */}
@@ -298,11 +333,11 @@ export default function Selectcomapny() {
                 <tbody>
                   {companies.length > 0 ? (
                     companies.map((company) => (
-                      <tr
-                        key={company.id}
-                        onClick={() => navigate("/dashboards/dashboard")}
-                        className="cursor-pointer border-t hover:bg-gray-50"
-                      >
+                     <tr
+  key={company.id}
+  onClick={() => handleSelectCompany(company)}
+  className="cursor-pointer border-t hover:bg-gray-50"
+>
                         <td className="p-3">{company.companyName}</td>
 
                         <td className="p-3">
@@ -336,7 +371,16 @@ export default function Selectcomapny() {
               </table>
             </div>
 
-          
+            {companies.length === 0 && (
+              <div className="mt-5">
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="bg-primary-500 hover:bg-primary-600 w-full rounded-lg py-3 font-medium text-white"
+                >
+                  + Create Company
+                </button>
+              </div>
+            )}
           </>
         ) : (
           <div className="flex-1 overflow-auto rounded-lg border p-6">
@@ -543,6 +587,19 @@ export default function Selectcomapny() {
                 />
               </div>
               <div>
+  <label className="mb-1 inline-block">Email</label>
+
+  <Input
+    name="email"
+    value={formData.email}
+    onChange={handleInputChange}
+    type="email"
+    placeholder="Company Email"
+    className="w-full rounded border p-3"
+     error={errors.email}
+  />
+</div>
+              <div>
                 <label className="mb-1 inline-block">GST Number</label>
                 <Input
                   type="text"
@@ -616,6 +673,27 @@ export default function Selectcomapny() {
                   error={errors.bankHolderName}
                 />
               </div>
+              <div>
+  <label className="mb-1 inline-block">Account Number</label>
+
+   <Input
+    name="accountNumber"
+    value={formData.accountNumber}
+    onChange={(e) => {
+      const value = e.target.value.replace(/\D/g, "");
+
+      setFormData((prev) => ({
+        ...prev,
+        accountNumber: value,
+      }));
+    }}
+    type="text"
+    inputMode="numeric"
+    placeholder="Bank Account Number"
+    className="w-full rounded border p-3"
+    error={errors.accountNumber}
+  />
+</div>
               <div>
                 <label className="mb-1 inline-block">IFSC Code</label>
                 <Input

@@ -197,7 +197,7 @@ export default function CashPayment() {
 
   const getAccounts = async () => {
     try {
-      const res = await apiHelper.get("/accounts");
+     const res = await apiHelper.get("/accounts?scope=all");
 
       const accounts = res.data;
 
