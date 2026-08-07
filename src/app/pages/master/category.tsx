@@ -29,7 +29,7 @@ import apiHelper from "@/utils/apiHelper";
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Listbox } from "@/components/shared/form/StyledListbox";
-
+import { Combobox } from "@/components/shared/form/Combobox";
 type Category = {
   id: number;
   categoryName: string; // ✅ Changed from "name"
@@ -387,20 +387,21 @@ export default function Category() {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Category Name
               </span>
-              <Listbox
-                data={categoryFilterOptions}
-                value={
-                  categoryFilterOptions.find(
-                    (o) => o.id === selectedCategoryFilter,
-                  ) || categoryFilterOptions[0]
-                }
-                placeholder="All"
-                onChange={(opt: any) => {
-                  setSelectedCategoryFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
+                <Combobox
+  data={categoryFilterOptions}
+  value={
+    categoryFilterOptions.find(
+      (o) => o.id === selectedCategoryFilter
+    ) || categoryFilterOptions[0]
+  }
+  placeholder="All"
+  displayField="name"
+  searchFields={["name"]}
+  onChange={(opt: any) => {
+    setSelectedCategoryFilter(opt.id);
+    setCurrentPage(1);
+  }}
+/>
             </div>
 
             <div className="flex flex-col gap-1">

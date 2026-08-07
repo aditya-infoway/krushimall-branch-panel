@@ -128,11 +128,25 @@ const Colour = () => {
   // ─── Dynamic Data from API ─────────────────────────────────────────────
   const [models, setModels] = useState<OptionType[]>([]);
   const [variants, setVariants] = useState<OptionType[]>([]);
+  const [selectedModelFilter, setSelectedModelFilter] = useState("All");
+const [selectedVariantFilter, setSelectedVariantFilter] = useState("All");
+const [selectedShowroomVariantFilter, setSelectedShowroomVariantFilter] =
+  useState("All");
+const [selectedColourFilter, setSelectedColourFilter] = useState("All");
   const [filteredVariants, setFilteredVariants] = useState<OptionType[]>([]);
   const [showroomVariants, setShowroomVariants] = useState<OptionType[]>([]);
-  const [filteredShowroomVariants, setFilteredShowroomVariants] = useState<
+   const [filteredShowroomVariants, setFilteredShowroomVariants] = useState<
     OptionType[]
   >([]);
+const [filteredVariantFilterOptions, setFilteredVariantFilterOptions] =
+  useState<OptionType[]>([]);
+
+const [
+  filteredShowroomVariantFilterOptions,
+  setFilteredShowroomVariantFilterOptions,
+] = useState<OptionType[]>([]);
+const [filteredColourFilterOptions, setFilteredColourFilterOptions] =
+  useState<{ id: string; name: string }[]>([]);
   // ─── Form State ─────────────────────────────────────────────────────────
   const [formData, setFormData] = useState<FormValues>({
     model: "",
@@ -160,12 +174,45 @@ const Colour = () => {
   });
 
   // ─── Fetch Models ──────────────────────────────────────────────────────
-  useEffect(() => {
-    getModels();
-    getVariants();
-    getColours();
-    getShowroomVariants();
-  }, []);
+ 
+const modelFilterOptions = [
+  { id: "All", name: "All Models" },
+  ...models.map((m) => ({
+    id: String(m.id),
+    name: m.name,
+  })),
+];
+
+const variantFilterOptions = [
+  { id: "All", name: "All Variants" },
+  ...variants.map((v) => ({
+    id: String(v.id),
+    name: v.name,
+  })),
+];
+
+const showroomVariantFilterOptions = [
+  { id: "All", name: "All Showroom Variants" },
+  ...showroomVariants.map((v) => ({
+    id: String(v.id),
+    name: v.name,
+  })),
+];
+
+const colourFilterOptions = [
+  { id: "All", name: "All Colours" },
+  ...Array.from(
+    new Map(
+      colours.map((c) => [
+        c.colourName,
+        {
+          id: c.colourName,
+          name: c.colourName,
+        },
+      ])
+    ).values()
+  ),
+];
 
   const getShowroomVariants = async () => {
     try {
@@ -242,6 +289,12 @@ const Colour = () => {
       setLoading(false);
     }
   };
+   useEffect(() => {
+    getModels();
+    getVariants();
+    getColours();
+    getShowroomVariants();
+  }, []);
   useEffect(() => {
     if (formData.modelId) {
       setFilteredShowroomVariants(
@@ -319,61 +372,61 @@ const Colour = () => {
     setShowDrawer(true);
   };
 
-  const handleOpenEditDrawer = (item: Colour) => {
-    setEditId(item.id);
+  // const handleOpenEditDrawer = (item: Colour) => {
+  //   setEditId(item.id);
 
-    setFormData({
-      model: item.model?.modelName || "",
-      modelId: item.modelId || "",
+  //   setFormData({
+  //     model: item.model?.modelName || "",
+  //     modelId: item.modelId || "",
 
-      variant: item.variant?.variantName || "",
-      variantId: item.variantId || "",
-      showroomVariantId: item.showroomVariantId || "",
-      colourName: item.colourName,
-      colourCode: item.colourCode,
-      status: item.status,
-    });
+  //     variant: item.variant?.variantName || "",
+  //     variantId: item.variantId || "",
+  //     showroomVariantId: item.showroomVariantId || "",
+  //     colourName: item.colourName,
+  //     colourCode: item.colourCode,
+  //     status: item.status,
+  //   });
 
-    setShowDrawer(true);
-  };
+  //   setShowDrawer(true);
+  // };
 
-  const handleDelete = async (id: number) => {
-    try {
-      if (!window.confirm("Are you sure you want to delete this colour?"))
-        return;
+  // const handleDelete = async (id: number) => {
+  //   try {
+  //     if (!window.confirm("Are you sure you want to delete this colour?"))
+  //       return;
 
-      await apiHelper.delete(`/colours/${id}`);
+  //     await apiHelper.delete(`/colours/${id}`);
 
-      // Refresh the list
-      await getColours();
-    } catch (error) {
-      console.error("Failed to delete:", error);
-    }
-  };
+  //     // Refresh the list
+  //     await getColours();
+  //   } catch (error) {
+  //     console.error("Failed to delete:", error);
+  //   }
+  // };
 
-  const handleBulkDelete = async () => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete ${selectedIds.length} selected colours?`,
-      )
-    )
-      return;
+  // const handleBulkDelete = async () => {
+  //   if (
+  //     !window.confirm(
+  //       `Are you sure you want to delete ${selectedIds.length} selected colours?`,
+  //     )
+  //   )
+  //     return;
 
-    try {
-      setLoading(true);
-      // Delete each selected colour
-      await Promise.all(
-        selectedIds.map((id) => apiHelper.delete(`/colours/${id}`)),
-      );
+  //   try {
+  //     setLoading(true);
+  //     // Delete each selected colour
+  //     await Promise.all(
+  //       selectedIds.map((id) => apiHelper.delete(`/colours/${id}`)),
+  //     );
 
-      setSelectedIds([]);
-      await getColours();
-    } catch (error) {
-      console.error("Failed to delete colours:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     setSelectedIds([]);
+  //     await getColours();
+  //   } catch (error) {
+  //     console.error("Failed to delete colours:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleToggleStatus = async (id: number) => {
     const colour = colours.find((item) => item.id === id);
@@ -502,17 +555,45 @@ const Colour = () => {
   };
 
   // ─── Filter Data ────────────────────────────────────────────────────────
-  const filteredData = colours.filter((item) => {
-    const matchesSearch =
-      item.colourName.toLowerCase().includes(search.toLowerCase()) ||
-      item.model?.modelName?.toLowerCase().includes(search.toLowerCase()) ||
-      item.variant?.variantName?.toLowerCase().includes(search.toLowerCase());
+ const filteredData = colours.filter((item) => {
+  const searchText = search.toLowerCase();
 
-    const matchesStatus =
-      selectedStatusFilter === "All" || item.status === selectedStatusFilter;
+  const matchesSearch =
+    item.colourName.toLowerCase().includes(searchText) ||
+    item.model?.modelName?.toLowerCase().includes(searchText) ||
+    item.variant?.variantName?.toLowerCase().includes(searchText) ||
+    item.showroomVariant?.variantName?.toLowerCase().includes(searchText);
 
-    return matchesSearch && matchesStatus;
-  });
+  const matchesModel =
+    selectedModelFilter === "All" ||
+    String(item.modelId) === selectedModelFilter;
+
+  const matchesVariant =
+    selectedVariantFilter === "All" ||
+    String(item.variantId) === selectedVariantFilter;
+
+  const matchesShowroomVariant =
+    selectedShowroomVariantFilter === "All" ||
+    String(item.showroomVariantId) ===
+      selectedShowroomVariantFilter;
+
+  const matchesColour =
+    selectedColourFilter === "All" ||
+    item.colourName === selectedColourFilter;
+
+  const matchesStatus =
+    selectedStatusFilter === "All" ||
+    item.status === selectedStatusFilter;
+
+  return (
+    matchesSearch &&
+    matchesModel &&
+    matchesVariant &&
+    matchesShowroomVariant &&
+    matchesColour &&
+    matchesStatus
+  );
+});
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -599,27 +680,173 @@ const Colour = () => {
       {/* Filter Bar */}
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Status
-              </span>
-              <Listbox
-                data={statusFilterOptions}
-                value={
-                  statusFilterOptions.find(
-                    (o) => o.id === selectedStatusFilter,
-                  ) || statusFilterOptions[0]
-                }
-                placeholder="All Statuses"
-                onChange={(opt: any) => {
-                  setSelectedStatusFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div>
-          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+
+  {/* Model */}
+  <div className="flex flex-col gap-1">
+    <span className="text-sm font-medium">Model</span>
+    <Combobox
+      data={modelFilterOptions}
+      displayField="name"
+      value={
+        modelFilterOptions.find(
+          (o) => o.id === selectedModelFilter
+        ) || modelFilterOptions[0]
+      }
+      placeholder="All Models"
+      searchFields={["name"]}
+     onChange={(opt: any) => {
+  const modelId = opt?.id || "All";
+
+  setSelectedModelFilter(modelId);
+  setSelectedVariantFilter("All");
+  setSelectedShowroomVariantFilter("All");
+  setCurrentPage(1);
+
+  if (modelId === "All") {
+    setFilteredVariantFilterOptions(variants);
+    setFilteredShowroomVariantFilterOptions(showroomVariants);
+    return;
+  }
+
+  setFilteredVariantFilterOptions(
+    variants.filter(v => String(v.modelId) === String(modelId))
+  );
+
+  setFilteredShowroomVariantFilterOptions(
+    showroomVariants.filter(v => String(v.modelId) === String(modelId))
+  );
+}}
+    />
+  </div>
+ <div className="flex flex-col gap-1">
+    <span className="text-sm font-medium">Variant</span>
+    <Combobox
+     data={[
+  { id: "All", name: "All Variants" },
+  ...filteredVariantFilterOptions.map(v => ({
+    id: String(v.id),
+    name: v.name,
+  })),
+]}
+      displayField="name"
+      value={
+        variantFilterOptions.find(
+          (o) => o.id === selectedVariantFilter
+        ) || variantFilterOptions[0]
+      }
+      placeholder="All Variants"
+      searchFields={["name"]}
+     onChange={(opt:any)=>{
+    setSelectedVariantFilter(opt.id);
+    setSelectedShowroomVariantFilter("All");
+    setSelectedColourFilter("All");
+
+    if(opt.id==="All"){
+        return;
+    }
+
+    const colourList = colours
+        .filter(c=>String(c.variantId)===String(opt.id))
+        .map(c=>({
+            id:c.colourName,
+            name:c.colourName
+        }));
+
+    setFilteredColourFilterOptions(
+        Array.from(new Map(colourList.map(c=>[c.id,c])).values())
+    );
+}}
+    />
+  </div>
+  {/* Showroom Variant */}
+  <div className="flex flex-col gap-1">
+    <span className="text-sm font-medium">Showroom Variant</span>
+    <Combobox
+   data={[
+  { id: "All", name: "All Showroom Variants" },
+  ...filteredShowroomVariantFilterOptions.map(v => ({
+    id: String(v.id),
+    name: v.name,
+  })),
+]}
+      displayField="name"
+      value={
+        showroomVariantFilterOptions.find(
+          (o) => o.id === selectedShowroomVariantFilter
+        ) || showroomVariantFilterOptions[0]
+      }
+      placeholder="All Showroom Variants"
+      searchFields={["name"]}
+    onChange={(opt:any)=>{
+    setSelectedShowroomVariantFilter(opt.id);
+    setSelectedVariantFilter("All");
+    setSelectedColourFilter("All");
+
+    if(opt.id==="All"){
+        return;
+    }
+
+    const colourList = colours
+        .filter(c=>String(c.showroomVariantId)===String(opt.id))
+        .map(c=>({
+            id:c.colourName,
+            name:c.colourName
+        }));
+
+    setFilteredColourFilterOptions(
+        Array.from(new Map(colourList.map(c=>[c.id,c])).values())
+    );
+}}
+    />
+  </div>
+
+  {/* Variant */}
+ 
+
+  {/* Colour */}
+  <div className="flex flex-col gap-1">
+    <span className="text-sm font-medium">Colour</span>
+    <Combobox
+      data={[
+    { id:"All", name:"All Colours" },
+    ...filteredColourFilterOptions
+]}
+      displayField="name"
+      value={
+        colourFilterOptions.find(
+          (o) => o.id === selectedColourFilter
+        ) || colourFilterOptions[0]
+      }
+      placeholder="All Colours"
+      searchFields={["name"]}
+      onChange={(opt: any) => {
+        setSelectedColourFilter(opt?.id || "All");
+        setCurrentPage(1);
+      }}
+    />
+  </div>
+
+  {/* Status */}
+  <div className="flex flex-col gap-1">
+    <span className="text-sm font-medium">Status</span>
+    <Listbox
+      data={statusFilterOptions}
+      displayField="name"
+      value={
+        statusFilterOptions.find(
+          (o) => o.id === selectedStatusFilter
+        ) || statusFilterOptions[0]
+      }
+      placeholder="All Statuses"
+      onChange={(opt: any) => {
+        setSelectedStatusFilter(opt.id);
+        setCurrentPage(1);
+      }}
+    />
+  </div>
+
+</div>
         </div>
       )}
 

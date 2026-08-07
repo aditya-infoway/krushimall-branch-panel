@@ -28,7 +28,7 @@ import apiHelper from "@/utils/apiHelper";
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Listbox } from "@/components/shared/form/StyledListbox";
-
+import { Combobox } from "@/components/shared/form/Combobox";
 type ModelType = {
   id: number;
   image: string;
@@ -100,6 +100,9 @@ export default function Model() {
   const [selectedBrandFilter, setSelectedBrandFilter] = useState("All");
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("All");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All"); // Status filter state
+const [filterBrands, setFilterBrands] = useState<BrandOption[]>([]);
+const [filterModels, setFilterModels] = useState<ModelType[]>([]);
+   // Status filter state
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
@@ -216,23 +219,29 @@ export default function Model() {
   };
 
   // Dropdown filtering layer data definitions
-  const nameFilterOptions = [
-    { id: "All", name: "All Models" },
-    ...Array.from(new Set(models.map((m) => m.modelName))).map((mName) => ({
-      id: mName,
-      name: mName,
-    })),
-  ];
+const nameFilterOptions = [
+  { id: "All", name: "All Models" },
+  ...filterModels.map((m) => ({
+    id: String(m.id),
+    name: m.modelName,
+  })),
+];
 
-  const brandFilterOptions = [
-    { id: "All", name: "All Brands" },
-    ...brands.map((b) => ({ id: b.name, name: b.name })),
-  ];
+ const brandFilterOptions = [
+  { id: "All", name: "All Brands" },
+  ...filterBrands.map((b) => ({
+    id: String(b.id),
+    name: b.name,
+  })),
+];
 
-  const categoryFilterOptions = [
-    { id: "All", name: "All Categories" },
-    ...categories.map((c) => ({ id: c.name, name: c.name })),
-  ];
+const categoryFilterOptions = [
+  { id: "All", name: "All Categories" },
+  ...categories.map((c) => ({
+    id: String(c.id),
+    name: c.name,
+  })),
+];
 
   // Status Filter Options
   const statusFilterOptions = [
@@ -241,59 +250,59 @@ export default function Model() {
     { id: "INACTIVE", name: "Off" },
   ];
 
-  const handleOpenAddDrawer = () => {
-    setEditId(null);
-    setFilteredBrands(brands); // Reset to all brands
-    const firstCategory = categories[0] || { id: "", name: "" };
-    const firstBrand = brands[0] || { id: "", name: "" };
-    reset({
-      category: firstCategory.name,
-      categoryId: firstCategory.id,
-      brand: firstBrand.name,
-      brandId: firstBrand.id,
-      modelName: "",
-      status: "ACTIVE",
-      image: "",
-    });
-    setShowDrawer(true);
-  };
+  // const handleOpenAddDrawer = () => {
+  //   setEditId(null);
+  //   setFilteredBrands(brands); // Reset to all brands
+  //   const firstCategory = categories[0] || { id: "", name: "" };
+  //   const firstBrand = brands[0] || { id: "", name: "" };
+  //   reset({
+  //     category: firstCategory.name,
+  //     categoryId: firstCategory.id,
+  //     brand: firstBrand.name,
+  //     brandId: firstBrand.id,
+  //     modelName: "",
+  //     status: "ACTIVE",
+  //     image: "",
+  //   });
+  //   setShowDrawer(true);
+  // };
 
-  const handleOpenEditDrawer = (item: ModelType) => {
-    setEditId(item.id);
-    setFilteredBrands(brands); // Reset to all brands for editing
-    reset({
-      category: item.category,
-      categoryId: item.categoryId || "",
-      brand: item.brand,
-      brandId: item.brandId || "",
-      modelName: item.modelName,
-      status: item.status,
-      image: item.image || "",
-    });
-    setShowDrawer(true);
-  };
+  // const handleOpenEditDrawer = (item: ModelType) => {
+  //   setEditId(item.id);
+  //   setFilteredBrands(brands); // Reset to all brands for editing
+  //   reset({
+  //     category: item.category,
+  //     categoryId: item.categoryId || "",
+  //     brand: item.brand,
+  //     brandId: item.brandId || "",
+  //     modelName: item.modelName,
+  //     status: item.status,
+  //     image: item.image || "",
+  //   });
+  //   setShowDrawer(true);
+  // };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await apiHelper.delete(`/model/${id}`);
-      getModels();
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  // const handleDelete = async (id: number) => {
+  //   try {
+  //     await apiHelper.delete(`/model/${id}`);
+  //     getModels();
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
-  const handleBulkDelete = async () => {
-    try {
-      await Promise.all(
-        selectedIds.map((id) => apiHelper.delete(`/model/${id}`)),
-      );
-      await getModels();
-      setSelectedIds([]);
-      setCurrentPage(1);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  // const handleBulkDelete = async () => {
+  //   try {
+  //     await Promise.all(
+  //       selectedIds.map((id) => apiHelper.delete(`/model/${id}`)),
+  //     );
+  //     await getModels();
+  //     setSelectedIds([]);
+  //     setCurrentPage(1);
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
   const handleToggleTableStatus = async (id: number) => {
     const model = models.find((item) => item.id === id);
@@ -364,19 +373,23 @@ export default function Model() {
   };
 
   // Filter evaluation matching Model fields including status matching logic
-  const filteredData = models.filter((item) => {
+   const filteredData = models.filter((item) => {
     const matchesSearch =
       item.modelName.toLowerCase().includes(search.toLowerCase()) ||
       item.brand.toLowerCase().includes(search.toLowerCase()) ||
       item.category.toLowerCase().includes(search.toLowerCase());
 
-    const matchesNameDropdown =
-      selectedNameFilter === "All" || item.modelName === selectedNameFilter;
-    const matchesBrandDropdown =
-      selectedBrandFilter === "All" || item.brand === selectedBrandFilter;
-    const matchesCategoryDropdown =
-      selectedCategoryFilter === "All" ||
-      item.category === selectedCategoryFilter;
+  const matchesBrandDropdown =
+  selectedBrandFilter === "All" ||
+  String(item.brandId) === selectedBrandFilter;
+
+const matchesCategoryDropdown =
+  selectedCategoryFilter === "All" ||
+  String(item.categoryId) === selectedCategoryFilter;
+
+const matchesNameDropdown =
+  selectedNameFilter === "All" ||
+  String(item.id) === selectedNameFilter;
     const matchesStatusDropdown =
       selectedStatusFilter === "All" ||
       String(item.status) === selectedStatusFilter;
@@ -493,65 +506,77 @@ export default function Model() {
             {/* Filter 1: Model Name */}
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Model Name
-              </span>
-              <Listbox
-                data={nameFilterOptions}
-                value={
-                  nameFilterOptions.find((o) => o.id === selectedNameFilter) ||
-                  nameFilterOptions[0]
-                }
-                placeholder="All Models"
-                onChange={(opt: any) => {
-                  setSelectedNameFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div>
-
-            {/* Filter 2: Brand */}
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Brand
-              </span>
-              <Listbox
-                data={brandFilterOptions}
-                value={
-                  brandFilterOptions.find(
-                    (o) => o.id === selectedBrandFilter,
-                  ) || brandFilterOptions[0]
-                }
-                placeholder="All Brands"
-                onChange={(opt: any) => {
-                  setSelectedBrandFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div>
-
-            {/* Filter 3: Category */}
-            {/* Filter 3: Category - use filter state, NOT form values */}
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Category
               </span>
-              <Listbox
+              <Combobox
                 data={categoryFilterOptions}
+                displayField="name"
                 value={
                   categoryFilterOptions.find(
                     (o) => o.id === selectedCategoryFilter,
                   ) || categoryFilterOptions[0]
                 }
-                placeholder="All Categories"
-                onChange={(opt: any) => {
-                  setSelectedCategoryFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
+              onChange={(opt: any) => {
+  setSelectedCategoryFilter(opt.id);
+  setSelectedBrandFilter("All");
+  setSelectedNameFilter("All");
+
+  const categoryBrands = brands.filter(
+    b => String(b.categoryId) === String(opt.id)
+  );
+
+  setFilterBrands(categoryBrands);
+  setFilterModels([]);
+}}
+                placeholder="Search or select category..."
+                searchFields={["name"]}
               />
             </div>
+               <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Brand
+              </span>
+              <Combobox
+                data={brandFilterOptions}
+                displayField="name"
+                value={
+                  brandFilterOptions.find(
+                    (o) => o.id === selectedBrandFilter,
+                  ) || brandFilterOptions[0]
+                }
+               onChange={(opt: any) => {
+  setSelectedBrandFilter(opt.id);
+  setSelectedNameFilter("All");
+
+  const brandModels = models.filter(
+    m => String(m.brandId) === String(opt.id)
+  );
+
+  setFilterModels(brandModels);
+}}
+                placeholder="Search or select brand..."
+                searchFields={["name"]}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                Model Name
+              </span>
+              <Combobox
+                data={nameFilterOptions}
+                displayField="name"
+                value={
+                  nameFilterOptions.find((o) => o.id === selectedNameFilter) ||
+                  nameFilterOptions[0]
+                }
+               onChange={(opt:any) => {
+  setSelectedNameFilter(opt.id);
+}}
+                placeholder="Search or select model..."
+                searchFields={["name"]}
+              />
+            </div>
+
 
             {/* Filter 4: Status */}
             <div className="flex flex-col gap-1">

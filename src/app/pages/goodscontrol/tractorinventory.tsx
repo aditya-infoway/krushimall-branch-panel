@@ -2,17 +2,17 @@ import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   MagnifyingGlassIcon,
-  FunnelIcon,
+  // FunnelIcon,
   DocumentArrowDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  PencilIcon,
-  TrashIcon,
-  PlusIcon,
-  EyeIcon,
+  // PencilIcon,
+  // TrashIcon,
+  // PlusIcon,
+  // EyeIcon,
 } from "@heroicons/react/24/outline";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
-import { Button, Checkbox, Input } from "@/components/ui";
+import { Checkbox } from "@/components/ui";
 import { Listbox } from "@/components/shared/form/StyledListbox";
 import apiHelper from "@/utils/apiHelper";
 
@@ -20,7 +20,7 @@ import apiHelper from "@/utils/apiHelper";
 export interface TractorInventoryRow {
   id: number;
   stock: "On" | "Off";
-  status: "Present" | "Sold" | "In Transit" | "Pending" | "Reserved";
+  status: "Present" | "Sold" | "In Transit" | "Pending" | "Reserved" | "Booked";
   location: string;
   currentLocation: string;
   billNo: string;
@@ -47,6 +47,7 @@ export interface TractorInventoryRow {
   grnNo: string;
   inWardDate: string;
   inWardTime: string;
+  ageDay: number;
 }
 
 interface TractorInventoryProps {
@@ -75,6 +76,7 @@ const stockFilterOptions = [
 const statusFilterOptions = [
   { id: "All", name: "All Statuses" },
   { id: "Present", name: "Present" },
+  { id: "Booked", name: "Booked" },
   { id: "Sold", name: "Sold" },
   { id: "In Transit", name: "In Transit" },
   { id: "Pending", name: "Pending" },
@@ -91,6 +93,8 @@ const statusColors: Record<TractorInventoryRow["status"], string> = {
     "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
   Reserved:
     "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+  Booked:
+    "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
 };
 
 const stockColors = {
@@ -339,16 +343,17 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
           <div
             className="dark:bg-dark-600 absolute top-1 bottom-1 rounded-md bg-white shadow-md transition-all duration-500 ease-in-out"
             style={{
-              // This ensures the pill is always 1/3 of the container minus the padding
-              width: "calc(33.33% - 8px)",
-              // We use percentages based on the 3 positions (0%, 33.33%, 66.66%)
-              // Adding the 4px offset to ensure it doesn't stick to the edge
+              // 4 filter buttons
+              width: "calc(25% - 8px)",
+
               left:
                 selectedStatusFilter === "All"
                   ? "4px"
                   : selectedStatusFilter === "Present"
-                    ? "calc(33.33% + 4px)"
-                    : "calc(66.66% + 4px)",
+                    ? "calc(25% + 4px)"
+                    : selectedStatusFilter === "In Transit"
+                      ? "calc(50% + 4px)"
+                      : "calc(75% + 4px)",
             }}
           />
 
@@ -356,6 +361,7 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
             { id: "All", label: "All" },
             { id: "Present", label: "Present" },
             { id: "In Transit", label: "Transit" },
+            { id: "Booked", label: "Booked" },
           ].map((option) => (
             <button
               key={option.id}
@@ -418,6 +424,7 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Item Name
                 </Th>
+
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Model
                 </Th>
@@ -473,6 +480,9 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
                   GRN No.
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Age Day
+                </Th>
+                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   In Ward Date
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
@@ -502,21 +512,23 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
                       {indexOfFirstItem + index + 1}
                     </Td>
                     <Td className="py-4">
-                      <button
-                        type="button"
-                        onClick={() => handleToggleStock(item.id)}
-                        className={`relative h-6 w-12 rounded-full transition-all ${
-                          item.stock === "On"
-                            ? "bg-primary-500"
-                            : "dark:bg-dark-600 bg-gray-300"
-                        }`}
-                      >
-                        <span
-                          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
-                            item.stock === "On" ? "left-6.5" : "left-0.5"
+                      {item.status !== "Booked" && (
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStock(item.id)}
+                          className={`relative h-6 w-12 rounded-full transition-all ${
+                            item.stock === "On"
+                              ? "bg-primary-500"
+                              : "dark:bg-dark-600 bg-gray-300"
                           }`}
-                        />
-                      </button>
+                        >
+                          <span
+                            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
+                              item.stock === "On" ? "left-6.5" : "left-0.5"
+                            }`}
+                          />
+                        </button>
+                      )}
                     </Td>
                     <Td className="py-4">
                       <span
@@ -559,6 +571,7 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
                     <Td className="py-4">{formatDate(item.grnDate)}</Td>
                     <Td className="py-4">{formatDate(item.grnRecordDate)}</Td>
                     <Td className="py-4">{item.grnNo}</Td>
+                    <Td className="py-4">{item.ageDay} Days</Td>
                     <Td className="py-4">{formatDate(item.inWardDate)}</Td>
                     <Td className="py-4">{formatDateTime(item.inWardTime)}</Td>
                   </Tr>
