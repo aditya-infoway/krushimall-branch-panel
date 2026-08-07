@@ -497,26 +497,34 @@ const protectedRoutes: RouteObject = {
           ],
         },
         {
-          path: "goodscontrol",
-          children: [
-            {
-              path: "tractorinventory",
-              lazy: async () => ({
-                Component: (
-                  await import("@/app/pages/goodscontrol/tractorinventory")
-                ).default,
-              }),
-            },
-            {
-              path: "accessoriesinventory",
-              lazy: async () => ({
-                Component: (
-                  await import("@/app/pages/goodscontrol/accessoriesinventory")
-                ).default,
-              }),
-            },
-          ],
-        },
+  path: "goodscontrol",
+  children: [
+    {
+      path: "tractorinventory",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/goodscontrol/tractorinventory")
+        ).default,
+      }),
+    },
+    {
+      path: "accessoriesinventory",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/goodscontrol/accessoriesinventory")
+        ).default,
+      }),
+    },
+    {
+      path: "accessoriesinventory/history/:id",
+      lazy: async () => ({
+        Component: (
+          await import("@/app/pages/goodscontrol/accessorieshistory")
+        ).default,
+      }),
+    },
+  ],
+},
 
         {
           path: "bookregister",

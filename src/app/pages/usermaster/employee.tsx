@@ -39,7 +39,7 @@ import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 type Employee = {
   id: number;
   department: string;
-
+branch?: string;
   role: string;
   employeeName: string;
   mobileNumber: string;

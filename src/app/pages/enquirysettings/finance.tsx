@@ -179,7 +179,7 @@ const getFinances = async () => {
       setEditId(null);
 
       reset({
-        finance: "",
+        employeeName: "",
         status: "ACTIVE",
       });
     } catch (error) {
@@ -615,8 +615,8 @@ const getFinances = async () => {
                     <Input
                       label="Finance Name *"
                       placeholder="Enter finance name"
-                      {...register("finance", formValidationRules.finance)}
-                      error={errors?.finance && errors.finance.message}
+                      {...register("employeeName", formValidationRules.finance)}
+                      error={errors?.employeeName && errors.employeeName.message}
                     />
                   </div>
 

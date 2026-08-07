@@ -1,4 +1,4 @@
-// Import Dependencies
+
 import {
   Combobox,
   ComboboxButton,
@@ -250,123 +250,205 @@ function GroupCombobox<TValue = DataItem>(
                   </ComboboxButton>
                 )}
 
-                <Transition
-                  as={Fragment}
-                  enter="transition ease-out"
-                  enterFrom="opacity-0 translate-y-2"
-                  enterTo="opacity-100 translate-y-0"
-                  leave="transition ease-in"
-                  leaveFrom="opacity-100 translate-y-0"
-                  leaveTo="opacity-0 translate-y-2"
-                  afterLeave={() => setQuery("")}
+            <Transition
+  as="div"
+  className="relative"
+  enter="transition ease-out"
+  enterFrom="opacity-0 translate-y-2"
+  enterTo="opacity-100 translate-y-0"
+  leave="transition ease-in"
+  leaveFrom="opacity-100 translate-y-0"
+  leaveTo="opacity-0 translate-y-2"
+  afterLeave={() => setQuery("")}
+>
+  <ComboboxOptions
+    anchor={{
+      to: "bottom start",
+      gap: 8,
+    }}
+    style={{
+      width: inputWidth,
+    }}
+    className="
+      dark:border-dark-500
+      dark:bg-dark-750
+      z-[9999]
+      max-h-60
+      overflow-y-auto
+      rounded-lg
+      border
+      border-gray-300
+      bg-white
+      py-1
+      shadow-lg
+    "
+  >
+    {filteredData.length === 0 &&
+    query !== "" ? (
+      <div className="dark:text-dark-100 relative cursor-default px-4 py-2 text-gray-800 select-none">
+        Nothing found for {query}
+      </div>
+    ) : (
+      <div>
+        {/* Header */}
+        {columns && (
+          <div
+            className="
+              dark:border-dark-500
+              dark:bg-dark-750
+              sticky
+              top-0
+              z-10
+              grid
+              border-b
+              bg-white
+              px-4
+              py-2
+              text-xs
+              font-semibold
+            "
+            style={{
+              gridTemplateColumns: columns
+                .map(
+                  (column) =>
+                    column.width ?? "1fr",
+                )
+                .join(" "),
+            }}
+          >
+            {columns.map(
+              (column, index) => (
+                <span
+                  key={column.field}
+                  className={clsx(
+                    index ===
+                      columns.length - 1 &&
+                      "text-right",
+                  )}
                 >
-                  <ComboboxOptions
-                    anchor={{ to: "bottom start", gap: 8 }}
-                    style={{
-                      width: inputWidth,
-                    }}
-                    className="dark:border-dark-500 dark:bg-dark-750 z-[9999] max-h-60 overflow-y-auto rounded-lg border border-gray-300 bg-white py-1 shadow-lg"
-                  >
-                    {filteredData.length === 0 && query !== "" ? (
-                      <div className="dark:text-dark-100 relative cursor-default px-4 py-2 text-gray-800 select-none">
-                        Nothing found for {query}
-                      </div>
-                    ) : (
-                      <>
-                        {/* Header */}
-                        {columns && (
-                          <div
-                            className="dark:border-dark-500 dark:bg-dark-750 sticky top-0 z-10 grid border-b bg-white px-4 py-2 text-xs font-semibold"
-                            style={{
-                              gridTemplateColumns: columns
-                                .map((c) => c.width ?? "1fr")
-                                .join(" "),
-                            }}
-                          >
-                            {columns.map((col, index) => (
-                              <span
-                                key={col.field}
-                                className={clsx(
-                                  index === columns.length - 1 && "text-right",
-                                )}
-                              >
-                                {col.header}
-                              </span>
-                            ))}
-                          </div>
-                        )}
+                  {column.header}
+                </span>
+              ),
+            )}
+          </div>
+        )}
 
-                        {filteredData.map(({ item, refIndex }) => (
-                          <ComboboxOption
-                            key={refIndex}
-                            value={item}
-                            className={({ selected, active }) =>
-                              clsx(
-                                "relative cursor-pointer px-4 py-2 outline-hidden transition-colors select-none",
-                                active &&
-                                  !selected &&
-                                  "dark:bg-dark-600 bg-gray-100",
-                                selected
-                                  ? "bg-primary-600 dark:bg-primary-500 text-white"
-                                  : "dark:text-dark-100 text-gray-800",
-                              )
-                            }
-                          >
-                            {({ selected }) =>
-                              columns ? (
-                                <div
-                                  className="grid items-center gap-2"
-                                  style={{
-                                    gridTemplateColumns: columns
-                                      .map((c) => c.width ?? "1fr")
-                                      .join(" "),
-                                  }}
-                                >
-                                  {columns.map((col, index) => (
-                                    <span
-                                      key={col.field}
-                                      className={clsx(
-                                        "truncate",
-                                        selected
-                                          ? "font-medium"
-                                          : "font-normal",
-                                        index === columns.length - 1 &&
-                                          "text-right text-xs text-gray-500 dark:text-gray-300",
-                                      )}
-                                    >
-                                      {highlight ? (
-                                        <Highlight query={query}>
-                                          {String(item[col.field] ?? "")}
-                                        </Highlight>
-                                      ) : (
-                                        String(item[col.field] ?? "")
-                                      )}
-                                    </span>
-                                  ))}
-                                </div>
-                              ) : (
-                                <span
-                                  className={clsx(
-                                    "block truncate",
-                                    selected ? "font-medium" : "font-normal",
-                                  )}
-                                >
-                                  {highlight ? (
-                                    <Highlight query={query}>
-                                      {String(item?.[displayField] ?? "")}
-                                    </Highlight>
-                                  ) : (
-                                    String(item?.[displayField] ?? "")
-                                  )}
-                                </span>
-                              )
-                            }
-                          </ComboboxOption>
-                        ))}
-                      </>
+        {filteredData.map(
+          ({ item, refIndex }) => (
+            <ComboboxOption
+              key={refIndex}
+              value={item}
+              className={({
+                selected,
+                active,
+              }) =>
+                clsx(
+                  "relative cursor-pointer px-4 py-2 outline-hidden transition-colors select-none",
+
+                  active &&
+                    !selected &&
+                    "dark:bg-dark-600 bg-gray-100",
+
+                  selected
+                    ? "bg-primary-600 dark:bg-primary-500 text-white"
+                    : "dark:text-dark-100 text-gray-800",
+                )
+              }
+            >
+              {({ selected }) =>
+                columns ? (
+                  <div
+                    className="grid items-center gap-2"
+                    style={{
+                      gridTemplateColumns:
+                        columns
+                          .map(
+                            (column) =>
+                              column.width ??
+                              "1fr",
+                          )
+                          .join(" "),
+                    }}
+                  >
+                    {columns.map(
+                      (column, index) => (
+                        <span
+                          key={
+                            column.field
+                          }
+                          className={clsx(
+                            "truncate",
+
+                            selected
+                              ? "font-medium"
+                              : "font-normal",
+
+                            index ===
+                              columns.length -
+                                1 &&
+                              "text-right text-xs text-gray-500 dark:text-gray-300",
+                          )}
+                        >
+                          {highlight ? (
+                            <Highlight
+                              query={query}
+                            >
+                              {String(
+                                item[
+                                  column
+                                    .field
+                                ] ?? "",
+                              )}
+                            </Highlight>
+                          ) : (
+                            String(
+                              item[
+                                column
+                                  .field
+                              ] ?? "",
+                            )
+                          )}
+                        </span>
+                      ),
                     )}
-                  </ComboboxOptions>
-                </Transition>
+                  </div>
+                ) : (
+                  <span
+                    className={clsx(
+                      "block truncate",
+
+                      selected
+                        ? "font-medium"
+                        : "font-normal",
+                    )}
+                  >
+                    {highlight ? (
+                      <Highlight
+                        query={query}
+                      >
+                        {String(
+                          item?.[
+                            displayField
+                          ] ?? "",
+                        )}
+                      </Highlight>
+                    ) : (
+                      String(
+                        item?.[
+                          displayField
+                        ] ?? "",
+                      )
+                    )}
+                  </span>
+                )
+              }
+            </ComboboxOption>
+          ),
+        )}
+      </div>
+    )}
+  </ComboboxOptions>
+</Transition>
               </div>
             </>
           );
@@ -379,3 +461,4 @@ function GroupCombobox<TValue = DataItem>(
 GroupCombobox.displayName = "Combobox";
 
 export { GroupCombobox as Combobox };
+

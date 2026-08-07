@@ -13,11 +13,11 @@ import { Fragment, useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import {
   XMarkIcon,
-  PencilSquareIcon,
-  TrashIcon,
+  // PencilSquareIcon,
+  // TrashIcon,
   FunnelIcon,
   DocumentArrowDownIcon,
-  EllipsisHorizontalIcon,
+  // EllipsisHorizontalIcon,
   MagnifyingGlassIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -28,7 +28,7 @@ import apiHelper from "@/utils/apiHelper";
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Listbox } from "@/components/shared/form/StyledListbox";
-
+import { Combobox } from "@/components/shared/form/Combobox";
 type YearDataType = {
   id: number;
   category: string;
@@ -82,7 +82,17 @@ export default function ModelYear() {
   const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
   const [models, setModels] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
+  type BrandOption = {
+    id: number;
+    name: string;
+    categoryId: number;
+  };
 
+  type ModelOption = {
+    id: number;
+    name: string;
+    brandId: number;
+  };
   const categoryOptions = categories.map((cat) => ({
     id: String(cat.id),
     name: cat.name,
@@ -99,6 +109,9 @@ export default function ModelYear() {
   const [search, setSearch] = useState("");
   const [showFilterBar, setShowFilterBar] = useState(false);
 
+  const [filteredBrands, setFilteredBrands] = useState<BrandOption[]>([]);
+  const [modelsList, setModelsList] = useState<ModelOption[]>([]);
+  const [filteredModels, setFilteredModels] = useState<ModelOption[]>([]);
   // Filter dropdown states - Added selectedYearFilter
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("All");
   const [selectedBrandFilter, setSelectedBrandFilter] = useState("All");
@@ -108,12 +121,7 @@ export default function ModelYear() {
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-  useEffect(() => {
-    getYears();
-    getCategories();
-    getBrands();
-    getModels();
-  }, []);
+
 
   const getYears = async () => {
     try {
@@ -175,16 +183,22 @@ export default function ModelYear() {
     }
   };
 
-  const getBrands = async () => {
+ const getBrands = async () => {
     try {
       const response = await apiHelper.get("/brand");
       const data = response?.data || response;
-      setBrands(
-        (Array.isArray(data) ? data : []).map((item: any) => ({
-          id: item.id || item._id,
-          name: item.brandName || item.name,
-        })),
+      const list: BrandOption[] = (Array.isArray(data) ? data : []).map(
+        (item: any) => ({
+          id: Number(item.id || item._id),
+          name: item.brandName || item.name || "",
+          categoryId: Number(
+            typeof item.category === "object"
+              ? item.category?.id
+              : item.categoryId,
+          ),
+        }),
       );
+      setBrands(list);
     } catch (error) {
       setBrands([]);
     }
@@ -194,17 +208,27 @@ export default function ModelYear() {
     try {
       const response = await apiHelper.get("/model");
       const data = response?.data || response;
-      setModels(
-        (Array.isArray(data) ? data : []).map((item: any) => ({
-          id: item.id || item._id,
-          name: item.modelName || item.name,
-        })),
+      const list: ModelOption[] = (Array.isArray(data) ? data : []).map(
+        (item: any) => ({
+          id: Number(item.id || item._id),
+          name: item.modelName || item.name || "",
+          brandId: Number(
+            typeof item.brand === "object" ? item.brand?.id : item.brandId,
+          ),
+        }),
       );
+      setModelsList(list);
     } catch (error) {
-      setModels([]);
+      setModelsList([]);
     }
   };
 
+  useEffect(() => {
+    getYears();
+    getCategories();
+    getBrands();
+    getModels();
+  }, []);
   // React Hook Form implementation
   const {
     register,
@@ -241,26 +265,48 @@ export default function ModelYear() {
   // Filter options
   const categoryFilterOptions = [
     { id: "All", name: "All Categories" },
-    ...categories.map((c) => ({ id: c, name: c })),
+    ...categories.map((c) => ({
+      id: String(c.id),
+      name: c.name,
+    })),
   ];
 
   const brandFilterOptions = [
     { id: "All", name: "All Brands" },
-    ...brands.map((b) => ({ id: b, name: b })),
+    ...filteredBrands.map((b) => ({
+      id: String(b.id),
+      name: b.name,
+    })),
   ];
 
   const modelFilterOptions = [
     { id: "All", name: "All Models" },
-    ...models.map((m) => ({ id: m, name: m })),
+    ...filteredModels.map((m) => ({
+      id: String(m.id),
+      name: m.name,
+    })),
   ];
 
   // Year filter options - dynamically generated from existing data
-  const yearFilterOptions = [
-    { id: "All", name: "All Years" },
-    ...Array.from(new Set(years.map((y) => y.year)))
-      .sort((a, b) => b - a)
-      .map((yr) => ({ id: yr.toString(), name: yr.toString() })),
-  ];
+const yearFilterOptions = [
+  { id: "All", name: "All Years" },
+  ...(selectedModelFilter === "All"
+    ? []
+    : Array.from(
+        new Set(
+          years
+            .filter(
+              (y) => String(y.modelId) === selectedModelFilter
+            )
+            .map((y) => y.year)
+        )
+      )
+        .sort((a, b) => b - a)
+        .map((yr) => ({
+          id: yr.toString(),
+          name: yr.toString(),
+        }))),
+];
 
   const statusFilterOptions = [
     { id: "All", name: "All Statuses" },
@@ -268,61 +314,61 @@ export default function ModelYear() {
     { id: "INACTIVE", name: "Off" },
   ];
 
-  const handleOpenAddDrawer = () => {
-    setEditId(null);
-    const firstCategory = categories[0] || { id: "", name: "" };
-    const firstBrand = brands[0] || { id: "", name: "" };
-    const firstModel = models[0] || { id: "", name: "" };
-    reset({
-      category: firstCategory.name,
-      categoryId: firstCategory.id,
-      brand: firstBrand.name,
-      brandId: firstBrand.id,
-      model: firstModel.name,
-      modelId: firstModel.id,
-      year: "",
-      status: "ACTIVE", // ✅ String, not true
-    });
-    setShowDrawer(true);
-  };
+  // const handleOpenAddDrawer = () => {
+  //   setEditId(null);
+  //   const firstCategory = categories[0] || { id: "", name: "" };
+  //   const firstBrand = brands[0] || { id: "", name: "" };
+  //   const firstModel = models[0] || { id: "", name: "" };
+  //   reset({
+  //     category: firstCategory.name,
+  //     categoryId: firstCategory.id,
+  //     brand: firstBrand.name,
+  //     brandId: firstBrand.id,
+  //     model: firstModel.name,
+  //     modelId: firstModel.id,
+  //     year: "",
+  //     status: "ACTIVE", // ✅ String, not true
+  //   });
+  //   setShowDrawer(true);
+  // };
 
-  const handleOpenEditDrawer = (item: YearDataType) => {
-    // ✅ YearDataType
-    setEditId(item.id);
-    reset({
-      category: item.category,
-      categoryId: item.categoryId || "",
-      brand: item.brand,
-      brandId: item.brandId || "",
-      model: item.model,
-      modelId: item.modelId || "",
-      year: item.year.toString(),
-      status: item.status,
-    });
-    setShowDrawer(true);
-  };
+  // const handleOpenEditDrawer = (item: YearDataType) => {
+  //   // ✅ YearDataType
+  //   setEditId(item.id);
+  //   reset({
+  //     category: item.category,
+  //     categoryId: item.categoryId || "",
+  //     brand: item.brand,
+  //     brandId: item.brandId || "",
+  //     model: item.model,
+  //     modelId: item.modelId || "",
+  //     year: item.year.toString(),
+  //     status: item.status,
+  //   });
+  //   setShowDrawer(true);
+  // };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await apiHelper.delete(`/model-year/${id}`);
-      getYears();
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  // const handleDelete = async (id: number) => {
+  //   try {
+  //     await apiHelper.delete(`/model-year/${id}`);
+  //     getYears();
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
-  const handleBulkDelete = async () => {
-    try {
-      await Promise.all(
-        selectedIds.map((id) => apiHelper.delete(`/model-year/${id}`)),
-      );
-      await getYears();
-      setSelectedIds([]);
-      setCurrentPage(1);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  // const handleBulkDelete = async () => {
+  //   try {
+  //     await Promise.all(
+  //       selectedIds.map((id) => apiHelper.delete(`/model-year/${id}`)),
+  //     );
+  //     await getYears();
+  //     setSelectedIds([]);
+  //     setCurrentPage(1);
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
   const handleToggleTableStatus = async (id: number) => {
     const item = years.find((y) => y.id === id);
@@ -367,7 +413,7 @@ export default function ModelYear() {
   };
 
   // Filter logic - Added year filter matching
-  const filteredData = years.filter((item) => {
+   const filteredData = years.filter((item) => {
     const matchesSearch =
       item.category.toLowerCase().includes(search.toLowerCase()) ||
       item.brand.toLowerCase().includes(search.toLowerCase()) ||
@@ -376,17 +422,22 @@ export default function ModelYear() {
 
     const matchesCategoryDropdown =
       selectedCategoryFilter === "All" ||
-      item.category === selectedCategoryFilter;
+      String(item.categoryId) === selectedCategoryFilter;
+
     const matchesBrandDropdown =
-      selectedBrandFilter === "All" || item.brand === selectedBrandFilter;
+      selectedBrandFilter === "All" ||
+      String(item.brandId) === selectedBrandFilter;
+
     const matchesModelDropdown =
-      selectedModelFilter === "All" || item.model === selectedModelFilter;
+      selectedModelFilter === "All" ||
+      String(item.modelId) === selectedModelFilter;
+
     const matchesYearDropdown =
       selectedYearFilter === "All" ||
       item.year.toString() === selectedYearFilter;
+
     const matchesStatusDropdown =
-      selectedStatusFilter === "All" ||
-      String(item.status) === selectedStatusFilter;
+      selectedStatusFilter === "All" || item.status === selectedStatusFilter;
 
     return (
       matchesSearch &&
@@ -502,55 +553,92 @@ export default function ModelYear() {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Category
               </span>
-              <Listbox
-                data={categoryOptions}
-                value={
-                  categoryOptions.find(
-                    (opt) => opt.name === formCategoryValue,
-                  ) || categoryOptions[0]
-                }
-                onChange={(opt: any) => {
-                  setValue("category", opt.name);
-                  setValue("categoryId", opt.id);
-                }}
-                displayField="name"
-              />
+             
+                  <Combobox
+                    data={categoryFilterOptions}
+                    displayField="name"
+                    value={
+                      categoryFilterOptions.find(
+                        (o) => o.id === selectedCategoryFilter,
+                      ) || categoryFilterOptions[0]
+                    }
+                    placeholder="Select Category"
+                    searchFields={["name"]}
+                    onChange={(opt: any) => {
+                      setSelectedCategoryFilter(opt.id);
+                      setSelectedBrandFilter("All");
+                      setSelectedModelFilter("All");
+                      setCurrentPage(1);
+
+                      if (opt.id === "All") {
+                        setFilteredBrands(brands);
+                        setFilteredModels(modelsList);
+                        return;
+                      }
+
+                      const categoryBrands = brands.filter(
+                        (b) => String(b.categoryId) === String(opt.id),
+                      );
+
+                      setFilteredBrands(categoryBrands);
+                      setFilteredModels([]);
+                    }}
+                  />
+              
             </div>
 
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Brand
               </span>
-              <Listbox
-                data={brandOptions}
-                value={
-                  brandOptions.find((opt) => opt.name === formBrandValue) ||
-                  brandOptions[0]
-                }
-                onChange={(opt: any) => {
-                  setValue("brand", opt.name);
-                  setValue("brandId", opt.id);
-                }}
-                displayField="name"
-              />
+              <Combobox
+                    data={brandFilterOptions}
+                    displayField="name"
+                    value={
+                      brandFilterOptions.find(
+                        (o) => o.id === selectedBrandFilter,
+                      ) || brandFilterOptions[0]
+                    }
+                    placeholder="Select Brand"
+                    searchFields={["name"]}
+                    onChange={(opt: any) => {
+                      setSelectedBrandFilter(opt.id);
+                      setSelectedModelFilter("All");
+                      setCurrentPage(1);
+
+                      if (opt.id === "All") {
+                        setFilteredModels(modelsList);
+                        return;
+                      }
+
+                      const brandModels = modelsList.filter(
+                        (m) => String(m.brandId) === String(opt.id),
+                      );
+
+                      setFilteredModels(brandModels);
+                    }}
+                  />
             </div>
 
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Model
               </span>
-              <Listbox
-                data={modelOptions}
-                value={
-                  modelOptions.find((opt) => opt.name === formModelValue) ||
-                  modelOptions[0]
-                }
-                onChange={(opt: any) => {
-                  setValue("model", opt.name);
-                  setValue("modelId", opt.id);
-                }}
-                displayField="name"
-              />
+               <Combobox
+                    data={modelFilterOptions}
+                    displayField="name"
+                    value={
+                      modelFilterOptions.find(
+                        (o) => o.id === selectedModelFilter,
+                      ) || modelFilterOptions[0]
+                    }
+                    placeholder="Select Model"
+                    searchFields={["name"]}
+                    onChange={(opt: any) => {
+                      setSelectedModelFilter(opt.id);
+                      setCurrentPage(1);
+                    }}
+                  />
             </div>
 
             {/* New Year Filter */}
@@ -558,18 +646,19 @@ export default function ModelYear() {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Year
               </span>
-              <Listbox
+               <Combobox
                 data={yearFilterOptions}
+                displayField="name"
                 value={
                   yearFilterOptions.find((o) => o.id === selectedYearFilter) ||
                   yearFilterOptions[0]
                 }
-                placeholder="All Years"
                 onChange={(opt: any) => {
-                  setSelectedYearFilter(opt.id);
+                  setSelectedYearFilter(opt?.id || "All");
                   setCurrentPage(1);
                 }}
-                displayField="name"
+                placeholder="Search or select year..."
+                searchFields={["name"]}
               />
             </div>
 

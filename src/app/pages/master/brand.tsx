@@ -13,11 +13,11 @@ import { Fragment, useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import {
   XMarkIcon,
-  PencilSquareIcon,
-  TrashIcon,
+  // PencilSquareIcon,
+  // TrashIcon,
   FunnelIcon,
   DocumentArrowDownIcon,
-  EllipsisHorizontalIcon,
+  // EllipsisHorizontalIcon,
   MagnifyingGlassIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -28,7 +28,7 @@ import apiHelper from "@/utils/apiHelper";
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Listbox } from "@/components/shared/form/StyledListbox";
-
+import { Combobox } from "@/components/shared/form/Combobox";
 type Brand = {
   id: number;
   _id?: string;
@@ -78,6 +78,9 @@ export default function Brand() {
   // Three distinct filter dropdown states
   const [selectedNameFilter, setSelectedNameFilter] = useState("All");
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("All");
+const [selectedBrandFilter, setSelectedBrandFilter] = useState("All");
+
+const [filterBrands, setFilterBrands] = useState<BrandOption[]>([]);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
@@ -90,7 +93,13 @@ export default function Brand() {
     id: cat.id,
     name: cat.name,
   }));
-
+const brandFilterOptions = [
+  { id: "All", name: "All Brands" },
+  ...filterBrands.map((b) => ({
+    id: String(b.id),
+    name: b.name,
+  })),
+];
   useEffect(() => {
     getBrands();
     getCategories();
@@ -199,11 +208,13 @@ export default function Brand() {
     })),
   ];
 
-  const categoryFilterOptions = [
-    { id: "All", name: "All Categories" },
-    ...categories.map((c) => ({ id: c.name, name: c.name })),
-  ];
-
+ const categoryFilterOptions = [
+  { id: "All", name: "All Categories" },
+  ...categories.map((c) => ({
+    id: String(c.id),
+    name: c.name,
+  })),
+];
   const statusFilterOptions = [
     { id: "All", name: "All Statuses" },
     { id: "ACTIVE", name: "On" },
@@ -361,27 +372,32 @@ export default function Brand() {
   };
 
   // Filter evaluation layer targeting Brand fields: Name, Category, and Status
-  const filteredData = brands.filter((item) => {
-    const itemName = item.brandName || item.name || "";
-    const matchesSearch =
-      itemName.toLowerCase().includes(search.toLowerCase()) ||
-      item.category.toLowerCase().includes(search.toLowerCase());
+const filteredData = brands.filter((item) => {
+  const itemName = item.brandName || item.name || "";
 
-    const matchesNameDropdown =
-      selectedNameFilter === "All" || itemName === selectedNameFilter;
-    const matchesCategoryDropdown =
-      selectedCategoryFilter === "All" ||
-      item.category === selectedCategoryFilter;
-    const matchesStatusDropdown =
-      selectedStatusFilter === "All" || item.status === selectedStatusFilter;
+  const matchesSearch =
+    itemName.toLowerCase().includes(search.toLowerCase()) ||
+    item.category.toLowerCase().includes(search.toLowerCase());
 
-    return (
-      matchesSearch &&
-      matchesNameDropdown &&
-      matchesCategoryDropdown &&
-      matchesStatusDropdown
-    );
-  });
+  const matchesCategory =
+    selectedCategoryFilter === "All" ||
+    String(item.categoryId) === selectedCategoryFilter;
+
+  const matchesBrand =
+    selectedBrandFilter === "All" ||
+    String(item.id) === selectedBrandFilter;
+
+  const matchesStatus =
+    selectedStatusFilter === "All" ||
+    item.status === selectedStatusFilter;
+
+  return (
+    matchesSearch &&
+    matchesCategory &&
+    matchesBrand &&
+    matchesStatus
+  );
+});
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -484,44 +500,51 @@ export default function Brand() {
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {/* Filter 1: Brand Name Criteria */}
+             <div className="flex flex-col gap-1">
+              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
+                 Category
+              </span>
+             <Combobox
+     data={categoryFilterOptions}
+  value={
+    categoryOptions.find(
+      (o) => String(o.id) === selectedCategoryFilter
+    ) || null
+  }
+  displayField="name"
+  searchFields={["name"]}
+  placeholder="All Categories"
+  onChange={(opt: any) => {
+    setSelectedCategoryFilter(String(opt.id));
+    setSelectedBrandFilter("All");
+
+    const categoryBrands = brands.filter(
+      (b) => String(b.categoryId) === String(opt.id)
+    );
+
+    setFilterBrands(categoryBrands);
+  }}
+/>
+            </div>
+
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Brand Name
               </span>
-              <Listbox
-                data={nameFilterOptions}
-                value={
-                  nameFilterOptions.find((o) => o.id === selectedNameFilter) ||
-                  nameFilterOptions[0]
-                }
-                placeholder="All Brands"
-                onChange={(opt: any) => {
-                  setSelectedNameFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div>
-
-            {/* Filter 2: Category Criteria */}
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Brand Category
-              </span>
-              <Listbox
-                data={categoryFilterOptions}
-                value={
-                  categoryFilterOptions.find(
-                    (o) => o.id === selectedCategoryFilter,
-                  ) || categoryFilterOptions[0]
-                }
-                placeholder="All Categories"
-                onChange={(opt: any) => {
-                  setSelectedCategoryFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
+             <Combobox
+  data={brandFilterOptions}
+  value={
+    brandFilterOptions.find(
+      (o) => o.id === selectedBrandFilter
+    ) || brandFilterOptions[0]
+  }
+  displayField="name"
+  searchFields={["name"]}
+  placeholder="All Brands"
+  onChange={(opt: any) => {
+    setSelectedBrandFilter(opt.id);
+  }}
+/>
             </div>
 
             {/* Filter 3: Status Criteria */}
