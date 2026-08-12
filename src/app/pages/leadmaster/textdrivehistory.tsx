@@ -74,7 +74,7 @@ const fetchTestDriveHistory = async () => {
   try {
     setLoading(true);
 
-    const response = await apiHelper.get("/test-drives/history");
+    const response = await apiHelper.get("/branch-panel/test-drives/history");
 
     
 

@@ -120,7 +120,7 @@ useEffect(() => {
      fetchContras();
     const fetchAccounts = async () => {
       try {
-       const res = await apiHelper.get("/accounts?scope=all");
+       const res = await apiHelper.get("/branch-panel/accounts?scope=all");
        
         const accountData = (res.data || res.data).map((acc: any) => ({
           id: acc.id,
@@ -175,7 +175,7 @@ const fetchContras = async () => {
   try {
     setLoading(true);
 
-    const res = await apiHelper.get("/contra");
+    const res = await apiHelper.get("/branch-panel/contra");
 
 
     const data = res.map((item: any) => ({
@@ -200,7 +200,10 @@ const fetchContras = async () => {
 };
 const getVoucher = async () => {
   try {
-    const res = await apiHelper.get("/contra/voucher");
+     const res = await apiHelper.get(
+      `/contra/voucher?companyId=${companyId}&financialYearId=${financialYearId}`
+    );
+
 
     setVoucherNo(res.voucherNo);
 
@@ -249,7 +252,7 @@ const getVoucher = async () => {
   if (!validateForm()) return;
 
   try {
-    await apiHelper.post("/contra", {
+    await apiHelper.post("/branch-panel/contra", {
       companyId,
       financialYearId,
       date,
@@ -324,7 +327,7 @@ const getVoucher = async () => {
 const downloadExcel = async () => {
   try {
     const blob = await apiHelper.getBlob(
-      "/contra/export/excel"
+      "/branch-panel/contra/export/excel"
     );
 
     const url = window.URL.createObjectURL(blob);

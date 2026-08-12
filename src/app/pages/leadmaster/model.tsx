@@ -1052,7 +1052,7 @@ function ReviewLeadSummaryStep({
   };
   const fetchAccounts = async () => {
     try {
-      const res = await apiHelper.get("/accounts?scope=all");
+      const res = await apiHelper.get("/branch-panel/accounts?scope=all");
 
       const data = Array.isArray(res.data)
         ? res.data
@@ -1989,7 +1989,7 @@ const financialYearId = Number(
 );
   const fetchExecutives = async () => {
     try {
-      const res = await apiHelper.get("/employees");
+      const res = await apiHelper.get("/branch-panel/employees");
 
       const data = Array.isArray(res.data?.data)
         ? res.data.data
@@ -2221,7 +2221,7 @@ marginMoney:
 
       console.log("PAYLOAD", payload);
 
-      const res = await apiHelper.post("/leads", payload);
+      const res = await apiHelper.post("/branch-panel/leads", payload);
       console.log("SUCCESS", res.data);
 
       toast.success("Lead created successfully!");
@@ -2237,7 +2237,7 @@ marginMoney:
 
   const handleCreateAccount = async (formData: AccountForm) => {
     try {
-      const res = await apiHelper.post("/accounts", {
+      const res = await apiHelper.post("/branch-panel/accounts", {
         accountName: formData.accountName,
         printName: formData.accountName,
         mobile: formData.mobile,
@@ -2271,8 +2271,9 @@ marginMoney:
 
   const fetchCustomers = async () => {
     try {
-        const res = await apiHelper.get("/accounts?scope=all");
-
+        const res = await apiHelper.get("/branch-panel/accounts", {
+      scope: "all",
+    });
       const data = Array.isArray(res.data)
         ? res.data
         : Array.isArray(res.data?.data)

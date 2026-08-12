@@ -163,7 +163,7 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
 
   const fetchInventory = async () => {
     try {
-      const res = await apiHelper.get("/purchases/tractor-inventory");
+      const res = await apiHelper.get("/branch-panel/purchases/tractor-inventory");
 
       setRows(res.data || []);
     } catch (err) {

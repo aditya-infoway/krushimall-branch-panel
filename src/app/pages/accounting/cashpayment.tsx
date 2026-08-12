@@ -179,7 +179,7 @@ export default function CashPayment() {
   }, []);
   const getPurchaseBills = async () => {
     try {
-      const res = await apiHelper.get("/purchases");
+      const res = await apiHelper.get("/branch-panel/purchases");
 
       setPurchaseBills(
         res.data.map((p: any) => ({
@@ -197,7 +197,7 @@ export default function CashPayment() {
 
   const getAccounts = async () => {
     try {
-     const res = await apiHelper.get("/accounts?scope=all");
+     const res = await apiHelper.get("/branch-panel/accounts?scope=all");
 
       const accounts = res.data;
 
@@ -232,8 +232,9 @@ export default function CashPayment() {
   };
   const getVoucherNo = async () => {
     try {
-      const res = await apiHelper.get("/cash-payment/generate-voucher");
-
+       const res = await apiHelper.get(
+      `cash-payment/generate-voucher?companyId=${companyId}&financialYearId=${financialYearId}`
+    );
       setForm((prev) => ({
         ...prev,
         voucherNo: res.voucherNo,
@@ -244,7 +245,7 @@ export default function CashPayment() {
   };
   const getCashPayments = async () => {
     try {
-      const res = await apiHelper.get("/cash-payment");
+      const res = await apiHelper.get("/branch-panel/cash-payments");
 
       setRows(
         res.map((item: any) => ({
@@ -384,10 +385,10 @@ export default function CashPayment() {
       console.log(payload);
 
       if (editId !== null) {
-        await apiHelper.put(`/cash-payment/${editId}`, payload);
+        await apiHelper.put(`/branch-panel/cash-payments/${editId}`, payload);
         toast.success("Cash payment updated successfully!");
       } else {
-        await apiHelper.post("/cash-payment", payload);
+        await apiHelper.post("/branch-panel/cash-payments", payload);
         toast.success("Cash payment added successfully!");
       }
 
@@ -430,7 +431,7 @@ export default function CashPayment() {
   }, [filterType, filterDateFrom, filterDateTo, search]);
   const handleExportExcel = async () => {
     try {
-      const blob = await apiHelper.getBlob("/cash-payment/export/excel");
+      const blob = await apiHelper.getBlob("/branch-panel/cash-payments/export/excel");
 
       const url = window.URL.createObjectURL(blob);
 

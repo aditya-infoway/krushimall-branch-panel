@@ -49,7 +49,7 @@ const [bankAccountOptions, setBankAccountOptions] = useState<any[]>([]);
   ];
 const getBankAccounts = async () => {
   try {
-    const res = await apiHelper.get("/accounts");
+    const res = await apiHelper.get("/branch-panel/accounts?scope=all");
 
     console.log("Account API Response:", res);
 
@@ -172,7 +172,7 @@ useEffect(() => {
 const getBankBook = async () => {
   try {
     const [bankPayments] = await Promise.all([
-      apiHelper.get("/bank-payment"),
+      apiHelper.get("/branch-panel/bank-payments"),
       // apiHelper.get("/bank-receipt"),
     ]);
 

@@ -127,7 +127,7 @@ export default function LeadBuilder() {
   );
   const fetchLeads = async () => {
     try {
-      const res = await apiHelper.get("/leads");
+    const res = await apiHelper.get("/branch-panel/leads");
 
       const data = Array.isArray(res.data) ? res.data : [];
 
@@ -151,7 +151,7 @@ export default function LeadBuilder() {
     setConfirmLoading(true);
     try {
       if (deleteTargetId === null) return;
-      await apiHelper.delete(`/leads/${deleteTargetId}`);
+      await apiHelper.delete(`/branch-panel/lead/${deleteTargetId}`);
       toast.success("Lead deleted successfully!");
       await fetchLeads();
       setDeleteTargetId(null);

@@ -200,7 +200,7 @@ export default function BankPayment() {
   }, []);
   const getPurchaseBills = async () => {
     try {
-      const res = await apiHelper.get("/purchases");
+      const res = await apiHelper.get("/branch-panel/purchases");
 
       setPurchaseBills(
         res.data.map((p: any) => ({
@@ -218,7 +218,7 @@ export default function BankPayment() {
 
   const getAccounts = async () => {
     try {
-    const res = await apiHelper.get("/accounts?scope=all");
+    const res = await apiHelper.get("/branch-panel/accounts?scope=all");
 
       const accounts = res.data;
 
@@ -255,7 +255,7 @@ export default function BankPayment() {
   };
   const getBankPayments = async () => {
     try {
-      const res = await apiHelper.get("/bank-payment");
+      const res = await apiHelper.get("/branch-panel/bank-payments");
 
       const data = res.map((item: any) => ({
         id: item.id,
@@ -286,7 +286,10 @@ export default function BankPayment() {
   };
   const getVoucherNo = async () => {
     try {
-      const res = await apiHelper.get("/bank-payment/voucher");
+       const res = await apiHelper.get(
+      `/bank-payment/voucher?companyId=${companyId}&financialYearId=${financialYearId}`
+    );
+
 
       setForm((prev) => ({
         ...prev,
@@ -414,10 +417,10 @@ export default function BankPayment() {
       };
 
       if (editId) {
-        await apiHelper.put(`/bank-payment/${editId}`, payload);
+        await apiHelper.put(`/branch-panel/bank-payments/${editId}`, payload);
         toast.success("Bank payment updated successfully!");
       } else {
-        await apiHelper.post("/bank-payment", payload);
+        await apiHelper.post("/branch-panel/bank-payments", payload);
         toast.success("Bank payment added successfully!");
       }
 
@@ -490,7 +493,7 @@ export default function BankPayment() {
   }, [filterType, filterDateFrom, filterDateTo, filterPaymentMode, search]);
   const downloadExcel = async () => {
     try {
-      const blob = await apiHelper.getBlob("/bank-payment/export/excel");
+      const blob = await apiHelper.getBlob("/branch-panel/bank-payments/export/excel");
 
       const url = window.URL.createObjectURL(blob);
 

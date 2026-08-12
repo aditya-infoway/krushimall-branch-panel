@@ -214,10 +214,10 @@ const NewAccount = () => {
       };
 
       if (isEditMode) {
-        await apiHelper.put(`/accounts/${editData.id}`, finalPayload);
+        await apiHelper.put(`/branch-panel/accounts/${editData.id}`, finalPayload);
         toast.success("Account updated successfully!");
       } else {
-        await apiHelper.post("/accounts", finalPayload);
+        await apiHelper.post("/branch-panel/accounts", finalPayload);
         toast.success("Account created successfully!");
       }
 

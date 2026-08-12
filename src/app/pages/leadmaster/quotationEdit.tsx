@@ -149,7 +149,7 @@ const fetchVariants = async (modelId?: number) => {
     try {
       // setLoading(true);
 
-      const res = await apiHelper.get(`/leads/${id}`);
+      const res = await apiHelper.get(`/branch-panel/leads/${id}`);
 
       const lead = res.data.data ?? res.data;
 
@@ -342,7 +342,7 @@ const handleSave = async () => {
 
     const response =
       await apiHelper.put(
-        `/leads/${id}/quotation`,
+        `/branch-panel/leads/${id}/quotation`,
         payload,
       );
 

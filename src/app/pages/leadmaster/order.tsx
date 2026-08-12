@@ -371,7 +371,7 @@ const Order: React.FC = () => {
   };
   const fetchPaymentAccounts = async () => {
     try {
-      const response = await apiHelper.get("/accounts");
+      const response = await apiHelper.get("/branch-panel/accounts?scope=all");
 
       const accounts = Array.isArray(response.data)
         ? response.data
@@ -423,7 +423,7 @@ const Order: React.FC = () => {
   const [bankOptions, setBankOptions] = useState<BankerOption[]>([]);
   const getBankers = async () => {
     try {
-      const response = await apiHelper.get("/bankers");
+      const response = await apiHelper.get("/branch-panel/bankers");
 
       const activeBankers = (response.data || []).filter(
         (item: BankerOption) => item.status === "ACTIVE",
@@ -443,7 +443,7 @@ const Order: React.FC = () => {
   }, []);
   const fetchVehicleInventory = async () => {
     try {
-      const res = await apiHelper.get("/purchases/tractor-inventory");
+      const res = await apiHelper.get("/branch-panel/purchases/tractor-inventory");
 
       const data = Array.isArray(res.data?.data)
         ? res.data.data
@@ -532,7 +532,7 @@ const Order: React.FC = () => {
       try {
         setLoading(true);
 
-        const response = await apiHelper.get(`/leads/${id}`);
+        const response = await apiHelper.get(`/branch-panel/leads/${id}`);
 
         console.log("CREATE ORDER LEAD RESPONSE:", response.data);
 
@@ -982,7 +982,7 @@ const Order: React.FC = () => {
       // CREATE ORDER API
       // =====================================
 
-      const response = await apiHelper.post("/orders", payload);
+      const response = await apiHelper.post("/branch-panel/orders", payload);
 
       console.log("CREATE ORDER RESPONSE:", response.data);
 

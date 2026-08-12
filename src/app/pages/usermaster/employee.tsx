@@ -148,9 +148,11 @@ const Employee = () => {
     name: "teamLeadId",
   });
  const [teamLeadOptions, setTeamLeadOptions] = useState<any[]>([]);
+
+  // FIX: backend route is "/team-leads/list" (see routes/branch/employee.ts)
   const getTeamLeads = async (department: string) => {
     const res = await apiHelper.get(
-      `/employees/team-leads?department=${department}`,
+      `/branch-panel/employees/team-leads/list?department=${department}`,
     );
 
     setTeamLeadOptions(
@@ -217,9 +219,13 @@ const Employee = () => {
     { id: "ACTIVE", name: "Active" },
     { id: "INACTIVE", name: "Inactive" },
   ];
+
+  // FIX: backend route is "/departments/list" (see routes/branch/employee.ts)
   const getDepartments = async () => {
     try {
-      const res = await apiHelper.get("/employees/departments");
+      const res = await apiHelper.get(
+        "/branch-panel/employees/departments/list",
+      );
 
       setDepartmentOptions(
         res.data.map((item: any) => ({
@@ -232,10 +238,13 @@ const Employee = () => {
       console.log(err);
     }
   };
+
+  // FIX: was missing "/branch-panel" prefix and backend expects
+  // "/roles/:departmentId" not "/roles/department/:departmentId"
   const getRoles = async (departmentId: number) => {
     try {
       const res = await apiHelper.get(
-        `/employees/roles/department/${departmentId}`,
+        `/branch-panel/employees/roles/${departmentId}`,
       );
 
       setRoleOptions(
@@ -251,7 +260,7 @@ const Employee = () => {
 
   const getEmployees = async () => {
     try {
-      const response = await apiHelper.get("/employees");
+      const response = await apiHelper.get("/branch-panel/employees");
 
       setEmployees(response.data || []);
     } catch (error) {
@@ -283,7 +292,7 @@ const Employee = () => {
 
   const handleOpenEditDrawer = async (item: Employee) => {
     try {
-      const response = await apiHelper.get(`/employees/${item.id}`);
+      const response = await apiHelper.get(`/branch-panel/employees/${item.id}`);
 
       const employee = response.data;
 
@@ -339,7 +348,7 @@ const Employee = () => {
     try {
       if (isBulkDelete) {
         await Promise.all(
-          selectedIds.map((id) => apiHelper.delete(`/employees/${id}`)),
+          selectedIds.map((id) => apiHelper.delete(`/branch-panel/employees/${id}`)),
         );
         toast.success(`${selectedIds.length} employees deleted successfully!`);
         setSelectedIds([]);
@@ -348,7 +357,7 @@ const Employee = () => {
         setConfirmState("success");
       } else {
         if (deleteTargetId === null) return;
-        await apiHelper.delete(`/employees/${deleteTargetId}`);
+        await apiHelper.delete(`/branch-panel/employees/${deleteTargetId}`);
         toast.success("Employee deleted successfully!");
         await getEmployees();
         setDeleteTargetId(null);
@@ -366,9 +375,10 @@ const Employee = () => {
     }
   };
 
+  // FIX: backend route is "/:id/toggle-status" — id must come BEFORE "toggle-status"
   const handleToggleStatus = async (id: number) => {
     try {
-      await apiHelper.patch(`/employees/toggle-status/${id}`, {});
+      await apiHelper.patch(`/branch-panel/employees/${id}/toggle-status`, {});
 
       getEmployees();
     } catch (error) {
@@ -391,10 +401,10 @@ const Employee = () => {
       };
 
       if (editId) {
-        await apiHelper.put(`/employees/${editId}`, payload);
+        await apiHelper.put(`/branch-panel/employees/${editId}`, payload);
         toast.success("Employee updated successfully!");
       } else {
-        await apiHelper.post("/employees", payload);
+        await apiHelper.post("/branch-panel/employees", payload);
         toast.success("Employee created successfully!");
       }
 

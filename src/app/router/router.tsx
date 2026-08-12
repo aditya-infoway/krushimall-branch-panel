@@ -24,7 +24,7 @@ const router = createBrowserRouter(
     },
   ],
   {
-    basename: import.meta.env.MODE === "capacitor" ? "/" : "/branch",
+    basename: import.meta.env.MODE === "capacitor" ? "/" : "krushimall-branch",
   }
 );
 

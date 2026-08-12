@@ -161,7 +161,7 @@ const navigate = useNavigate();
       : followups;
   const fetchFollowups = async () => {
     try {
-      const res = await apiHelper.get(`/followup/lead/${id}/latest`);
+    const res = await apiHelper.get(`/branch-panel/followups/lead/${id}/latest`);
 
       setFollowups(res.data || []);
     } catch (error) {
@@ -181,7 +181,7 @@ const navigate = useNavigate();
   useEffect(() => {
     const fetchLead = async () => {
       try {
-        const res = await apiHelper.get(`/leads/${id}`);
+        const res = await apiHelper.get(`/branch-panel/leads/${id}`);
         setLead(res.data || res);
       } catch (error) {
         console.error(error);
@@ -216,7 +216,7 @@ const navigate = useNavigate();
         discussion,
       };
 
-      const res = await apiHelper.post("/followup", payload);
+   const res = await apiHelper.post("/branch-panel/followups", payload);
 
       console.log("Saved:", res);
 
