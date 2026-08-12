@@ -100,7 +100,7 @@ const [bankers, setBankers] =
   };
 const getBankers = async () => {
   try {
-    const response = await apiHelper.get("/bankers");
+    const response = await apiHelper.get("/branch-panel/bankers");
     setBankers(response.data || []);
   } catch (error) {
     console.log(error);

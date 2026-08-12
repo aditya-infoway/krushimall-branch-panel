@@ -64,7 +64,11 @@ const statusOptions = [
   { id: "ACTIVE", name: "On" },
   { id: "INACTIVE", name: "Off" },
 ];
-
+interface BrandOption {
+  id: number;
+  name: string;
+  categoryId: number;
+}
 export default function Model() {
   const [showDrawer, setShowDrawer] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -72,15 +76,13 @@ export default function Model() {
   const [categories, setCategories] = useState<{ id: number; name: string }[]>(
     [],
   );
-  const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
+  const [brands, setBrands] = useState<BrandOption[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [filteredBrands, setFilteredBrands] = useState<
-    { id: number; name: string }[]
-  >([]);
+ const [filteredBrands, setFilteredBrands] = useState<BrandOption[]>([]);
 
   // Change from id: number to id: string
   const categoryOptions = categories.map((cat) => ({

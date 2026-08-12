@@ -92,7 +92,7 @@ const Account = () => {
         setConfirmState("success");
       } else {
         if (deleteTargetId === null) return;
-        await apiHelper.delete(`/accounts/${deleteTargetId}`);
+        await apiHelper.delete(`/branch-panel/accounts/${deleteTargetId}`);
         toast.success("Account deleted successfully!");
         setData((prev) => prev.filter((item) => item.id !== deleteTargetId));
         setDeleteTargetId(null);
@@ -156,7 +156,7 @@ const Account = () => {
   };
   const getAccounts = async () => {
     try {
-      const response = await apiHelper.get("/accounts");
+      const response = await apiHelper.get("/branch-panel/accounts");
 
       // Check actual structure
 

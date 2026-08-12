@@ -175,7 +175,7 @@ export default function CashReceipt() {
   };
   const getLeads = async () => {
     try {
-      const res = await apiHelper.get("/leads");
+      const res = await apiHelper.get("/branch-panel/leads");
 
       const leads = res.data || [];
 
@@ -221,7 +221,7 @@ export default function CashReceipt() {
   }, []);
   const getCashReceipts = async () => {
     try {
-      const res = await apiHelper.get("/cash-receipt");
+      const res = await apiHelper.get("/branch-panel/cash-receipts");
 
       const data = res.map((item: any) => ({
         ...item,
@@ -240,9 +240,11 @@ export default function CashReceipt() {
   }, []);
   const getVoucherNo = async () => {
     try {
-      const res = await apiHelper.get("/cash-receipt/voucher");
+        const res = await apiHelper.get(
+      `/cash-receipt/voucher?companyId=${companyId}&financialYearId=${financialYearId}`
+    );
 
-      console.log("Voucher API:", res);
+     
 
       const voucherNo = res?.data?.voucherNo ?? res?.voucherNo ?? "";
 
@@ -256,7 +258,7 @@ export default function CashReceipt() {
   };
   const getAccounts = async () => {
     try {
-     const res = await apiHelper.get("/accounts?scope=all");
+     const res = await apiHelper.get("/branch-panel/accounts?scope=all");
 
       const accounts = res.data.data || res.data || [];
 
@@ -420,10 +422,10 @@ export default function CashReceipt() {
       };
 
       if (editId) {
-        await apiHelper.put(`/cash-receipt/${editId}`, payload);
+        await apiHelper.put(`/branch-panel/cash-receipts/${editId}`, payload);
         toast.success("Cash receipt updated successfully!");
       } else {
-        await apiHelper.post("/cash-receipt", payload);
+        await apiHelper.post("/branch-panel/cash-receipts", payload);
         toast.success("Cash receipt added successfully!");
       }
 
@@ -465,7 +467,7 @@ export default function CashReceipt() {
   }, [filterType, filterDateFrom, filterDateTo, search]);
   const downloadExcel = async () => {
     try {
-      const blob = await apiHelper.getBlob("/cash-receipt/export/excel");
+      const blob = await apiHelper.getBlob("/branch-panel/cash-receipts/export/excel");
 
       const url = window.URL.createObjectURL(blob);
 
@@ -485,7 +487,7 @@ export default function CashReceipt() {
 
   const handlePrint = async (item: CashReceipt) => {
     try {
-      const blob = await apiHelper.getBlob(`/cash-receipt/${item.id}/print`);
+      const blob = await apiHelper.getBlob(`/branch-panel/cash-receipts/${item.id}/print`);
       const url = window.URL.createObjectURL(blob);
       window.open(url, "_blank");
       setTimeout(() => window.URL.revokeObjectURL(url), 60000);

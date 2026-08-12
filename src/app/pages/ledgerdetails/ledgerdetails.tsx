@@ -105,7 +105,7 @@ const LedgerDetails: React.FC = () => {
     try {
       setLoading(true);
 
-      const res = await apiHelper.get(`/ledger/details/${accountId}`, {
+      const res = await apiHelper.get(`/branch-panel/ledger/details/${accountId}`, {
         fromDate: convertDate(appliedFromDate),
         toDate: convertDate(appliedToDate),
       });
@@ -198,7 +198,7 @@ const LedgerDetails: React.FC = () => {
   };
   const downloadExcel = async () => {
     const blob = await apiHelper.getBlob(
-      `/ledger/details/${accountId}/export`,
+      `/branch-panel/ledger/details/${accountId}/export`,
       {
         fromDate: convertDate(fromDate),
         toDate: convertDate(toDate),

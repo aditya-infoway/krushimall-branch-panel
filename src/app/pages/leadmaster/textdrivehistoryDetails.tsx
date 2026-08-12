@@ -104,7 +104,7 @@ export default function TestDriveHistoryDetails() {
     try {
       setLoading(true);
 
-      const response = await apiHelper.get(`/test-drives/history/${id}`);
+      const response = await apiHelper.get(`/branch-panel/test-drives/history/${id}`);
 
       console.log(response.data);
 

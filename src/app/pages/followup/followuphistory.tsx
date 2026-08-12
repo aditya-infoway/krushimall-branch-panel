@@ -55,7 +55,7 @@ const FollowupHistory: React.FC = () => {
   const fetchHistory = async () => {
     try {
       setLoading(true);
-      const res = await apiHelper.get(`/followup/lead/${id}`);
+      const res = await apiHelper.get(`/branch-panel/followups/lead/${id}`);
       setFollowups(res.data || []);
       setLead(res.lead || null);
     } catch (error) {

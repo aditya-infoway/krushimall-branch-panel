@@ -79,7 +79,7 @@ export default function ModelYear() {
   const [categories, setCategories] = useState<{ id: number; name: string }[]>(
     [],
   );
-  const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
+const [brands, setBrands] = useState<BrandOption[]>([]);
   const [models, setModels] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
   type BrandOption = {

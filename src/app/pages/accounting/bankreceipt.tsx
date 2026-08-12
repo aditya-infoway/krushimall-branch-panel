@@ -211,7 +211,7 @@ export default function BankReceipt() {
   };
   const getLeads = async () => {
     try {
-      const res = await apiHelper.get("/leads");
+      const res = await apiHelper.get("/branch-panel/leads");
 
       const leads = res.data || [];
 
@@ -257,7 +257,7 @@ export default function BankReceipt() {
   }, []);
   const getAccounts = async () => {
     try {
-     const res = await apiHelper.get("/accounts?scope=all");
+     const res = await apiHelper.get("/branch-panel/accounts?scope=all");
 
       const accounts = res.data.data || res.data || [];
 
@@ -298,7 +298,7 @@ export default function BankReceipt() {
   }, []);
 const getBankReceipts = async () => {
   try {
-    const res = await apiHelper.get("/bank-receipt");
+    const res = await apiHelper.get("/branch-panel/bank-receipts");
 
     // console.log("Bank Receipt Response:", res);
 
@@ -334,7 +334,9 @@ const getBankReceipts = async () => {
 
   const getVoucherNo = async () => {
     try {
-      const res = await apiHelper.get("/bank-receipt/voucher");
+      const res = await apiHelper.get(
+      `/bank-receipt/voucher?companyId=${companyId}&financialYearId=${financialYearId}`
+    );
 
       const voucherNo = res?.data?.voucherNo ?? res?.voucherNo ?? "";
 
@@ -421,10 +423,10 @@ const getBankReceipts = async () => {
     };
 
     if (editId) {
-      await apiHelper.put(`/bank-receipt/${editId}`, payload);
+      await apiHelper.put(`/branch-panel/bank-receipts/${editId}`, payload);
       toast.success("Bank receipt updated successfully!");
     } else {
-      await apiHelper.post("/bank-receipt", payload);
+      await apiHelper.post("/branch-panel/bank-receipts", payload);
       toast.success("Bank receipt added successfully!");
     }
 
@@ -520,7 +522,7 @@ const getBankReceipts = async () => {
 const downloadExcel = async () => {
   try {
     const blob = await apiHelper.getBlob(
-      "/bank-receipt/export/excel"
+      "/branch-panel/bank-receipts/export/excel"
     );
 
     const url = window.URL.createObjectURL(blob);
@@ -544,7 +546,7 @@ const downloadExcel = async () => {
 
  const handlePrint = async (item: BankReceipt) => {
   try {
-    const blob = await apiHelper.getBlob(`/bank-receipt/${item.id}/print`);
+    const blob = await apiHelper.getBlob(`/branch-panel/bank-receipts/${item.id}/print`);
     const url = window.URL.createObjectURL(blob);
     window.open(url, "_blank");
     setTimeout(() => window.URL.revokeObjectURL(url), 60000);

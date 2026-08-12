@@ -246,7 +246,7 @@ export function TestDriveModal({
         placeOfTestDrive: data.placeOfTestDrive,
       };
 
-      await apiHelper.post("/test-drives", payload);
+      await apiHelper.post("/branch-panel/test-drives", payload);
 
       toast.success("Test drive added successfully!");
       if (onSuccess) onSuccess();

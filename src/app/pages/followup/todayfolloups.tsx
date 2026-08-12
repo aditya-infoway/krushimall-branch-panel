@@ -163,7 +163,7 @@ const [loading, setLoading] = useState(true);
 const fetchBoard = async () => {
   try {
     setLoading(true);
-    const res = await apiHelper.get(`/followup/board?t=${Date.now()}`);
+    const res = await apiHelper.get(`/branch-panel/followups/board?t=${Date.now()}`);
     setBoard(res.data || { Pending: [], Attend: [], Delay: [], Upcoming: [] });
   } catch (error) {
     console.error("Board fetch error:", error);

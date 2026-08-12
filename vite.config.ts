@@ -5,7 +5,7 @@ import path from "path";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig(({ mode }) => ({
-  base: mode === "capacitor" ? "/" : "/branch/",
+  base: mode === "capacitor" ? "/" : "krushimall-branch",
   plugins: [react(), svgr(), tailwindcss()],
   resolve: {
     alias: {

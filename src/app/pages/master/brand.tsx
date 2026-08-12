@@ -97,7 +97,7 @@ const brandFilterOptions = [
   { id: "All", name: "All Brands" },
   ...filterBrands.map((b) => ({
     id: String(b.id),
-    name: b.name,
+      name: b.name || "",
   })),
 ];
   useEffect(() => {
@@ -220,7 +220,11 @@ const brandFilterOptions = [
     { id: "ACTIVE", name: "On" },
     { id: "INACTIVE", name: "Off" },
   ];
-
+interface BrandOption {
+  id: number;
+  name?: string;
+  categoryId?: number;
+}
   const handleOpenAddDrawer = () => {
     setEditId(null);
     const firstCategory = categories[0] || { id: "", name: "" };

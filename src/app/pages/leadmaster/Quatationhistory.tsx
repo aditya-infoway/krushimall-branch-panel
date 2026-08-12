@@ -84,7 +84,7 @@ const [
 
         const response =
           await apiHelper.get(
-            "/leads/quotation-history",
+            "/branch-panel/leads/quotation-history",
           );
 
         setQuotationHistory(

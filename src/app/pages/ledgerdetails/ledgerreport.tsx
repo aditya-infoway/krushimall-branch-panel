@@ -67,7 +67,7 @@ const [filterData, setFilterData] = useState<FilterData>({
 
   const getLedgerAccounts = async () => {
   try {
-    const res = await apiHelper.get("/accounts");
+    const res = await apiHelper.get("/branch-panel/accounts");
 
     console.log("Accounts:", res);
 
@@ -139,7 +139,7 @@ const handleViewClick = (account: any) => {
     return pages;
   };
 const downloadExcel = async () => {
-  const blob = await apiHelper.getBlob("/ledger/export");
+  const blob = await apiHelper.getBlob("/branch-panel/ledger/export");
 
   const url = window.URL.createObjectURL(blob);
 

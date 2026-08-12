@@ -103,7 +103,7 @@ useEffect(() => {
 const getCashBook = async () => {
   try {
     const [cashPayments, ] = await Promise.all([
-      apiHelper.get("/cash-payment"),
+      apiHelper.get("/branch-panel/cash-payments"),
       // apiHelper.get("/cash-receipt"),
     ]);
 // console.log("Cash Payments:", cashPayments);

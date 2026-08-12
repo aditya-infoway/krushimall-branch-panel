@@ -87,7 +87,7 @@ export default function QuotationHistoryDetails() {
     try {
       setLoading(true);
 
-      const response = await apiHelper.get(`/leads/quotation-history/${id}`);
+      const response = await apiHelper.get(`/branch-panel/leads/quotation-history/${id}`);
 
       console.log("QUOTATION DETAILS:", response);
 
