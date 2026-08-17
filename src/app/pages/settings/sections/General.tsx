@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { useAuthContext } from "@/app/contexts/auth/context";
 
 export default function General() {
-  console.log("GENERAL COMPONENT RENDERED");
+
   const savedUser = JSON.parse(localStorage.getItem("branchUser") || "{}");
   const id = savedUser?.id;
   const navigate = useNavigate();
@@ -59,28 +59,35 @@ export default function General() {
       label: city.name,
     }));
   }, [country, state]);
-  const fetchBranch = async () => {
-    try {
-      setLoading(true);
+ const fetchBranch = async () => {
+  try {
+    setLoading(true);
 
-      const response = await apiHelper.get(`/branch/${id}`);
+    const response = await apiHelper.get(`/branch/${id}`);
 
-      console.log("API Response:", response);
+    console.log("API Response:", response);
 
-      setCountry(response.countryCode || "");
-      setState(response.stateCode || "");
-      setStateCode(response.stateCode || "");
-      setCity(response.city || "");
-      setDistrict(response.district || "");
+    const data = response?.data;
 
-      setBranch(response);
-    } catch (err) {
-      console.log("API ERROR", err);
-    } finally {
-      console.log("Finally executed");
-      setLoading(false);
+    if (!data) {
+      console.error("Branch data not found");
+      return;
     }
-  };
+
+    setCountry(data.countryCode || "");
+    setState(data.stateCode || "");
+    setStateCode(data.stateCode || "");
+    setCity(data.city || "");
+    setDistrict(data.district || "");
+
+    setBranch(data);
+  } catch (err) {
+    console.log("API ERROR", err);
+  } finally {
+    console.log("Finally executed");
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     if (id) {
@@ -119,7 +126,7 @@ export default function General() {
         formData.append("logo", avatar);
       }
 
-      await apiHelper.put(`/branch/${branch.id}`, formData, {
+      await apiHelper.put(`/branch-panel/branch/${branch.id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

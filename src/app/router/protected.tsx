@@ -271,24 +271,37 @@ const protectedRoutes: RouteObject = {
           ],
         },
 
+       {
+  path: "stocktransfer",
+  children: [
+    {
+      path: "vehiclestock",
+      children: [
+        // Vehicle Stock Transfer List
         {
-          path: "stocktransfer",
-          children: [
-            {
-              path: "vehiclestock",
-              children: [
-                {
-                  index: true,
-                  lazy: async () => ({
-                    Component: (
-                      await import("@/app/pages/stocktransfer/vehiclestock")
-                    ).default,
-                  }),
-                },
-              ],
-            },
-          ],
+          index: true,
+          lazy: async () => ({
+            Component: (
+              await import("@/app/pages/stocktransfer/vehiclestock")
+            ).default,
+          }),
         },
+
+        // Vehicle Stock Transfer Details
+         {
+          path: "view/:id",
+          lazy: async () => ({
+            Component: (
+              await import(
+                "@/app/pages/stocktransfer/Vehiclestocktransferdetails"
+              )
+            ).default,
+          }),
+        },
+      ],
+    },
+  ],
+},
 
         {
           path: "enquirysettings",

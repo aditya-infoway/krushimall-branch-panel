@@ -22,13 +22,14 @@ export interface TractorInventoryRow {
   stock: "On" | "Off";
   status: "Present" | "Sold" | "In Transit" | "Pending" | "Reserved" | "Booked";
   location: string;
+  itemCode:string;
   currentLocation: string;
   billNo: string;
   purchaseBillNo: string;
   supplierName: string;
   itemName: string;
-  model: string;
-  variant: string;
+  modelName: string;
+  variantName: string;
   colour: string;
   fuelType: string;
   serialNo: string;
@@ -38,10 +39,10 @@ export interface TractorInventoryRow {
   keyNumber: string;
   batteryMake: string;
   batteryNo: string;
-  first1Tyer: string;
-  first2Tyer: string;
-  second1Tyer: string;
-  second2Tyer: string;
+first1TyreNo: string;
+first2TyreNo: string;
+second1TyreNo: string;
+second2TyreNo: string;
   grnDate: string;
   grnRecordDate: string;
   grnNo: string;
@@ -163,7 +164,7 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
 
   const fetchInventory = async () => {
     try {
-      const res = await apiHelper.get("/branch-panel/purchases/tractor-inventory");
+      const res = await apiHelper.get("/branch-panel/tractor-inventory");
 
       setRows(res.data || []);
     } catch (err) {
@@ -212,8 +213,8 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
           r.engineNo,
           r.status,
           r.stock,
-          r.model,
-          r.variant,
+          r.modelName,
+          r.variantName,
           r.colour,
         ]
           .join(" ")
@@ -399,32 +400,18 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
                 <Th className="w-16 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   S.No
                 </Th>
-
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Stock
+                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                   Action
                 </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Status
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Location
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Current Location
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Bill No.
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Purchase Bill No.
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Supplier Name
+                   <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                   Status
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Item Name
                 </Th>
-
+                  <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                  Item Code 
+                </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Model
                 </Th>
@@ -470,7 +457,7 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Second 2 Tyer
                 </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                {/* <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   GRN Date
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
@@ -481,7 +468,7 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
                 </Th>
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   Age Day
-                </Th>
+                </Th> */}
                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   In Ward Date
                 </Th>
@@ -530,23 +517,11 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
                         </button>
                       )}
                     </Td>
-                    <Td className="py-4">
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${statusColors[item.status]}`}
-                      >
-                        {item.status}
-                      </span>
-                    </Td>
-                    <Td className="py-4 whitespace-nowrap">{item.location}</Td>
-                    <Td className="py-4 whitespace-nowrap">
-                      {item.currentLocation}
-                    </Td>
-                    <Td className="py-4">{item.billNo}</Td>
-                    <Td className="py-4">{item.purchaseBillNo}</Td>
-                    <Td className="py-4 font-medium">{item.supplierName}</Td>
+                       <Td className="py-4 font-medium">{item.status}</Td>
                     <Td className="py-4 font-medium">{item.itemName}</Td>
-                    <Td className="py-4">{item.model}</Td>
-                    <Td className="py-4">{item.variant}</Td>
+                      <Td className="py-4 font-medium">{item.itemCode}</Td>
+                    <Td className="py-4">{item.modelName}</Td>
+                    <Td className="py-4">{item.variantName}</Td>
                     <Td className="py-4">
                       <span className="inline-flex items-center gap-1.5">
                         <span
@@ -564,14 +539,14 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
                     <Td className="py-4 font-mono text-sm">{item.keyNumber}</Td>
                     <Td className="py-4">{item.batteryMake}</Td>
                     <Td className="py-4 font-mono text-sm">{item.batteryNo}</Td>
-                    <Td className="py-4">{item.first1Tyer}</Td>
-                    <Td className="py-4">{item.first2Tyer}</Td>
-                    <Td className="py-4">{item.second1Tyer}</Td>
-                    <Td className="py-4">{item.second2Tyer}</Td>
-                    <Td className="py-4">{formatDate(item.grnDate)}</Td>
+                    <Td className="py-4">{item.first1TyreNo || "-"}</Td>
+<Td className="py-4">{item.first2TyreNo || "-"}</Td>
+<Td className="py-4">{item.second1TyreNo || "-"}</Td>
+<Td className="py-4">{item.second2TyreNo || "-"}</Td>
+                    {/* <Td className="py-4">{formatDate(item.grnDate)}</Td>
                     <Td className="py-4">{formatDate(item.grnRecordDate)}</Td>
                     <Td className="py-4">{item.grnNo}</Td>
-                    <Td className="py-4">{item.ageDay} Days</Td>
+                    <Td className="py-4">{item.ageDay} Days</Td> */}
                     <Td className="py-4">{formatDate(item.inWardDate)}</Td>
                     <Td className="py-4">{formatDateTime(item.inWardTime)}</Td>
                   </Tr>

@@ -357,9 +357,7 @@ const Order: React.FC = () => {
       sessionStorage.getItem("financialYearId") ||
       localStorage.getItem("financialYearId");
 
-    console.log("SAVED COMPANY ID:", savedCompanyId);
-
-    console.log("SAVED FINANCIAL YEAR ID:", savedFinancialYearId);
+ 
 
     if (savedCompanyId) {
       setCompanyId(Number(savedCompanyId));
@@ -379,7 +377,7 @@ const Order: React.FC = () => {
           ? response.data
           : [];
 
-      console.log("ALL ACCOUNTS:", accounts);
+    
 
       const cashAccounts = accounts
         .filter((item: any) => {
@@ -413,9 +411,6 @@ const Order: React.FC = () => {
 
       setBankAccountOptions(bankAccounts);
 
-      console.log("CASH ACCOUNTS:", cashAccounts);
-
-      console.log("BANK ACCOUNTS:", bankAccounts);
     } catch (error) {
       console.error("GET ACCOUNT ERROR:", error);
     }
@@ -441,54 +436,65 @@ const Order: React.FC = () => {
     getBankers();
     fetchPaymentAccounts();
   }, []);
-  const fetchVehicleInventory = async () => {
-    try {
-      const res = await apiHelper.get("/branch-panel/purchases/tractor-inventory");
+   const fetchVehicleInventory = async () => {
+  try {
+ 
 
-      const data = Array.isArray(res.data?.data)
-        ? res.data.data
-        : Array.isArray(res.data)
-          ? res.data
-          : [];
+    const res = await apiHelper.get("/branch-panel/tractor-inventory");
 
-      const mappedVehicles = data
-        // Remove already booked chassis
-        .filter(
-          (item: any) =>
-            String(item.status ?? "")
-              .trim()
-              .toLowerCase() !== "booked",
-        )
-        .map((item: any) => ({
-          id: String(item.id ?? item.tractorId ?? item.purchaseItemId),
+  
 
-          chassisNo: item.chassisNo ?? "",
+    const data = Array.isArray(res.data?.data)
+      ? res.data.data
+      : Array.isArray(res.data)
+        ? res.data
+        : [];
 
-          batteryNo: item.batteryNo ?? "",
+  
 
-          keyNo: item.keyNo ?? item.keyNumber ?? "",
+    const verifiedVehicles = data.filter(
+      (item: any) =>
+        String(item.status ?? "").trim().toUpperCase() === "VERIFIED",
+    );
 
-          engineNo: item.engineNo ?? item.motorNo ?? "",
+   
 
-          inwardDate: item.inwardDate ?? item.inWardDate ?? "",
+    const mappedVehicles = verifiedVehicles
+      .filter(
+        (item: any) =>
+          String(item.status ?? "").trim().toLowerCase() !== "booked",
+      )
+      .map((item: any) => ({
+        id: String(item.id ?? item.tractorId ?? item.purchaseItemId),
 
-          ageDay: item.ageDay ?? item.ageday ?? null,
+        chassisNo: String(item.chassisNo ?? "").trim(),
 
-          model: item.model ?? item.modelName ?? "",
+        batteryNo: item.batteryNo ?? "",
 
-          variant: item.variant ?? item.variantName ?? "",
+        keyNo: item.keyNo ?? item.keyNumber ?? "",
 
-          colour: item.colour ?? item.color ?? "",
+        engineNo: item.engineNo ?? item.motorNo ?? "",
 
-          // Keep inventory status
-          status: item.status ?? "",
-        }));
+        inwardDate: item.inwardDate ?? item.inWardDate ?? "",
 
-      setVehicleOptions(mappedVehicles);
-    } catch (error) {
-      console.error("GET TRACTOR INVENTORY ERROR:", error);
-    }
-  };
+        ageDay: item.ageDay ?? item.ageday ?? null,
+
+        model: item.model ?? item.modelName ?? "",
+
+        variant: item.variant ?? item.variantName ?? "",
+
+        colour: item.colour ?? item.color ?? "",
+
+        status: item.status ?? "",
+      }));
+
+   
+
+    setVehicleOptions(mappedVehicles);
+  } catch (error) {
+    console.error("❌ GET TRACTOR INVENTORY ERROR:", error);
+  }
+};
   const totalValue = 0;
   const fetchFinances = async () => {
     try {
@@ -512,7 +518,7 @@ const Order: React.FC = () => {
         status: item.status ?? "",
       }));
 
-      console.log("FINANCE OPTIONS:", mappedFinances);
+    
 
       setFinanceOptions(mappedFinances);
     } catch (error) {
@@ -534,7 +540,7 @@ const Order: React.FC = () => {
 
         const response = await apiHelper.get(`/branch-panel/leads/${id}`);
 
-        console.log("CREATE ORDER LEAD RESPONSE:", response.data);
+       
 
         const lead = response.data?.data || response.data;
         setGrandTotal(String(Number(lead?.quotationGrandTotal) || 0));
@@ -976,7 +982,7 @@ const Order: React.FC = () => {
         selectedAccessories,
       };
 
-      console.log("CREATE ORDER PAYLOAD:", payload);
+    
 
       // =====================================
       // CREATE ORDER API
@@ -984,7 +990,7 @@ const Order: React.FC = () => {
 
       const response = await apiHelper.post("/branch-panel/orders", payload);
 
-      console.log("CREATE ORDER RESPONSE:", response.data);
+   
 
       // Success toaster
       toast.success(response.data?.message || "Order created successfully");
@@ -1214,7 +1220,7 @@ const Order: React.FC = () => {
                 </label>
 
                 <Select
-                  options={matchingVehicleOptions}
+                 options={vehicleOptions}
                   value={
                     matchingVehicleOptions.find(
                       (vehicle: any) =>

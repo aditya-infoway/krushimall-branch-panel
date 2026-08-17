@@ -269,9 +269,14 @@ export default function CashPayment() {
   useEffect(() => {
     getAccounts();
     getPurchaseBills();
-    getVoucherNo();
+   
     getCashPayments();
-  }, []);
+  }, []);useEffect(() => {
+  if (companyId && financialYearId) {
+    getVoucherNo();
+  }
+}, [companyId, financialYearId]);
+
   const purchaseBillOptions = purchaseBills;
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
