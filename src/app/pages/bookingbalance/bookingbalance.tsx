@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import {
   DocumentArrowDownIcon,
   ArrowPathIcon,
@@ -18,7 +18,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
-
+import apiHelper from "@/utils/apiHelper";
 interface BookingRow {
   sr: number;
   leadDate: string;
@@ -55,16 +55,15 @@ const COLORS = [
 
 const BookingBalance: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
-const [dateRange, setDateRange] = useState<[string, string] | null>(null);
+  const [dateRange, setDateRange] = useState<[string, string] | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(15);
   const [collapsed, setCollapsed] = useState(false);
 
   // Sample table data (empty for now)
-  const tableData: BookingRow[] = [];
+const [tableData, setTableData] = useState<BookingRow[]>([]);
 
-  // Model analysis data
-  const modelAnalysisData: ModelAnalysisRow[] = [];
+const [modelAnalysisData, setModelAnalysisData] = useState<ModelAnalysisRow[]>([]);
 
   const totalLeads = modelAnalysisData.reduce(
     (sum, row) => sum + row.totalLead,
@@ -84,11 +83,14 @@ const [dateRange, setDateRange] = useState<[string, string] | null>(null);
       : [{ name: "No Data", value: 1 }];
 
   // Summary data
-  const summaryData = {
-    invoiceAmount: "0.00",
-    pendingAmount: "0.00",
-    receivedAmount: "0.00",
-  };
+
+const [summaryData, setSummaryData] = useState({
+  invoiceAmount: "0.00",
+  pendingAmount: "0.00",
+  receivedAmount: "0.00",
+});
+
+const [loading, setLoading] = useState(false);
 
   // Pagination
   const totalItems = tableData.length;
@@ -96,7 +98,37 @@ const [dateRange, setDateRange] = useState<[string, string] | null>(null);
   const indexOfLastItem = currentPage * rowsPerPage;
   const indexOfFirstItem = indexOfLastItem - rowsPerPage;
   const currentItems = tableData.slice(indexOfFirstItem, indexOfLastItem);
+const fetchBookingBalance = async () => {
+  try {
+    setLoading(true);
 
+    const response = await apiHelper.get("/leads/booking-balance");
+
+    // apiHelper interceptor unwraps to response.data.data,
+    // so everything backend sends must live under "data".
+    // Backend now returns: { summary, modelAnalysis, rows }
+    const payload = response.data || {};
+
+    setTableData(payload.rows || []);
+
+    setSummaryData(
+      payload.summary || {
+        invoiceAmount: "0.00",
+        pendingAmount: "0.00",
+        receivedAmount: "0.00",
+      },
+    );
+
+    setModelAnalysisData(payload.modelAnalysis || []);
+  } catch (error) {
+    console.log(error);
+  } finally {
+    setLoading(false);
+  }
+};
+useEffect(() => {
+  fetchBookingBalance();
+}, []);
   return (
     <div className="dark:bg-dark-800 min-h-screen bg-gray-50 p-3 sm:p-4 lg:p-5 xl:p-6">
       <div className="mx-auto w-full max-w-[1920px]">
@@ -108,43 +140,47 @@ const [dateRange, setDateRange] = useState<[string, string] | null>(null);
             Booking Balance
           </h2>
           <div className="flex flex-wrap items-center gap-2">
-     
+            <div className="dark:border-dark-600 dark:bg-dark-700 flex items-center gap-1 rounded-lg border border-gray-300 bg-white py-1.5">
+              <DatePicker
+                options={{
+                  mode: "range",
+                  dateFormat: "d-m-Y", // Changed from "Y-m-d" to "d-m-y"
+                  defaultDate: dateRange || undefined,
+                }}
+                placeholder="Choose date from to"
+                onChange={(dates) => {
+                  if (dates && dates.length === 2) {
+                    const [from, to] = dates;
+                    if (
+                      from instanceof Date &&
+                      !isNaN(from.getTime()) &&
+                      to instanceof Date &&
+                      !isNaN(to.getTime())
+                    ) {
+                      const formatDate = (date: Date) => {
+                        const day = String(date.getDate()).padStart(2, "0");
+                        const month = String(date.getMonth() + 1).padStart(
+                          2,
+                          "0",
+                        );
+                        const year = String(date.getFullYear());
+                        return `${day}-${month}-${year}`;
+                      };
+                      setDateRange([formatDate(from), formatDate(to)]);
+                    }
+                  } else {
+                    setDateRange(null);
+                  }
+                }}
+                className="w-64 border-none p-0 text-sm outline-none"
+              />
+            </div>
 
-<div className="dark:border-dark-600 dark:bg-dark-700 flex items-center gap-1 rounded-lg border border-gray-300 bg-white py-1.5">
-  <DatePicker
-    options={{
-      mode: "range",
-      dateFormat: "d-m-Y", // Changed from "Y-m-d" to "d-m-y"
-      defaultDate: dateRange || undefined,
-    }}
-    placeholder="Choose date range..."
-    onChange={(dates) => {
-      if (dates && dates.length === 2) {
-        const [from, to] = dates;
-        if (from instanceof Date && !isNaN(from.getTime()) && 
-            to instanceof Date && !isNaN(to.getTime())) {
-          const formatDate = (date: Date) => {
-            const day = String(date.getDate()).padStart(2, "0");
-            const month = String(date.getMonth() + 1).padStart(2, "0");
-            const year = String(date.getFullYear()); // Get last 2 digits of year
-            return `${day}-${month}-${year}`;
-          };
-          setDateRange([formatDate(from), formatDate(to)]);
-        }
-      } else {
-        setDateRange(null);
-      }
-    }}
-    className="w-64 border-none p-0 text-sm outline-none"
-  />
-</div>
-
-
-         {/* PDF Button - Icon only */}
+            {/* PDF Button - Icon only */}
             <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
               <RiFilePdfFill className="h-4 w-4" />
             </button>
-           
+
             {/* Excel Button - Icon only */}
             <button className="dark:border-dark-600 dark:bg-dark-700 dark:hover:bg-dark-600 flex h-9.5 w-9.5 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:text-gray-300">
               <RiFileExcel2Fill className="h-4 w-4" />
@@ -312,7 +348,7 @@ const [dateRange, setDateRange] = useState<[string, string] | null>(null);
 
             {/* Table controls: rows per page + search */}
             <div className="mb-3 flex flex-col items-end justify-end gap-3 sm:flex-row sm:items-center">
-              <div className="relative w-full sm:w-auto sm:max-w-[240px]">
+              <div className="relative w-full sm:w-auto sm:max-w-60">
                 <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
@@ -329,7 +365,7 @@ const [dateRange, setDateRange] = useState<[string, string] | null>(null);
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-sm">
                   <thead className="dark:bg-dark-600 bg-gray-50 whitespace-nowrap">
-                    <tr>
+                    <tr className=" whitespace-nowrap">
                       <th className="px-3 py-3 text-left text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                         #
                       </th>
@@ -394,13 +430,15 @@ const [dateRange, setDateRange] = useState<[string, string] | null>(null);
                       currentItems.map((row, index) => (
                         <tr
                           key={index}
-                          className="dark:hover:bg-dark-600 transition-colors hover:bg-gray-50"
+                          className="dark:hover:bg-dark-600 transition-colors hover:bg-gray-50 whitespace-nowrap"
                         >
                           <td className="px-3 py-2.5 text-gray-500 dark:text-gray-400">
                             {row.sr}
                           </td>
                           <td className="px-3 py-2.5 text-gray-900 dark:text-white">
-                            {row.leadDate}
+                            {row.leadDate
+  ? new Date(row.leadDate).toLocaleDateString("en-IN")
+  : "-"}
                           </td>
                           <td className="px-3 py-2.5 text-gray-900 dark:text-white">
                             {row.leadId}
@@ -409,7 +447,10 @@ const [dateRange, setDateRange] = useState<[string, string] | null>(null);
                             {row.dmsEnquiryNo}
                           </td>
                           <td className="px-3 py-2.5 text-gray-900 dark:text-white">
-                            {row.dmsEnquiryDate}
+                          
+                            {row.dmsEnquiryDate
+  ? new Date(row.dmsEnquiryDate).toLocaleDateString("en-IN")
+  : "-"}
                           </td>
                           <td className="px-3 py-2.5 text-gray-900 dark:text-white">
                             {row.customerName}

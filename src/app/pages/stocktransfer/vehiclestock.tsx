@@ -1,58 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import apiHelper from "@/utils/apiHelper";
 import {
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
   MagnifyingGlassIcon,
-  FunnelIcon,
   DocumentArrowDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  EllipsisHorizontalIcon,
-  XMarkIcon,
+  EyeIcon,
+  ArrowDownIcon
 } from "@heroicons/react/24/outline";
-import {
-  Menu,
-  MenuButton,
-  MenuItems,
-  MenuItem,
-  Transition,
-} from "@headlessui/react";
-import { Fragment } from "react";
+import { Menu, MenuButton, MenuItems, MenuItem, Transition } from "@headlessui/react";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
-import { Button, Checkbox } from "@/components/ui";
-import { Listbox } from "@/components/shared/form/StyledListbox";
-
-type VehicleStock = {
+import { Checkbox } from "@/components/ui";
+import { toast } from "sonner";
+// Matches the grouped response shape from GET /vehicle-stock-transfer/branch
+// (one row per transferNo = the first vehicle entry of that transfer + itemCount)
+type VehicleStockTransferGroup = {
   id: number;
-  stockTransferId: string;
-  date: string;
-  branch: string;
-  branchManagerName: string;
-  contactNo: string;
-  chassisNo: string;
-  vehicleSrNo: string;
-  model: string;
-  variant: string;
-  colour: string;
-  itemName: string;
-  itemCode: string;
-  engineNo: string;
-  mfgDate: string;
-  keyNo: string;
-  batteryNo: string;
-  batteryMake: string;
-  f1TyresNo: string;
-  f2TyresNo: string;
-  s1TyresNo: string;
-  s2TyresNo: string;
-  location: string;
-  grnNumber: string;
-  grnDate: string;
-  grnRecordDate: string;
-  createdAt: string;
+  transferNo: string;
+  transferDate: string;
+  branch?: { branchName?: string };
+  manager?: { accountName?: string };
+  itemCount: number;
 };
 
 const entriesOptions = [
@@ -64,107 +33,70 @@ const entriesOptions = [
   { id: 100, name: "100" },
 ];
 
-const branchOptions = [
-  { label: "Mumbai", value: "Mumbai" },
-  { label: "Delhi", value: "Delhi" },
-  { label: "Bangalore", value: "Bangalore" },
-  { label: "Chennai", value: "Chennai" },
-  { label: "Pune", value: "Pune" },
-];
+const formatDate = (date?: string) => {
+  if (!date) return "-";
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return "-";
+  return d.toLocaleDateString("en-IN");
+};
 
 const VehicleStock = () => {
   const navigate = useNavigate();
-  const [vehicleStocks, setVehicleStocks] = useState<VehicleStock[]>([]);
+
+  const [transfers, setTransfers] = useState<VehicleStockTransferGroup[]>([]);
+  const [loading, setLoading] = useState(false);
+
   const [search, setSearch] = useState("");
-  const [showFilterBar, setShowFilterBar] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [selectedBranchFilter, setSelectedBranchFilter] = useState("All");
-  const [selectedChassisFilter, setSelectedChassisFilter] = useState("All");
-  const [selectedVehicle, setSelectedVehicle] = useState<VehicleStock | null>(null);
-  const [showDetails, setShowDetails] = useState(false);
 
-  const getVehicleStocks = async () => {
-    try {
-      const response = await apiHelper.get("/vehicle-stocks");
-      setVehicleStocks(response.data || []);
-    } catch (error) {
-      console.log(error);
+const getVehicleStockTransfers = async () => {
+  try {
+    setLoading(true);
+
+    const res = await apiHelper.get("/branch-panel/stocktransfer");
+
+    const data = res?.data || res || [];
+
+    if (!data || !Array.isArray(data)) {
+      toast.error("Stock transfer data not found");
+      setTransfers([]);
+      return;
     }
-  };
 
-  useEffect(() => {
-    getVehicleStocks();
-  }, []);
+    setTransfers(data);
+  } catch (error: any) {
+    console.log(error);
 
-const handleAdd = () => {
-  navigate("/stocktransfer/vehiclestock/add");
+    toast.error(
+      error?.response?.data?.message ||
+        "Failed to fetch stock transfers"
+    );
+
+    setTransfers([]);
+  } finally {
+    setLoading(false);
+  }
 };
 
-const handleEdit = (item: VehicleStock) => {
-  navigate(`/stocktransfer/vehiclestock/edit/${item.id}`, { state: { item } });
-}
+  useEffect(() => {
+    getVehicleStockTransfers();
+  }, []);
 
-  const handleDelete = async (id: number) => {
-    try {
-      if (window.confirm("Are you sure you want to delete this vehicle stock?")) {
-        await apiHelper.delete(`/vehicle-stocks/${id}`);
-        getVehicleStocks();
-      }
-    } catch (error) {
-      console.log(error);
-    }
+  // Action button -> opens a new page with the full chassis-wise table
+  // for that transfer
+  const handleViewDetails = (item: VehicleStockTransferGroup) => {
+    navigate(`/stocktransfer/vehiclestock/view/${item.id}`);
   };
 
-  const handleBulkDelete = async () => {
-    try {
-      if (
-        window.confirm("Are you sure you want to delete selected vehicle stocks?")
-      ) {
-        await Promise.all(
-          selectedIds.map((id) => apiHelper.delete(`/vehicle-stocks/${id}`))
-        );
-        setSelectedIds([]);
-        getVehicleStocks();
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const handleViewDetails = (item: VehicleStock) => {
-    setSelectedVehicle(item);
-    setShowDetails(true);
-  };
-
-  const branchFilterOptions = [
-    { id: "All", name: "All Branches" },
-    ...branchOptions.map(b => ({ id: b.value, name: b.label })),
-  ];
-
-  const chassisFilterOptions = [
-    { id: "All", name: "All Chassis" },
-    ...vehicleStocks.map(v => ({ id: v.chassisNo, name: v.chassisNo })),
-  ];
-
-  const filteredData = vehicleStocks.filter((item) => {
-    const matchesSearch =
-      item.stockTransferId.toLowerCase().includes(search.toLowerCase()) ||
-      item.chassisNo.toLowerCase().includes(search.toLowerCase()) ||
-      item.model.toLowerCase().includes(search.toLowerCase()) ||
-      item.branch.toLowerCase().includes(search.toLowerCase());
-
-    const matchesBranch =
-      selectedBranchFilter === "All" || item.branch === selectedBranchFilter;
-    const matchesChassis =
-      selectedChassisFilter === "All" || item.chassisNo === selectedChassisFilter;
-
-    return matchesSearch && matchesBranch && matchesChassis;
+  const filteredData = transfers.filter((item) => {
+    return (item.transferNo || "").toLowerCase().includes(search.toLowerCase());
   });
 
   const totalItems = filteredData.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
@@ -174,20 +106,17 @@ const handleEdit = (item: VehicleStock) => {
     currentItems.every((item) => selectedIds.includes(item.id));
 
   const handleSelectAll = (checked: boolean) => {
+    const pageIds = currentItems.map((item) => item.id);
     if (checked) {
-      const pageIds = currentItems.map((item) => item.id);
       setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])));
     } else {
-      const pageIds = currentItems.map((item) => item.id);
       setSelectedIds((prev) => prev.filter((id) => !pageIds.includes(id)));
     }
   };
 
   const handleSelectRow = (id: number) => {
     setSelectedIds((prev) =>
-      prev.includes(id)
-        ? prev.filter((selectedId) => selectedId !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id],
     );
   };
 
@@ -197,27 +126,14 @@ const handleEdit = (item: VehicleStock) => {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 md:text-2xl dark:text-white">
-             Stock Verify List
+            Stock Verify List
           </h1>
           <p className="dark:text-dark-300 mt-1 text-sm text-gray-500">
-            Manage all vehicle stocks from here
+            Manage all vehicle stocks transferred to your branch
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowFilterBar(!showFilterBar)}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-              showFilterBar
-                ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-dark-600 dark:border-dark-500 dark:text-white"
-                : "dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-            }`}
-          >
-            <FunnelIcon className="size-4.5" />
-            Filter
-          </button>
-
           <button
             type="button"
             className="dark:bg-dark-800 dark:border-dark-500 dark:text-dark-200 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
@@ -225,8 +141,6 @@ const handleEdit = (item: VehicleStock) => {
             <DocumentArrowDownIcon className="size-4.5 text-gray-400" />
             Excel
           </button>
-
-        
         </div>
       </div>
 
@@ -235,7 +149,7 @@ const handleEdit = (item: VehicleStock) => {
         <MagnifyingGlassIcon className="absolute top-1/2 left-3 size-4.5 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
-          placeholder="Search stock ID, chassis, model..."
+          placeholder="Search transfer ID..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -245,58 +159,12 @@ const handleEdit = (item: VehicleStock) => {
         />
       </div>
 
-      {/* Filter Bar */}
-      {showFilterBar && (
-        <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Branch
-              </span>
-              <Listbox
-                data={branchFilterOptions}
-                value={
-                  branchFilterOptions.find(
-                    (o) => o.id === selectedBranchFilter
-                  ) || branchFilterOptions[0]
-                }
-                placeholder="All Branches"
-                onChange={(opt: any) => {
-                  setSelectedBranchFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
-                Chassis No
-              </span>
-              <Listbox
-                data={chassisFilterOptions}
-                value={
-                  chassisFilterOptions.find(
-                    (o) => o.id === selectedChassisFilter
-                  ) || chassisFilterOptions[0]
-                }
-                placeholder="All Chassis"
-                onChange={(opt: any) => {
-                  setSelectedChassisFilter(opt.id);
-                  setCurrentPage(1);
-                }}
-                displayField="name"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Table */}
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <Table
             hoverable
-            className="w-full min-w-[1200px] text-left [&_.table-th]:font-semibold"
+            className="w-full min-w-[700px] text-left [&_.table-th]:font-semibold"
           >
             <THead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
               <Tr>
@@ -310,28 +178,18 @@ const handleEdit = (item: VehicleStock) => {
                 <Th className="w-16 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                   S.No
                 </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Stock ID
+                <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Transfer Date
                 </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Date
+                <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Transfer ID
                 </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Branch
+                <Th className="py-3.5 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  Number of Item
                 </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Chassis No
+                <Th className="py-3.5 text-center text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase dark:text-gray-400">
+                  View
                 </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Model
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Variant
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Colour
-                </Th>
-               
               </Tr>
             </THead>
 
@@ -355,40 +213,41 @@ const handleEdit = (item: VehicleStock) => {
                     <Td className="py-4 font-medium text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </Td>
-                    <Td className="py-4 font-mono text-sm font-medium text-gray-900 dark:text-gray-400">
-                      {item.stockTransferId}
+                    <Td className="dark:text-dark-200 py-4 whitespace-nowrap text-gray-600">
+                      {formatDate(item.transferDate)}
                     </Td>
-                    <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {new Date(item.date).toLocaleDateString("en-IN")}
+                    <Td className="py-4 font-mono text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-400">
+                      {item.transferNo}
                     </Td>
-                    <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.branch}
+                    <Td className="dark:text-dark-200 py-4 whitespace-nowrap text-gray-600">
+                      {item.itemCount}
                     </Td>
-                    <Td className="py-4 font-mono text-sm text-gray-600 dark:text-gray-400">
-                      {item.chassisNo}
+                    <Td className="py-4 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleViewDetails(item)}
+                        className="text-primary-600 hover:bg-primary-50 dark:hover:bg-dark-600 rounded-md p-2 transition border cursor-pointer"
+                        title="View details"
+                      >
+                        <ArrowDownIcon className="h-4 w-4 " />
+                      </button>
                     </Td>
-                    <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.model}
-                    </Td>
-                    <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.variant}
-                    </Td>
-                    <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      <span className="inline-flex h-4 w-4 rounded-full border border-gray-300" style={{ backgroundColor: item.colour.toLowerCase() }}></span>
-                      <span className="ml-2">{item.colour}</span>
-                    </Td>
-                   
                   </Tr>
                 );
               })}
 
-              {currentItems.length === 0 && (
+              {!loading && currentItems.length === 0 && (
                 <Tr>
-                  <Td
-                    colSpan={9}
-                    className="py-12 text-center text-gray-400 dark:text-gray-500"
-                  >
+                  <Td colSpan={6} className="py-12 text-center text-gray-400 dark:text-gray-500">
                     No vehicle stocks found
+                  </Td>
+                </Tr>
+              )}
+
+              {loading && (
+                <Tr>
+                  <Td colSpan={6} className="py-12 text-center text-gray-400 dark:text-gray-500">
+                    Loading...
                   </Td>
                 </Tr>
               )}
@@ -402,17 +261,10 @@ const handleEdit = (item: VehicleStock) => {
             <div className="order-1 flex items-center justify-center gap-2 text-sm text-gray-600 md:w-1/3 md:justify-start dark:text-gray-400">
               <span>Show</span>
               <div className="w-20">
-                <Menu
-                  as="div"
-                  className="relative inline-block w-full text-left"
-                >
+                <Menu as="div" className="relative inline-block w-full text-left">
                   <MenuButton className="dark:border-dark-600 dark:bg-dark-700 flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm focus:outline-none dark:text-gray-200">
                     <span>{itemsPerPage}</span>
-                    <svg
-                      className="ml-2 h-4 w-4 transform transition-transform"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
+                    <svg className="ml-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                       <path
                         fillRule="evenodd"
                         d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
@@ -451,21 +303,6 @@ const handleEdit = (item: VehicleStock) => {
                               }`}
                             >
                               {opt.name}
-                              {opt.id === itemsPerPage && (
-                                <svg
-                                  className="h-4 w-4"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                  strokeWidth={3}
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M5 13l4 4L19 7"
-                                  />
-                                </svg>
-                              )}
                             </button>
                           )}
                         </MenuItem>
@@ -481,37 +318,31 @@ const handleEdit = (item: VehicleStock) => {
               <div className="dark:border-dark-700 dark:bg-dark-800 inline-flex items-center space-x-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
                 <button
                   type="button"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
                   className="dark:hover:bg-dark-700 inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent dark:text-gray-400"
                 >
                   <ChevronLeftIcon className="size-4" />
                 </button>
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
-                    <button
-                      key={page}
-                      type="button"
-                      onClick={() => setCurrentPage(page)}
-                      className={`inline-flex size-8 items-center justify-center rounded-md text-sm font-medium transition-colors ${
-                        page === currentPage
-                          ? "bg-primary-500 text-white"
-                          : "dark:hover:bg-dark-700 text-gray-600 hover:bg-gray-100 dark:text-gray-300"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  )
-                )}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => setCurrentPage(page)}
+                    className={`inline-flex size-8 items-center justify-center rounded-md text-sm font-medium transition-colors ${
+                      page === currentPage
+                        ? "bg-primary-500 text-white"
+                        : "dark:hover:bg-dark-700 text-gray-600 hover:bg-gray-100 dark:text-gray-300"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
                   className="dark:hover:bg-dark-700 inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent dark:text-gray-400"
                 >
@@ -529,164 +360,6 @@ const handleEdit = (item: VehicleStock) => {
           </div>
         )}
       </div>
-
-      {/* Details View */}
-      {showDetails && selectedVehicle && (
-        <div className="dark:bg-dark-800 dark:border-dark-700 animate-in fade-in slide-in-from-bottom-4 rounded-xl border border-gray-200 bg-white p-6 shadow-lg">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Vehicle Details - {selectedVehicle.stockTransferId}
-            </h3>
-            <button
-              onClick={() => setShowDetails(false)}
-              className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-dark-600"
-            >
-              <XMarkIcon className="size-5" />
-            </button>
-          </div>
-
-          <div className="overflow-x-auto">
-            <Table hoverable className="w-full text-left">
-              <THead className="dark:bg-dark-700/60 dark:border-dark-600 border-b border-gray-200 bg-gray-100">
-                <Tr>
-                  <Th className="py-3 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                    Field
-                  </Th>
-                  <Th className="py-3 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                    Value
-                  </Th>
-                </Tr>
-              </THead>
-              <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
-                <Tr>
-                  <Td className="py-3 font-medium">Stock Transfer ID</Td>
-                  <Td className="py-3">{selectedVehicle.stockTransferId}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">Date</Td>
-                  <Td className="py-3">{new Date(selectedVehicle.date).toLocaleDateString("en-IN")}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">Branch</Td>
-                  <Td className="py-3">{selectedVehicle.branch}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">Branch Manager</Td>
-                  <Td className="py-3">{selectedVehicle.branchManagerName}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">Contact No</Td>
-                  <Td className="py-3">{selectedVehicle.contactNo}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">Chassis No</Td>
-                  <Td className="py-3">{selectedVehicle.chassisNo}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">Vehicle Sr. No</Td>
-                  <Td className="py-3">{selectedVehicle.vehicleSrNo}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">Model</Td>
-                  <Td className="py-3">{selectedVehicle.model}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">Variant</Td>
-                  <Td className="py-3">{selectedVehicle.variant}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">Colour</Td>
-                  <Td className="py-3">{selectedVehicle.colour}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">Item Name</Td>
-                  <Td className="py-3">{selectedVehicle.itemName}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">Item Code</Td>
-                  <Td className="py-3">{selectedVehicle.itemCode}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">Engine No</Td>
-                  <Td className="py-3">{selectedVehicle.engineNo}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">MFG Date</Td>
-                  <Td className="py-3">{selectedVehicle.mfgDate}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">Key No</Td>
-                  <Td className="py-3">{selectedVehicle.keyNo}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">Battery No</Td>
-                  <Td className="py-3">{selectedVehicle.batteryNo}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">Battery Make</Td>
-                  <Td className="py-3">{selectedVehicle.batteryMake}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">F1 Tyres No</Td>
-                  <Td className="py-3">{selectedVehicle.f1TyresNo}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">F2 Tyres No</Td>
-                  <Td className="py-3">{selectedVehicle.f2TyresNo}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">S1 Tyres No</Td>
-                  <Td className="py-3">{selectedVehicle.s1TyresNo}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">S2 Tyres No</Td>
-                  <Td className="py-3">{selectedVehicle.s2TyresNo}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">Location</Td>
-                  <Td className="py-3">{selectedVehicle.location}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">GRN Number</Td>
-                  <Td className="py-3">{selectedVehicle.grnNumber}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">GRN Date</Td>
-                  <Td className="py-3">{selectedVehicle.grnDate}</Td>
-                </Tr>
-                <Tr>
-                  <Td className="py-3 font-medium">GRN Record Date</Td>
-                  <Td className="py-3">{selectedVehicle.grnRecordDate}</Td>
-                </Tr>
-              </TBody>
-            </Table>
-          </div>
-        </div>
-      )}
-
-      {/* Floating Action Bar */}
-      {/* {selectedIds.length > 0 && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 fixed right-6 bottom-6 z-50 w-full max-w-xs px-2 duration-200">
-          <div className="dark:border-dark-500 dark:bg-dark-700/95 flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white/95 p-4 shadow-xl backdrop-blur">
-            <div className="dark:text-dark-200 text-sm font-medium text-gray-600">
-              Selected{" "}
-              <span className="font-semibold text-gray-900 dark:text-white">
-                {selectedIds.length}
-              </span>{" "}
-              items
-            </div>
-            <Button
-              variant="filled"
-              color="error"
-              onClick={handleBulkDelete}
-              className="flex items-center gap-1.5 px-3 py-1.5 shadow-sm"
-            >
-              <TrashIcon className="size-4" />
-              <span className="text-xs font-semibold">Delete Selected</span>
-            </Button>
-          </div>
-        </div>
-      )} */}
     </div>
   );
 };
