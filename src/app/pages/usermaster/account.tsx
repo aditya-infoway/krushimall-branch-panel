@@ -22,12 +22,12 @@ import {
 import { Fragment } from "react";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Button, Checkbox } from "@/components/ui";
-import { Listbox } from "@/components/shared/form/StyledListbox";
+// import { Listbox } from "@/components/shared/form/StyledListbox";
 import apiHelper from "@/utils/apiHelper";
 import { toast } from "sonner";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-
+import { Combobox } from "@/components/shared/form/Combobox";
 // Sample data
 const entriesOptions = [
   { id: 10, name: "10" },
@@ -37,7 +37,105 @@ const entriesOptions = [
   { id: 50, name: "50" },
   { id: 100, name: "100" },
 ];
+const accountGroupOptions = [
+  { label: "All", value: "All", effect: "All" },
 
+  {
+    label: "Bank Accounts (Bank)",
+    value: "Bank Accounts",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Bank OCC A/C",
+    value: "Bank OCC A/C",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Capital Account",
+    value: "Capital Account",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Cash-in-Hand",
+    value: "Cash-in-Hand",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Currant Assets",
+    value: "Currant Assets",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Duites & Taxes",
+    value: "Duites & Taxes",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Expense Account",
+    value: "Expense Account",
+    effect: "Profit & Loss",
+  },
+  {
+    label: "Purchase Account",
+    value: "Purchase Account",
+    effect: "Trading",
+  },
+  {
+    label: "Sales Account",
+    value: "Sales Account",
+    effect: "Trading",
+  },
+  {
+    label: "Stock in Hand",
+    value: "Stock in Hand",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Sundry Creditors",
+    value: "Sundry Creditors",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Sundry Debitors",
+    value: "Sundry Debtors",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Supplier",
+    value: "Supplier",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Customer",
+    value: "Customer",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Sundry Debitor (finance)",
+    value: "Sundry Debitor (finance)",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Sundry Credito (finance)",
+    value: "Sundry Credito (finance)",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Sundry Debitor (internal)",
+    value: "Sundry Debitor (internal)",
+    effect: "Balance Sheet",
+  },
+  {
+    label: "Sundry Creditor (internal)",
+    value: "Sundry Creditor (internal)",
+    effect: "Balance Sheet",
+  },
+];
+const statusOptions = [
+  { label: "All", value: "All" },
+  { label: "Active", value: "ACTIVE" },
+  { label: "Inactive", value: "INACTIVE" },
+];
 const Account = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<any[]>([]);
@@ -46,7 +144,8 @@ const Account = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showFilterBar, setShowFilterBar] = useState(false);
-
+    const [selectedGroup, setSelectedGroup] = useState("All");
+  const [selectedStatus, setSelectedStatus] = useState("All");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmState, setConfirmState] = useState<
     "pending" | "success" | "error"
@@ -111,22 +210,52 @@ const Account = () => {
   };
 
   // Filter data based on search
-  const filteredData = data.filter((item: any) => {
-    if (!search.trim()) return true;
+  const searchText = search.trim().toLowerCase();
 
-    return (
-      String(item.accountName || "")
+const filteredData = data.filter((item: any) => {
+  const matchesSearch =
+    !searchText ||
+    String(item.accountName ?? "")
         .toLowerCase()
-        .includes(search.toLowerCase()) ||
-      String(item.printName || "")
+        .includes(searchText) ||
+      String(item.printName ?? "")
         .toLowerCase()
-        .includes(search.toLowerCase()) ||
-      String(item.email || "")
+        .includes(searchText) ||
+      String(item.group ?? "")
         .toLowerCase()
-        .includes(search.toLowerCase()) ||
-      String(item.mobile || "").includes(search)
-    );
-  });
+        .includes(searchText) ||
+      String(item.email ?? "")
+        .toLowerCase()
+        .includes(searchText) ||
+      String(item.mobile ?? "")
+        .toLowerCase()
+        .includes(searchText) ||
+      String(item.city ?? "")
+        .toLowerCase()
+        .includes(searchText) ||
+      String(item.state ?? "")
+        .toLowerCase()
+        .includes(searchText) ||
+      String(item.district ?? "")
+        .toLowerCase()
+        .includes(searchText) ||
+      String(item.country ?? "")
+        .toLowerCase()
+        .includes(searchText)
+
+
+  const matchesGroup =
+    selectedGroup === "All" ||
+    String(item.group ?? "").trim().toLowerCase() ===
+      String(selectedGroup ?? "").trim().toLowerCase();
+
+  const matchesStatus =
+    selectedStatus === "All" ||
+    String(item.status ?? "").trim().toLowerCase() ===
+      String(selectedStatus ?? "").trim().toLowerCase();
+
+  return matchesSearch && matchesGroup && matchesStatus;
+});
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -248,21 +377,41 @@ const Account = () => {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Account Type
               </span>
-              <select className="dark:border-dark-500 dark:bg-dark-800 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm">
-                <option>All</option>
-                <option>Cash</option>
-                <option>Bank</option>
-              </select>
+              <Combobox
+  data={accountGroupOptions}
+  value={
+    accountGroupOptions.find(
+      (option) => option.value === selectedGroup
+    ) || accountGroupOptions[0]
+  }
+  displayField="label"
+  searchFields={["label", "value"]}
+  placeholder="Search account group..."
+  onChange={(option: any) => {
+    const value = option?.value ?? "All";
+
+    setSelectedGroup(value);
+    setCurrentPage(1);
+  }}
+/>
             </div>
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Status
               </span>
-              <select className="dark:border-dark-500 dark:bg-dark-800 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm">
-                <option>All</option>
-                <option>Active</option>
-                <option>Inactive</option>
-              </select>
+              <Combobox
+                data={statusOptions}
+                value={
+                  statusOptions.find(
+                    (option) => option.value === selectedStatus,
+                  ) || statusOptions[0]
+                }
+                onChange={(option: any) => {
+                  setSelectedStatus(option?.value ?? "All");
+                  setCurrentPage(1);
+                }}
+                displayField="label"
+              />
             </div>
           </div>
         </div>

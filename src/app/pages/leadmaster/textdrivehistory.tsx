@@ -7,6 +7,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   EyeIcon,
+  MagnifyingGlassIcon
 } from "@heroicons/react/24/outline";
 import {
   useNavigate,
@@ -50,7 +51,7 @@ interface TestDriveHistoryItem {
 
 export default function TestdriveHistory() {
   const navigate = useNavigate();
-
+ const [search, setSearch] = useState("");
 const [testDriveHistory, setTestDriveHistory] = useState<TestDriveHistoryItem[]>([]);
 
   const [
@@ -94,26 +95,35 @@ useEffect(() => {
 // PAGINATION
 // ------------------------------------------
 
-const totalItems =
-  testDriveHistory.length;
+const searchText = search.trim().toLowerCase();
 
-const totalPages =
-  Math.ceil(
-    totalItems / itemsPerPage,
+const filteredTestDriveHistory = testDriveHistory.filter((item) => {
+  return (
+    String(item.customerName ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+    String(item.mobile ?? "")
+      .toLowerCase()
+      .includes(searchText)
   );
+});
 
-const indexOfLastItem =
-  currentPage * itemsPerPage;
+// ------------------------------------------
+// PAGINATION
+// ------------------------------------------
 
-const indexOfFirstItem =
-  indexOfLastItem -
-  itemsPerPage;
+const totalItems = filteredTestDriveHistory.length;
 
-const currentItems =
-  testDriveHistory.slice(
-    indexOfFirstItem,
-    indexOfLastItem,
-  );
+const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+const indexOfLastItem = currentPage * itemsPerPage;
+
+const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+const currentItems = filteredTestDriveHistory.slice(
+  indexOfFirstItem,
+  indexOfLastItem,
+);
   // ------------------------------------------
   // VIEW HISTORY
   // ------------------------------------------
@@ -143,7 +153,18 @@ const handleView = (
         </div>
 
         {/* TABLE */}
-
+ <div className="relative w-full max-w-md mb-5">
+        <MagnifyingGlassIcon className="absolute top-1/2 left-3 size-4.5 -translate-y-1/2 text-gray-400" />
+        <input
+          placeholder="Search leads..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="dark:border-dark-500 dark:bg-dark-800 w-full rounded-lg border border-gray-300 bg-white py-2.5 pr-4 pl-10 text-sm outline-none"
+        />
+      </div>
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left">

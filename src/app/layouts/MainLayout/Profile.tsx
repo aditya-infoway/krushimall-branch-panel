@@ -92,7 +92,7 @@ export function Profile() {
         return;
       }
 
-      const response = await apiHelper.get(`/branch/${id}`);
+      const response = await apiHelper.get(`/branch-panel/branch/${id}`);
       const branchData = response?.data || response;
       setBranch(branchData);
     } catch (error) {

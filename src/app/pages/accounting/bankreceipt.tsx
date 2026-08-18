@@ -34,7 +34,7 @@ import apiHelper from "@/utils/apiHelper";
 type EntryType = "Manual" | "Lead Cancel" | "Job Card";
 import { Combobox } from "@/components/shared/form/Combobox";
 type PaymentType = "NEFT" | "RTGS" | "IMPS" | "Cheque" | "UPI";
-
+import { Listbox } from "@/components/shared/form/StyledListbox";
 interface BankReceipt {
   id: number;
   date: string;
@@ -148,22 +148,60 @@ export default function BankReceipt() {
   const [form, setForm] = useState({ ...initialForm });
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+// Type filter options — dynamically built from actual rows data
+const typeFilterOptions = [
+  { id: "All", name: "All Types" },
+  ...Array.from(new Set(rows.map((r) => r.type).filter(Boolean))).map(
+    (type) => ({ id: type, name: type }),
+  ),
+];
 
+// Payment Type filter options — dynamically built from actual rows data
+const paymentTypeFilterOptions = [
+  { id: "All", name: "All Types" },
+  ...Array.from(
+    new Set(rows.map((r) => r.paymentType).filter(Boolean)),
+  ).map((type) => ({ id: type, name: type })),
+];
   // Filter states
   const [filterType, setFilterType] = useState("All");
   const [filterDateFrom, setFilterDateFrom] = useState<any>(null);
   const [filterDateTo, setFilterDateTo] = useState<any>(null);
   const [filterPaymentType, setFilterPaymentType] = useState("All");
 
-  const filteredRows = rows.filter((r) => {
-    const matchesSearch = Object.values(r).some((v) =>
-      String(v).toLowerCase().includes(search.toLowerCase()),
-    );
-    const matchesType = filterType === "All" || r.type === filterType;
-    const matchesPaymentType =
-      filterPaymentType === "All" || r.paymentType === filterPaymentType;
-    return matchesSearch && matchesType && matchesPaymentType;
-  });
+const filteredRows = rows.filter((r) => {
+  const matchesSearch = Object.values(r).some((v) =>
+    String(v).toLowerCase().includes(search.toLowerCase()),
+  );
+  const matchesType = filterType === "All" || r.type === filterType;
+  const matchesPaymentType =
+    filterPaymentType === "All" || r.paymentType === filterPaymentType;
+
+  // NEW: date range filter — handles DatePicker returning either a Date or an array
+  const rowDate = new Date(r.date);
+  rowDate.setHours(0, 0, 0, 0);
+
+  const rawFrom = Array.isArray(filterDateFrom)
+    ? filterDateFrom[0]
+    : filterDateFrom;
+  const fromDate = rawFrom ? new Date(rawFrom) : null;
+  if (fromDate) fromDate.setHours(0, 0, 0, 0);
+
+  const rawTo = Array.isArray(filterDateTo) ? filterDateTo[0] : filterDateTo;
+  const toDate = rawTo ? new Date(rawTo) : null;
+  if (toDate) toDate.setHours(23, 59, 59, 999);
+
+  const matchesDateFrom = !fromDate || rowDate >= fromDate;
+  const matchesDateTo = !toDate || rowDate <= toDate;
+
+  return (
+    matchesSearch &&
+    matchesType &&
+    matchesPaymentType &&
+    matchesDateFrom &&
+    matchesDateTo
+  );
+});
 
   const totalItems = filteredRows.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -626,60 +664,60 @@ const downloadExcel = async () => {
       {/* Filter Bar - Auto Apply */}
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-            <div>
-              <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
-                Type
-              </label>
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500"
-              >
-                <option value="All">All Types</option>
-                <option value="Manual">Manual</option>
-                <option value="Lead Cancel">Lead Cancel</option>
-                <option value="Job Card">Job Card</option>
-              </select>
-            </div>
-            <div>
-              <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
-                Payment Type
-              </label>
-              <select
-                value={filterPaymentType}
-                onChange={(e) => setFilterPaymentType(e.target.value)}
-                className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500"
-              >
-                <option value="All">All Types</option>
-                <option value="NEFT">NEFT</option>
-                <option value="RTGS">RTGS</option>
-                <option value="IMPS">IMPS</option>
-                <option value="Cheque">Cheque</option>
-                <option value="UPI">UPI</option>
-              </select>
-            </div>
-            <div>
-              <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
-                Date From
-              </label>
-              <DatePicker
-                placeholder="From Date"
-                value={filterDateFrom}
-                onChange={setFilterDateFrom}
-              />
-            </div>
-            <div>
-              <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
-                Date To
-              </label>
-              <DatePicker
-                placeholder="To Date"
-                value={filterDateTo}
-                onChange={setFilterDateTo}
-              />
-            </div>
-          </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+  <div>
+    <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
+      Type
+    </label>
+    <Listbox
+      data={typeFilterOptions}
+      value={
+        typeFilterOptions.find((o) => o.id === filterType) ||
+        typeFilterOptions[0]
+      }
+      onChange={(opt: any) => setFilterType(opt.id)}
+      displayField="name"
+    />
+  </div>
+
+  <div>
+    <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
+      Payment Type
+    </label>
+    <Listbox
+      data={paymentTypeFilterOptions}
+      value={
+        paymentTypeFilterOptions.find(
+          (o) => o.id === filterPaymentType,
+        ) || paymentTypeFilterOptions[0]
+      }
+      onChange={(opt: any) => setFilterPaymentType(opt.id)}
+      displayField="name"
+    />
+  </div>
+
+  <div>
+    <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
+      Date From
+    </label>
+    <DatePicker
+      placeholder="From Date"
+      value={filterDateFrom}
+      onChange={setFilterDateFrom}
+    />
+  </div>
+
+  <div>
+    <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
+      Date To
+    </label>
+    <DatePicker
+      placeholder="To Date"
+      value={filterDateTo}
+      onChange={setFilterDateTo}
+    />
+  </div>
+</div>
         </div>
       )}
 

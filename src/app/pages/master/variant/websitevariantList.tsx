@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import apiHelper from "@/utils/apiHelper";
 import { useNavigate } from "react-router";
 import {
-  Dialog,
-  DialogPanel,
+  // Dialog,
+  // DialogPanel,
   Transition,
-  TransitionChild,
+  // TransitionChild,
   Menu,
   MenuButton,
   MenuItems,
@@ -14,30 +14,51 @@ import {
 } from "@headlessui/react";
 import { Fragment } from "react";
 import {
-  XMarkIcon,
-  PencilSquareIcon,
-  TrashIcon,
+  // XMarkIcon,
+  // PencilSquareIcon,
+  // TrashIcon,
   FunnelIcon,
   DocumentArrowDownIcon,
-  EllipsisHorizontalIcon,
+  // EllipsisHorizontalIcon,
   MagnifyingGlassIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
-
+import { Combobox } from "@/components/shared/form/Combobox";
 // Local UI Imports
-import { Button, Checkbox, Input } from "@/components/ui";
+import {  Checkbox } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
-import { Listbox } from "@/components/shared/form/StyledListbox";
+// import { Listbox } from "@/components/shared/form/StyledListbox";
 
 // Dummy data structure matching the table design
 type WebsiteVariantType = {
   id: number;
-  category?: { categoryName: string };
-  brand?: { brandName: string };
-  model?: { modelName: string };
-  variant?: { variantName: string };
-  modelYear?: { year: number };
+
+  category?: {
+    id: number;
+    categoryName: string;
+  };
+
+  brand?: {
+    id: number;
+    brandName: string;
+  };
+
+  model?: {
+    id: number;
+    modelName: string;
+  };
+
+  modelYear?: {
+    id: number;
+    modelYear: number;
+  };
+
+  variant?: {
+    id: number;
+    variantName: string;
+  };
+
   productName: string;
   variantCode: string;
   status: string;
@@ -50,25 +71,36 @@ const entriesOptions = [
   { id: 50, name: "50" },
   { id: 100, name: "100" },
 ];
-
+type FilterOption = {
+  id: string;
+  name: string;
+  categoryId?: string;
+  brandId?: string;
+  modelId?: string;
+};
 export default function WebsiteVariantList() {
-  const navigate = useNavigate();
-  const [showDrawer, setShowDrawer] = useState(false);
-  const [editId, setEditId] = useState<number | null>(null);
+  // const navigate = useNavigate();
+ 
+
   const [variants, setVariants] = useState<WebsiteVariantType[]>([]);
   const [loading, setLoading] = useState(false);
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-
+const [categories, setCategories] = useState<FilterOption[]>([]);
+const [brands, setBrands] = useState<FilterOption[]>([]);
+const [models, setModels] = useState<FilterOption[]>([]);
+const [modelYears, setModelYears] = useState<FilterOption[]>([]);
   // Search and filter states
-  const [search, setSearch] = useState("");
-  const [showFilterBar, setShowFilterBar] = useState(false);
-  // const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("All");
-  const [selectedBrandFilter, setSelectedBrandFilter] = useState("All");
-  const [selectedModelFilter, setSelectedModelFilter] = useState("All");
-  // const [selectedYearFilter, setSelectedYearFilter] = useState("All");
-  const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
+// Search and filter states
+const [search, setSearch] = useState("");
+const [showFilterBar, setShowFilterBar] = useState(false);
+
+const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("All");
+const [selectedBrandFilter, setSelectedBrandFilter] = useState("All");
+const [selectedModelFilter, setSelectedModelFilter] = useState("All");
+const [selectedYearFilter, setSelectedYearFilter] = useState("All");
+const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
 
   // Selection states
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -89,21 +121,103 @@ export default function WebsiteVariantList() {
   useEffect(() => {
     fetchVariants();
   }, []);
+  const getCategories = async () => {
+  try {
+    const res = await apiHelper.get("/category");
+    const data = res?.data || res;
+
+    setCategories(
+      (Array.isArray(data) ? data : []).map((item: any) => ({
+        id: item.id,
+        name: item.categoryName,
+      }))
+    );
+  } catch {
+    setCategories([]);
+  }
+};
+
+const getBrands = async () => {
+  try {
+    const res = await apiHelper.get("/brand");
+    const data = res?.data || res;
+
+   setBrands(
+  (Array.isArray(data) ? data : []).map((item: any) => ({
+    id: String(item.id),
+    name: item.brandName,
+    categoryId: String(item.categoryId),
+  }))
+);
+  } catch {
+    setBrands([]);
+  }
+};
+
+const getModels = async () => {
+  try {
+    const res = await apiHelper.get("/model");
+    const data = res?.data || res;
+
+   setModels(
+  (Array.isArray(data) ? data : []).map((item: any) => ({
+    id: String(item.id),
+    name: item.modelName,
+    brandId: String(item.brandId),
+  }))
+);
+  } catch {
+    setModels([]);
+  }
+};
+
+const getModelYears = async () => {
+  try {
+    const res = await apiHelper.get("/model-year");
+    const data = res?.data || res;
+
+    setModelYears(
+  (Array.isArray(data) ? data : []).map((item: any) => ({
+    id: String(item.id),
+    name: String(item.modelYear),
+    modelId: String(item.modelId),
+  }))
+);
+  } catch {
+    setModelYears([]);
+  }
+};
+useEffect(() => {
+  getCategories();
+  getBrands();
+  getModels();
+  getModelYears();
+}, []);
   // Filter logic
-  const filteredData = variants.filter((item) => {
+ const filteredData = variants.filter((item) => {
     const matchesSearch =
+     item.category?.categoryName.toLowerCase().includes(search.toLowerCase()) ||
       item.productName?.toLowerCase().includes(search.toLowerCase()) ||
       item.variant?.variantName?.toLowerCase().includes(search.toLowerCase()) ||
       item.variantCode?.toLowerCase().includes(search.toLowerCase()) ||
       item.brand?.brandName?.toLowerCase().includes(search.toLowerCase()) ||
-      item.model?.modelName?.toLowerCase().includes(search.toLowerCase());
+      item.model?.modelName?.toLowerCase().includes(search.toLowerCase()) ||
+         item.modelYear?.modelYear.toString().includes(search.toLowerCase());
+const matchesCategoryDropdown =
+  selectedCategoryFilter === "All" ||
+  String(item.category?.id) === selectedCategoryFilter;
 
-    const matchesBrandDropdown =
-      selectedBrandFilter === "All" ||
-      item.brand?.brandName === selectedBrandFilter;
-    const matchesModelDropdown =
-      selectedModelFilter === "All" ||
-      item.model?.modelName === selectedModelFilter;
+const matchesBrandDropdown =
+  selectedBrandFilter === "All" ||
+  String(item.brand?.id) === selectedBrandFilter;
+
+const matchesModelDropdown =
+  selectedModelFilter === "All" ||
+  String(item.model?.id) === selectedModelFilter;
+
+const matchesYearDropdown =
+  selectedYearFilter === "All" ||
+  String(item.modelYear?.id) === selectedYearFilter;;
 
     const matchesStatusDropdown =
       selectedStatusFilter === "All" ||
@@ -111,14 +225,61 @@ export default function WebsiteVariantList() {
 
     return (
       matchesSearch &&
-      // matchesCategoryDropdown &&
+      matchesCategoryDropdown &&
       matchesBrandDropdown &&
       matchesModelDropdown &&
-      // matchesYearDropdown &&
+      matchesYearDropdown &&
       matchesStatusDropdown
     );
   });
+ const categoryOptions = [
+  { id: "All", name: "All Categories" },
+  ...categories.map((c: any) => ({
+    id: String(c.id),
+    name: c.name,
+  })),
+];
 
+const brandOptions = [
+  { id: "All", name: "All Brands" },
+  ...(selectedCategoryFilter === "All"
+    ? []
+    : brands
+        .filter(b => b.categoryId === selectedCategoryFilter)
+        .map(b => ({
+          id: b.id,
+          name: b.name,
+        }))),
+];
+
+const modelOptions = [
+  { id: "All", name: "All Models" },
+  ...(selectedBrandFilter === "All"
+    ? []
+    : models
+        .filter(m => m.brandId === selectedBrandFilter)
+        .map(m => ({
+          id: m.id,
+          name: m.name,
+        }))),
+];
+const yearFilterOptions = [
+  { id: "All", name: "All Years" },
+  ...(selectedModelFilter === "All"
+    ? []
+    : modelYears
+        .filter(y => y.modelId === selectedModelFilter)
+        .map(y => ({
+          id: y.id,
+          name: y.name,
+        }))),
+];
+
+const statusFilterOptions = [
+  { id: "All", name: "All" },
+  { id: "ACTIVE", name: "Active" },
+  { id: "INACTIVE", name: "Inactive" },
+];
   // Pagination calculations
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -151,47 +312,47 @@ export default function WebsiteVariantList() {
 
   // CRUD handlers (dummy implementations)
 
-  const handleEdit = (item: WebsiteVariantType) => {
-    navigate(`/master/variant/website/create?id=${item.id}`);
-  };
+  // const handleEdit = (item: WebsiteVariantType) => {
+  //   navigate(`/master/variant/website/create?id=${item.id}`);
+  // };
 
-  const handleDelete = async (id: number) => {
-    try {
-      const confirmDelete = window.confirm(
-        "Are you sure you want to delete this website variant?",
-      );
+  // const handleDelete = async (id: number) => {
+  //   try {
+  //     const confirmDelete = window.confirm(
+  //       "Are you sure you want to delete this website variant?",
+  //     );
 
-      if (!confirmDelete) return;
+  //     if (!confirmDelete) return;
 
-      await apiHelper.delete(`/website-variants/${id}`);
+  //     await apiHelper.delete(`/website-variants/${id}`);
 
-      await fetchVariants();
+  //     await fetchVariants();
 
-      setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
-    } catch (error) {
-      console.error("Delete failed:", error);
-    }
-  };
+  //     setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
+  //   } catch (error) {
+  //     console.error("Delete failed:", error);
+  //   }
+  // };
 
-  const handleBulkDelete = async () => {
-    try {
-      const confirmDelete = window.confirm(
-        `Delete ${selectedIds.length} selected records?`,
-      );
+  // const handleBulkDelete = async () => {
+  //   try {
+  //     const confirmDelete = window.confirm(
+  //       `Delete ${selectedIds.length} selected records?`,
+  //     );
 
-      if (!confirmDelete) return;
+  //     if (!confirmDelete) return;
 
-      await apiHelper.post("/website-variants/bulk-delete", {
-        ids: selectedIds,
-      });
+  //     await apiHelper.post("/website-variants/bulk-delete", {
+  //       ids: selectedIds,
+  //     });
 
-      await fetchVariants();
+  //     await fetchVariants();
 
-      setSelectedIds([]);
-    } catch (error) {
-      console.error("Bulk delete failed:", error);
-    }
-  };
+  //     setSelectedIds([]);
+  //   } catch (error) {
+  //     console.error("Bulk delete failed:", error);
+  //   }
+  // };
 
   const handleToggleStatus = async (id: number) => {
     try {
@@ -275,24 +436,27 @@ export default function WebsiteVariantList() {
       </div>
 
       {/* Five Dropdown Filters */}
-      {/* {showFilterBar && (
+      {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
             <div className="flex flex-col gap-1">
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Category
               </span>
-              <Listbox
+              <Combobox
                 data={categoryOptions}
                 value={
                   categoryOptions.find(
                     (opt) => opt.id === selectedCategoryFilter
                   ) || categoryOptions[0]
                 }
-                onChange={(opt: any) => {
-                  setSelectedCategoryFilter(opt.id);
-                  setCurrentPage(1);
-                }}
+              onChange={(opt: any) => {
+  setSelectedCategoryFilter(opt.id);
+  setSelectedBrandFilter("All");
+  setSelectedModelFilter("All");
+  setSelectedYearFilter("All");
+  setCurrentPage(1);
+}}
                 displayField="name"
               />
             </div>
@@ -301,17 +465,19 @@ export default function WebsiteVariantList() {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Brand
               </span>
-              <Listbox
+              <Combobox
                 data={brandOptions}
                 value={
                   brandOptions.find(
                     (opt) => opt.id === selectedBrandFilter
                   ) || brandOptions[0]
                 }
-                onChange={(opt: any) => {
-                  setSelectedBrandFilter(opt.id);
-                  setCurrentPage(1);
-                }}
+              onChange={(opt: any) => {
+  setSelectedBrandFilter(opt.id);
+  setSelectedModelFilter("All");
+  setSelectedYearFilter("All");
+  setCurrentPage(1);
+}}
                 displayField="name"
               />
             </div>
@@ -320,17 +486,18 @@ export default function WebsiteVariantList() {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Model
               </span>
-              <Listbox
+              <Combobox
                 data={modelOptions}
                 value={
                   modelOptions.find(
                     (opt) => opt.id === selectedModelFilter
                   ) || modelOptions[0]
                 }
-                onChange={(opt: any) => {
-                  setSelectedModelFilter(opt.id);
-                  setCurrentPage(1);
-                }}
+              onChange={(opt: any) => {
+  setSelectedModelFilter(opt.id);
+  setSelectedYearFilter("All");
+  setCurrentPage(1);
+}}
                 displayField="name"
               />
             </div>
@@ -339,7 +506,7 @@ export default function WebsiteVariantList() {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Year
               </span>
-              <Listbox
+              <Combobox
                 data={yearFilterOptions}
                 value={
                   yearFilterOptions.find(
@@ -358,7 +525,7 @@ export default function WebsiteVariantList() {
               <span className="dark:text-dark-200 text-sm font-medium text-gray-700">
                 Status
               </span>
-              <Listbox
+              <Combobox
                 data={statusFilterOptions}
                 value={
                   statusFilterOptions.find(
@@ -374,8 +541,7 @@ export default function WebsiteVariantList() {
             </div>
           </div>
         </div>
-      )} */}
-
+      )}
       {/* Main Table Layout Panel Container */}
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
@@ -475,7 +641,7 @@ export default function WebsiteVariantList() {
                     </Td>
 
                     <Td className="dark:text-dark-200 py-4 text-gray-600">
-                      {item.modelYear?.year || "-"}
+                      {item.modelYear?.modelYear || "-"}
                     </Td>
 
                     <Td className="py-4 font-medium text-gray-900 dark:text-gray-400">

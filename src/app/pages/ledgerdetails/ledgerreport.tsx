@@ -13,6 +13,7 @@ import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import { useEffect } from "react";
 import apiHelper from "@/utils/apiHelper";
+import { Search } from "lucide-react";
 interface LedgerAccount {
   id: number;
   accountName: string;
@@ -37,6 +38,7 @@ const LedgerReport: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"all" | "ledger" | "default">(
     "ledger",
   );
+   const [search, setSearch] = useState("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilterBar, setShowFilterBar] = useState(false);
@@ -59,11 +61,27 @@ const [filterData, setFilterData] = useState<FilterData>({
   toDate: formatDate(today),
   displayType: "",
 });
- const [ledgerData, setLedgerData] = useState<LedgerAccount[]>([]);
-  const totalPages = Math.ceil(ledgerData.length / rowsPerPage);
-  const startIndex = (currentPage - 1) * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
-  const currentData = ledgerData.slice(startIndex, endIndex);
+const [ledgerData, setLedgerData] = useState<LedgerAccount[]>([]);
+
+// NEW: filter ledgerData by the search box before paginating
+const filteredData = ledgerData.filter((item) => {
+  const q = search.toLowerCase();
+  return (
+    item.accountName?.toLowerCase().includes(q) ||
+    item.group?.toLowerCase().includes(q) ||
+    item.address?.toLowerCase().includes(q) ||
+    item.city?.toLowerCase().includes(q) ||
+    item.state?.toLowerCase().includes(q)
+  );
+});
+
+const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+const startIndex = (currentPage - 1) * rowsPerPage;
+const endIndex = startIndex + rowsPerPage;
+const currentData = filteredData.slice(startIndex, endIndex);
+useEffect(() => {
+  setCurrentPage(1);
+}, [search]);
 
   const getLedgerAccounts = async () => {
   try {
@@ -212,17 +230,17 @@ const downloadExcel = async () => {
       </div>
 
       {/* Filters */}
-      <div className="mb-5 flex flex-col items-end justify-end gap-4 sm:flex-row sm:items-center">
-        <div className="relative w-full sm:w-48">
-          <input
-            type="text"
-            placeholder="Search"
-            className="dark:border-dark-600 dark:bg-dark-700 focus:ring-primary-500 w-full rounded-lg border border-gray-300 bg-white px-4 py-1.5 text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:outline-none dark:text-white dark:placeholder-gray-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+     <div className="relative mb-5 w-full max-w-md">
+        <Search className="absolute top-1/2 left-3 size-4.5 -translate-y-1/2 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Search contra entries..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="dark:border-dark-500 dark:bg-dark-800 w-full rounded-lg border border-gray-300 bg-white py-2.5 pr-4 pl-10 text-sm outline-none"
+        />
       </div>
+     
 
       {/* Table */}
       <div className="dark:bg-dark-700 dark:border-dark-600 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">

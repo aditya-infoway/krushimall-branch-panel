@@ -432,12 +432,32 @@ const Employee = () => {
     }
   };
   // Filter data
+ const searchText = search.trim().toLowerCase();
   const filteredData = employees.filter((item) => {
     const matchesSearch =
-      item.employeeName.toLowerCase().includes(search.toLowerCase()) ||
-      item.email.toLowerCase().includes(search.toLowerCase()) ||
-      item.mobileNumber.includes(search) ||
-      item.department.toLowerCase().includes(search.toLowerCase());
+     String(item.employeeName ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+
+    String(item.department ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+
+    String(item.branch ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+
+    String(item.role ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+
+    String(item.mobileNumber ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+
+    String(item.email ?? "")
+      .toLowerCase()
+      .includes(searchText);
 
     const matchesDepartment =
       selectedDepartmentFilter === "All" ||
