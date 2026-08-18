@@ -32,6 +32,7 @@ import { Input, Radio, Textarea, Checkbox } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
 import { toast } from "sonner";
+import { Listbox } from "@/components/shared/form/StyledListbox";
 // ── Types ──────────────────────────────────────────────────────────────────────
 type ContraType = "Cash Deposit" | "Cash Withdrawal" | "Bank Transfer";
 
@@ -74,7 +75,13 @@ export default function Contra() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-
+// Type filter options — dynamically built from actual entries data
+const typeFilterOptions = [
+  { id: "All", name: "All Types" },
+  ...Array.from(new Set(entries.map((e) => e.type).filter(Boolean))).map(
+    (t) => ({ id: t, name: t }),
+  ),
+];
   // form state
   const [type, setType] = useState<ContraType>("Bank Transfer");
   const [cashBankAccount, setCashBankAccount] = useState<any>(null);
@@ -287,11 +294,32 @@ const getVoucher = async () => {
     setSelectedIds([]);
   };
 
-  const filtered = entries.filter((e) =>
-    Object.values(e).some((v) =>
-      String(v).toLowerCase().includes(search.toLowerCase()),
-    ),
+const filtered = entries.filter((e) => {
+  const matchesSearch = Object.values(e).some((v) =>
+    String(v).toLowerCase().includes(search.toLowerCase()),
   );
+
+  const matchesType = filterType === "All" || e.type === filterType;
+
+  // NEW: date range filter — handles DatePicker returning either a Date or an array
+  const rowDate = new Date(e.date);
+  rowDate.setHours(0, 0, 0, 0);
+
+  const rawFrom = Array.isArray(filterDateFrom)
+    ? filterDateFrom[0]
+    : filterDateFrom;
+  const fromDate = rawFrom ? new Date(rawFrom) : null;
+  if (fromDate) fromDate.setHours(0, 0, 0, 0);
+
+  const rawTo = Array.isArray(filterDateTo) ? filterDateTo[0] : filterDateTo;
+  const toDate = rawTo ? new Date(rawTo) : null;
+  if (toDate) toDate.setHours(23, 59, 59, 999);
+
+  const matchesDateFrom = !fromDate || rowDate >= fromDate;
+  const matchesDateTo = !toDate || rowDate <= toDate;
+
+  return matchesSearch && matchesType && matchesDateFrom && matchesDateTo;
+});
 
   const totalItems = filtered.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -417,43 +445,42 @@ const downloadExcel = async () => {
       {/* Filter Bar */}
       {showFilterBar && (
         <div className="dark:bg-dark-700 dark:border-dark-500 animate-in fade-in slide-in-from-top-2 rounded-xl border border-gray-200 bg-white p-4 transition-all duration-150">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div>
-              <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
-                Type
-              </label>
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm"
-              >
-                <option value="All">All Types</option>
-                <option value="Cash Deposit">Cash Deposit</option>
-                <option value="Cash Withdrawal">Cash Withdrawal</option>
-                <option value="Bank Transfer">Bank Transfer</option>
-              </select>
-            </div>
-            <div>
-              <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
-                Date From
-              </label>
-              <DatePicker
-                placeholder="From Date"
-                value={filterDateFrom}
-                onChange={setFilterDateFrom}
-              />
-            </div>
-            <div>
-              <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
-                Date To
-              </label>
-              <DatePicker
-                placeholder="To Date"
-                value={filterDateTo}
-                onChange={setFilterDateTo}
-              />
-            </div>
-          </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+  <div>
+    <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
+      Type
+    </label>
+    <Listbox
+      data={typeFilterOptions}
+      value={
+        typeFilterOptions.find((o) => o.id === filterType) ||
+        typeFilterOptions[0]
+      }
+      onChange={(opt: any) => setFilterType(opt.id)}
+      displayField="name"
+    />
+  </div>
+  <div>
+    <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
+      Date From
+    </label>
+    <DatePicker
+      placeholder="From Date"
+      value={filterDateFrom}
+      onChange={setFilterDateFrom}
+    />
+  </div>
+  <div>
+    <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
+      Date To
+    </label>
+    <DatePicker
+      placeholder="To Date"
+      value={filterDateTo}
+      onChange={setFilterDateTo}
+    />
+  </div>
+</div>
         </div>
       )}
 

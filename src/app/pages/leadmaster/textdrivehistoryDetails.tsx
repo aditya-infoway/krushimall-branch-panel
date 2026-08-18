@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 
 import {
   ArrowLeftIcon,
-  ArrowDownTrayIcon,
+  
   ChevronLeftIcon,
   ChevronRightIcon,
+  MagnifyingGlassIcon
 } from "@heroicons/react/24/outline";
 import {
   Menu,
@@ -22,7 +23,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import apiHelper from "@/utils/apiHelper";
 import { Page } from "@/components/shared/Page";
 
-import { Button, Card } from "@/components/ui";
+import {  Card } from "@/components/ui";
 
 // --------------------------------------------
 const entriesOptions = [
@@ -81,7 +82,7 @@ interface HistoryItem {
 
 export default function TestDriveHistoryDetails() {
   const navigate = useNavigate();
-
+ const [search, setSearch] = useState("");
   const { id } = useParams();
 
   const [customer, setCustomer] = useState<CustomerDetails>({
@@ -135,15 +136,44 @@ export default function TestDriveHistoryDetails() {
   // PAGINATION
   // ------------------------------------------
 
-  const totalItems = history.length;
+const searchText = search.trim().toLowerCase();
 
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+const filteredHistory = history.filter((item) => {
+  return (
+    String(item.model?.modelName ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+    String(item.showroomVariant?.variantName ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+    String(item.colour?.colourName ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+    String(item.licenceNo ?? "")
+      .toLowerCase()
+      .includes(searchText) ||
+    String(item.placeOfTestDrive ?? "")
+      .toLowerCase()
+      .includes(searchText)
+  );
+});
 
-  const indexOfLastItem = currentPage * itemsPerPage;
+// ------------------------------------------
+// PAGINATION
+// ------------------------------------------
 
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+const totalItems = filteredHistory.length;
 
-  const currentItems = history.slice(indexOfFirstItem, indexOfLastItem);
+const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+const indexOfLastItem = currentPage * itemsPerPage;
+
+const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+const currentItems = filteredHistory.slice(
+  indexOfFirstItem,
+  indexOfLastItem,
+);
   // ------------------------------------------
   // VIEW QUOTATION
   // ------------------------------------------
@@ -236,7 +266,18 @@ const formatIndianTime = (time?: string) => {
         </Card>
 
         {/* HISTORY TABLE */}
-
+  <div className="relative mb-5 w-full max-w-md">
+          <MagnifyingGlassIcon className="absolute top-1/2 left-3 size-4.5 -translate-y-1/2 text-gray-400" />
+          <input
+            placeholder="Search leads..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="dark:border-dark-500 dark:bg-dark-800 w-full rounded-lg border border-gray-300 bg-white py-2.5 pr-4 pl-10 text-sm outline-none"
+          />
+        </div>
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left ">

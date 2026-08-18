@@ -63,7 +63,7 @@ export default function General() {
   try {
     setLoading(true);
 
-    const response = await apiHelper.get(`/branch/${id}`);
+    const response = await apiHelper.get(`/branch-panel/branch/${id}`);
 
     console.log("API Response:", response);
 
@@ -109,7 +109,8 @@ export default function General() {
           key === "company" ||
           key === "financialYear" ||
           key === "createdAt" ||
-          key === "updatedAt"
+          key === "updatedAt" ||
+          key === "password" // 👈 never round-trip the password hash back to the server
         )
           return;
         if (branch[key] !== undefined && branch[key] !== null) {

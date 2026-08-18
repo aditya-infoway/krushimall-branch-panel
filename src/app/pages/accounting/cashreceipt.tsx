@@ -34,7 +34,7 @@ import { DatePicker } from "@/components/shared/form/Datepicker";
 import { Input, Radio, Textarea, Checkbox } from "@/components/ui";
 import apiHelper from "@/utils/apiHelper";
 import { toast } from "sonner";
-
+import { Listbox } from "@/components/shared/form/StyledListbox";
 type EntryType = "Manual" | "Lead" | "Job Card";
 import { Combobox } from "@/components/shared/form/Combobox";
 import { RiFileExcel2Fill, RiFilePdfFill } from "react-icons/ri";
@@ -137,12 +137,30 @@ export default function CashReceipt() {
   const [filterDateTo, setFilterDateTo] = useState<any>(null);
 
   const filteredRows = rows.filter((r) => {
-    const matchesSearch = Object.values(r).some((v) =>
-      String(v).toLowerCase().includes(search.toLowerCase()),
-    );
-    const matchesType = filterType === "All" || r.type === filterType;
-    return matchesSearch && matchesType;
-  });
+  const matchesSearch = Object.values(r).some((v) =>
+    String(v).toLowerCase().includes(search.toLowerCase()),
+  );
+  const matchesType = filterType === "All" || r.type === filterType;
+
+  // NEW: date range filter — handles DatePicker returning either a Date or an array
+  const rowDate = new Date(r.date);
+  rowDate.setHours(0, 0, 0, 0);
+
+  const rawFrom = Array.isArray(filterDateFrom)
+    ? filterDateFrom[0]
+    : filterDateFrom;
+  const fromDate = rawFrom ? new Date(rawFrom) : null;
+  if (fromDate) fromDate.setHours(0, 0, 0, 0);
+
+  const rawTo = Array.isArray(filterDateTo) ? filterDateTo[0] : filterDateTo;
+  const toDate = rawTo ? new Date(rawTo) : null;
+  if (toDate) toDate.setHours(23, 59, 59, 999);
+
+  const matchesDateFrom = !fromDate || rowDate >= fromDate;
+  const matchesDateTo = !toDate || rowDate <= toDate;
+
+  return matchesSearch && matchesType && matchesDateFrom && matchesDateTo;
+});
   const [companyId, setCompanyId] = useState<number | null>(null);
   const [financialYearId, setFinancialYearId] = useState<number | null>(null);
   const totalItems = filteredRows.length;
@@ -151,6 +169,12 @@ export default function CashReceipt() {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
   const [leadOptions, setLeadOptions] = useState<any[]>([]);
+  const typeFilterOptions = [
+  { id: "All", name: "All Types" },
+  ...Array.from(new Set(rows.map((r) => r.type).filter(Boolean))).map(
+    (type) => ({ id: type, name: type }),
+  ),
+];
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -572,16 +596,16 @@ export default function CashReceipt() {
               <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
                 Type
               </label>
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="dark:border-dark-500 dark:bg-dark-600 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500"
-              >
-                <option value="All">All Types</option>
-                <option value="Manual">Manual</option>
-                <option value="Lead ">Lead </option>
-                <option value="Job Card">Job Card</option>
-              </select>
+               <Listbox
+    data={typeFilterOptions}
+    value={
+      typeFilterOptions.find((o) => o.id === filterType) ||
+      typeFilterOptions[0]
+    }
+    onChange={(opt: any) => setFilterType(opt.id)}
+    displayField="name"
+  />
+
             </div>
             <div>
               <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">

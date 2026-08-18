@@ -442,11 +442,13 @@ export default function Createvariant() {
 
   // Filter logic - Added year filter matching
   const filteredData = variants.filter((item) => {
-    const matchesSearch =
+      const matchesSearch =
       item.category.toLowerCase().includes(search.toLowerCase()) ||
       item.brand.toLowerCase().includes(search.toLowerCase()) ||
       item.model.toLowerCase().includes(search.toLowerCase()) ||
-      item.modelYear.toString().includes(search.toLowerCase());
+      item.modelYear.toString().includes(search.toLowerCase()) ||
+        item.variantCode.toLowerCase().includes(search.toLowerCase()) ||
+  item.variantName.toLowerCase().includes(search.toLowerCase());
 
     const matchesCategoryDropdown =
       selectedCategoryFilter === "All" ||
