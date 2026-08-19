@@ -6,8 +6,18 @@ import {
   EyeIcon,
   XMarkIcon,
   CheckIcon,
+  MagnifyingGlassIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
-import { Dialog, Transition } from "@headlessui/react";
+import {
+  Dialog,
+  Transition,
+  Menu,
+  MenuButton,
+  MenuItems,
+  MenuItem,
+} from "@headlessui/react";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { toast } from "sonner";
 type TransferVehicle = {
@@ -46,7 +56,14 @@ type TransferDetails = {
   manager?: { accountName?: string };
   vehicles: TransferVehicle[];
 };
-
+const entriesOptions = [
+  { id: 10, name: "10" },
+  { id: 20, name: "20" },
+  { id: 30, name: "30" },
+  { id: 40, name: "40" },
+  { id: 50, name: "50" },
+  { id: 100, name: "100" },
+];
 const formatDate = (date?: string) => {
   if (!date) return "-";
   const d = new Date(date);
@@ -94,43 +111,43 @@ const DetailItem = ({
 const VehicleStockTransferDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-
+  const [search, setSearch] = useState("");
   const [transfer, setTransfer] = useState<TransferDetails | null>(null);
   const [loading, setLoading] = useState(false);
   const [verifyingId, setVerifyingId] = useState<number | null>(null);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   // Right-side details drawer, per vehicle
   const [selectedVehicle, setSelectedVehicle] =
     useState<TransferVehicle | null>(null);
   const [showDetails, setShowDetails] = useState(false);
 
-const getTransferDetails = async () => {
-  try {
-    setLoading(true);
+  const getTransferDetails = async () => {
+    try {
+      setLoading(true);
 
-    const res = await apiHelper.get(`/branch-panel/stocktransfer/${id}`);
-    const data = res?.data || res;
+      const res = await apiHelper.get(`/branch-panel/stocktransfer/${id}`);
+      const data = res?.data || res;
 
-    if (!data) {
-      toast.error("Transfer details not found");
+      if (!data) {
+        toast.error("Transfer details not found");
+        setTransfer(null);
+        return;
+      }
+
+      setTransfer(data);
+    } catch (error: any) {
+      console.log(error);
+
+      toast.error(
+        error?.response?.data?.message || "Failed to fetch transfer details",
+      );
+
       setTransfer(null);
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    setTransfer(data);
-  } catch (error: any) {
-    console.log(error);
-
-    toast.error(
-      error?.response?.data?.message ||
-        "Failed to fetch transfer details"
-    );
-
-    setTransfer(null);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     if (id) getTransferDetails();
@@ -142,65 +159,87 @@ const getTransferDetails = async () => {
 
   const vehicles = transfer?.vehicles || [];
 
-const handleVerify = async (vehicleId: number) => {
-  const vehicle = transfer?.vehicles.find((v) => v.id === vehicleId);
-  if (!vehicle || vehicle.status === "VERIFIED") return; // already verified, no-op
+  const handleVerify = async (vehicleId: number) => {
+    const vehicle = transfer?.vehicles.find((v) => v.id === vehicleId);
+    if (!vehicle || vehicle.status === "VERIFIED") return; // already verified, no-op
 
-  setVerifyingId(vehicleId);
+    setVerifyingId(vehicleId);
 
-  // optimistic update
-  setTransfer((prev) => {
-    if (!prev) return prev;
-    return {
-      ...prev,
-      vehicles: prev.vehicles.map((v) =>
-        v.id === vehicleId ? { ...v, status: "VERIFIED" } : v,
-      ),
-    };
+    // optimistic update
+    setTransfer((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        vehicles: prev.vehicles.map((v) =>
+          v.id === vehicleId ? { ...v, status: "VERIFIED" } : v,
+        ),
+      };
+    });
+
+    try {
+      const res = await apiHelper.patch(
+        `/branch-panel/stocktransfer/verify/${vehicleId}`,
+        { checked: true },
+      );
+      const updatedVehicle = res?.data || res;
+
+      setTransfer((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          vehicles: prev.vehicles.map((v) =>
+            v.id === vehicleId ? { ...v, ...updatedVehicle } : v,
+          ),
+        };
+      });
+
+      toast.success("Vehicle verified successfully");
+    } catch (error: any) {
+      console.log(error);
+
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to verify vehicle",
+      );
+
+      // revert on failure
+      setTransfer((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          vehicles: prev.vehicles.map((v) =>
+            v.id === vehicleId ? { ...v, status: "TRANSFER" } : v,
+          ),
+        };
+      });
+    } finally {
+      setVerifyingId(null);
+    }
+  };
+
+  // NEW: filter vehicles by the search box
+  const filteredRows = vehicles.filter((v) => {
+    const q = search.toLowerCase();
+    return (
+      v.chassisNo?.toLowerCase().includes(q) ||
+      v.modelName?.toLowerCase().includes(q) ||
+      v.variantName?.toLowerCase().includes(q) ||
+      v.colour?.toLowerCase().includes(q) ||
+      v.itemName?.toLowerCase().includes(q) ||
+      v.itemCode?.toLowerCase().includes(q) ||
+      v.engineNo?.toLowerCase().includes(q)
+    );
   });
+  const totalItems = filteredRows.length;
 
-  try {
-    const res = await apiHelper.patch(
-      `/branch-panel/stocktransfer/verify/${vehicleId}`,
-      { checked: true },
-    );
-    const updatedVehicle = res?.data || res;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-    setTransfer((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        vehicles: prev.vehicles.map((v) =>
-          v.id === vehicleId ? { ...v, ...updatedVehicle } : v,
-        ),
-      };
-    });
+  const indexOfLastItem = currentPage * itemsPerPage;
 
-    toast.success("Vehicle verified successfully");
-  } catch (error: any) {
-    console.log(error);
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 
-    toast.error(
-      error?.response?.data?.message ||
-        error?.message ||
-        "Failed to verify vehicle"
-    );
-
-    // revert on failure
-    setTransfer((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        vehicles: prev.vehicles.map((v) =>
-          v.id === vehicleId ? { ...v, status: "TRANSFER" } : v,
-        ),
-      };
-    });
-  } finally {
-    setVerifyingId(null);
-  }
-};
-
+  const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
   const handleViewDetails = (vehicle: TransferVehicle) => {
     setSelectedVehicle(vehicle);
     setShowDetails(true);
@@ -216,7 +255,7 @@ const handleVerify = async (vehicleId: number) => {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-700">
         <div>
-          <h2 className="text-xl font-bold whitespace-nowrap text-gray-800 md:text-2xl dark:text-white">
+          <h2 className="text-20 font-bold whitespace-nowrap text-gray-800 md:text-2xl dark:text-white">
             Transfer Details {transfer ? `- ${transfer.transferNo}` : ""}
           </h2>
           {transfer && (
@@ -241,7 +280,18 @@ const handleVerify = async (vehicleId: number) => {
           Loading...
         </div>
       )}
-
+      <div className="relative mb-5 w-full max-w-md">
+        <MagnifyingGlassIcon className="absolute top-1/2 left-3 size-4.5 -translate-y-1/2 text-gray-400" />
+        <input
+          placeholder="Search leads..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="dark:border-dark-500 dark:bg-dark-800 w-full rounded-lg border border-gray-300 bg-white py-2.5 pr-4 pl-10 text-sm outline-none"
+        />
+      </div>
       {!loading && transfer && (
         <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
@@ -284,7 +334,7 @@ const handleVerify = async (vehicleId: number) => {
                 </Tr>
               </THead>
               <TBody className="dark:divide-dark-700 divide-y divide-gray-200">
-                {vehicles.map((item, index) => {
+                {currentItems.map((item, index) => {
                   const isVerified = item.status === "VERIFIED";
                   const isBusy = verifyingId === item.id;
                   return (
@@ -306,7 +356,7 @@ const handleVerify = async (vehicleId: number) => {
                           className={`inline-flex size-6 items-center justify-center rounded-lg border-2 transition-all duration-150 ${
                             isVerified
                               ? "cursor-not-allowed border-green-500 bg-green-500 text-white"
-                              : "cursor-pointer border-gray-300 bg-white hover:border-primary-500 hover:bg-primary-50 dark:border-dark-500 dark:bg-transparent dark:hover:border-primary-500"
+                              : "hover:border-primary-500 hover:bg-primary-50 dark:border-dark-500 dark:hover:border-primary-500 cursor-pointer border-gray-300 bg-white dark:bg-transparent"
                           } ${isBusy ? "opacity-50" : ""}`}
                         >
                           {isVerified ? (
@@ -355,7 +405,7 @@ const handleVerify = async (vehicleId: number) => {
                   );
                 })}
 
-                {vehicles.length === 0 && (
+                {currentItems.length === 0 && (
                   <Tr>
                     <Td
                       colSpan={9}
@@ -368,6 +418,120 @@ const handleVerify = async (vehicleId: number) => {
               </TBody>
             </Table>
           </div>
+          {totalItems > 0 && (
+            <div className="dark:border-dark-700 dark:bg-dark-800 flex flex-col gap-4 border-t border-gray-200 bg-white px-4 py-4 md:flex-row md:items-center">
+              {/* SHOW ENTRIES */}
+              <div className="order-1 flex items-center justify-center gap-2 text-sm text-gray-600 md:w-1/3 md:justify-start dark:text-gray-400">
+                <span>Show</span>
+                <Menu as="div" className="relative inline-block w-20 text-left">
+                  <MenuButton className="dark:border-dark-600 dark:bg-dark-700 flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm dark:text-gray-200">
+                    <span>{itemsPerPage}</span>
+                    <svg
+                      className="ml-2 size-4"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </MenuButton>
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-100"
+                    enterFrom="transform opacity-0 scale-95"
+                    enterTo="transform opacity-100 scale-100"
+                    leave="transition ease-in duration-75"
+                    leaveFrom="transform opacity-100 scale-100"
+                    leaveTo="transform opacity-0 scale-95"
+                  >
+                    <MenuItems
+                      anchor="top start"
+                      className="dark:border-dark-600 dark:bg-dark-700 z-200 w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl focus:outline-none"
+                    >
+                      {entriesOptions.map((option) => (
+                        <MenuItem key={option.id}>
+                          {({ active }) => (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setItemsPerPage(option.id);
+                                setCurrentPage(1);
+                              }}
+                              className={`flex w-full rounded-md px-3 py-1.5 text-sm font-medium ${
+                                option.id === itemsPerPage
+                                  ? "bg-primary-500 text-white"
+                                  : active
+                                    ? "dark:bg-dark-600 bg-gray-100 text-gray-900 dark:text-white"
+                                    : "text-gray-700 dark:text-gray-200"
+                              }`}
+                            >
+                              {option.name}
+                            </button>
+                          )}
+                        </MenuItem>
+                      ))}
+                    </MenuItems>
+                  </Transition>
+                </Menu>
+                <span>entries</span>
+              </div>
+
+              {/* PAGE BUTTONS */}
+              <div className="order-2 flex justify-center md:w-1/3">
+                <div className="dark:border-dark-700 dark:bg-dark-800 inline-flex items-center space-x-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
+                  <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
+                    className="dark:hover:bg-dark-700 inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-400"
+                  >
+                    <ChevronLeftIcon className="size-4" />
+                  </button>
+                  {Array.from(
+                    { length: totalPages },
+                    (_, index) => index + 1,
+                  ).map((page) => (
+                    <button
+                      key={page}
+                      type="button"
+                      onClick={() => setCurrentPage(page)}
+                      className={`inline-flex size-8 items-center justify-center rounded-md text-sm font-medium ${
+                        currentPage === page
+                          ? "bg-primary-500 text-white"
+                          : "dark:hover:bg-dark-700 text-gray-600 hover:bg-gray-100 dark:text-gray-300"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    disabled={currentPage === totalPages}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    className="dark:hover:bg-dark-700 inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-400"
+                  >
+                    <ChevronRightIcon className="size-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* ENTRY INFORMATION */}
+              <div className="order-3 flex items-center justify-center text-sm text-gray-500 md:w-1/3 md:justify-end dark:text-gray-400">
+                <span>
+                  {indexOfFirstItem + 1} -{" "}
+                  {Math.min(indexOfLastItem, totalItems)} of {totalItems}{" "}
+                  entries
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -431,7 +595,7 @@ const handleVerify = async (vehicleId: number) => {
                             />
                           </div>
 
-                          <div className="dark:from-dark-700 dark:to-dark-700 mb-5 flex items-center justify-between rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 p-4 dark:border dark:border-dark-600">
+                          <div className="dark:from-dark-700 dark:to-dark-700 dark:border-dark-600 mb-5 flex items-center justify-between rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 p-4 dark:border">
                             <div>
                               <p className="text-xs text-gray-400 dark:text-gray-500">
                                 Chassis No
