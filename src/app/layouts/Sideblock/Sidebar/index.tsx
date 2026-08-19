@@ -9,6 +9,7 @@ import { useThemeContext } from "@/app/contexts/theme/context";
 import { useDidUpdate } from "@/hooks";
 import { Header } from "./Header";
 import { Menu } from "./Menu";
+import { LogoutButton } from "./LogoutButton";
 
 // ----------------------------------------------------------------------
 
@@ -39,7 +40,14 @@ export function Sidebar() {
         )}
       >
         <Header />
-        <Menu />
+
+        {/* Scrollable menu area */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          <Menu />
+        </div>
+
+        {/* Logout fixed at bottom */}
+        <LogoutButton />
       </div>
 
       {lgAndDown && isSidebarExpanded && (

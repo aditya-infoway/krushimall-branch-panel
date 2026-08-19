@@ -21,7 +21,10 @@ import {
 } from "react-icons/ri";
 import { FiChevronUp, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { Badge } from "@/components/ui";
+import {
 
+   MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
 interface FollowUpData {
   id: number;
   leadId: string;
@@ -305,9 +308,8 @@ useEffect(() => {
       {view === "table" && (
         <>
           {/* Table Controls */}
-          <div className="mb-5 flex flex-col items-end justify-end gap-4 sm:flex-row sm:items-center">
-            <div className="relative w-full sm:w-48">
-              <RiSearchLine className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
+           <div className="relative mb-5 w-full max-w-md">
+          <MagnifyingGlassIcon className="absolute top-1/2 left-3 size-4.5 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search"
@@ -316,7 +318,7 @@ useEffect(() => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-          </div>
+      
 
           {/* Table */}
           <div className="dark:bg-dark-700 dark:border-dark-600 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
