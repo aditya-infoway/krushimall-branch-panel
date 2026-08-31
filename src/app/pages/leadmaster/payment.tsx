@@ -13,7 +13,7 @@ import apiHelper from "@/utils/apiHelper";
 import { toast } from "sonner";
 
 type PaymentEntry = {
-  id: string;                 // ✅ "cash-32" / "bank-15" jaisa string id hai
+  id: string; // ✅ "cash-32" / "bank-15" jaisa string id hai
   voucherNo: string;
   paidAmount: number;
   pendingAmount: number;
@@ -56,20 +56,20 @@ export function PaymentDrawer({
   const [payments, setPayments] = useState<PaymentEntry[]>([]);
   const [loading, setLoading] = useState(false);
 
-const fetchPayments = async () => {
-  if (!leadId) return;
-  setLoading(true);
-  try {
-    const res = await apiHelper.get(`/branch-panel/leads/${leadId}/payments`);
-    const list = res.data?.payments ?? [];   // ✅ correct unwrap
-    setPayments(list);
-  } catch (error) {
-    console.error("Payment fetch error:", error);
-    toast.error("Failed to load payment history");
-  } finally {
-    setLoading(false);
-  }
-};
+  const fetchPayments = async () => {
+    if (!leadId) return;
+    setLoading(true);
+    try {
+      const res = await apiHelper.get(`/branch-panel/leads/${leadId}/payments`);
+      const list = res.data?.payments ?? []; // ✅ correct unwrap
+      setPayments(list);
+    } catch (error) {
+      console.error("Payment fetch error:", error);
+      toast.error("Failed to load payment history");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen && leadId) {
@@ -94,7 +94,7 @@ const fetchPayments = async () => {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/60" />
+          <div className="fixed inset-0 bg-black/30 dark:bg-black/60" />
         </Transition.Child>
 
         {/* Right side sliding panel */}
@@ -111,22 +111,22 @@ const fetchPayments = async () => {
                 leaveTo="translate-x-full"
               >
                 <Dialog.Panel className="pointer-events-auto w-screen max-w-3xl">
-                  <div className="flex h-full flex-col overflow-y-auto bg-[#141a21] shadow-xl">
+                  <div className="dark:bg-dark-700 flex h-full flex-col overflow-y-auto bg-white shadow-xl">
                     {/* Header */}
-                    <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[#141a21] px-5 py-4">
+                    <div className="dark:bg-dark-600 dark:border-dark-500 sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-5 py-4">
                       <div>
-                        <Dialog.Title className="text-lg font-semibold text-white">
+                        <Dialog.Title className="dark:text-dark-50 text-lg font-semibold text-gray-900">
                           Payment Details
                         </Dialog.Title>
                         {customerName && (
-                          <p className="mt-0.5 text-xs text-gray-400">
+                          <p className="dark:text-dark-200 mt-0.5 text-xs text-gray-500">
                             {customerName}
                           </p>
                         )}
                       </div>
                       <button
                         onClick={onClose}
-                        className="rounded-full p-1.5 text-gray-400 hover:bg-white/10 hover:text-white"
+                        className="dark:text-dark-200 rounded-full p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-white/10 dark:hover:text-white"
                       >
                         <XMarkIcon className="size-5" />
                       </button>
@@ -134,28 +134,27 @@ const fetchPayments = async () => {
 
                     {/* Pending amount summary strip */}
                     {latestPending !== undefined && (
-                      <div className="mx-5 mt-4 flex items-center justify-between rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2.5">
-                        <span className="flex items-center gap-1.5 text-sm text-red-400">
+                      <div className="mx-5 mt-4 flex items-center justify-between rounded-lg border border-red-300 bg-red-50 px-4 py-2.5 dark:border-red-500/30 dark:bg-red-500/10">
+                        <span className="flex items-center gap-1.5 text-sm text-red-600 dark:text-red-400">
                           <ExclamationCircleIcon className="size-4" />
                           Pending Amount
                         </span>
-                        <span className="text-sm font-bold text-red-400">
+                        <span className="text-sm font-bold text-red-600 dark:text-red-400">
                           ₹{latestPending.toLocaleString("en-IN")}
                         </span>
                       </div>
                     )}
 
                     {/* Body — Payment entries list */}
-               {/* Body — Payment entries list */}
                     <div className="flex-1 px-5 py-4">
                       {loading && (
-                        <p className="py-10 text-center text-sm text-gray-400">
+                        <p className="dark:text-dark-200 py-10 text-center text-sm text-gray-500">
                           Loading payment history...
                         </p>
                       )}
 
                       {!loading && payments.length === 0 && (
-                        <p className="py-10 text-center text-sm text-gray-500">
+                        <p className="dark:text-dark-300 py-10 text-center text-sm text-gray-400">
                           No payment records found
                         </p>
                       )}
@@ -163,23 +162,23 @@ const fetchPayments = async () => {
                       {!loading && payments.length > 0 && (
                         <div className="relative pl-6">
                           {/* continuous vertical timeline rail */}
-                          <span className="absolute top-2 bottom-2 left-[7px] w-px bg-white/10" />
+                          <span className="dark:bg-dark-400 absolute top-2 bottom-2 left-[7px] w-px bg-gray-200" />
 
                           <div className="space-y-4">
                             {payments.map((p) => (
                               <div key={p.id} className="relative">
                                 {/* timeline dot, centered on the rail */}
-                                <span className="absolute top-1 -left-6 z-0 size-3.5 rounded-full border-2 border-[#141a21] bg-blue-500" />
+                                <span className="dark:border-dark-700 absolute top-1 -left-6 z-0 size-3.5 rounded-full border-2 border-white bg-blue-500" />
 
-                                <div className="rounded-xl border border-white/10 bg-[#1b232c] p-4">
+                                <div className="dark:border-dark-500 dark:bg-dark-600 rounded-xl border border-gray-200 bg-gray-50 p-4">
                                   <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-2">
-                                      <DocumentTextIcon className="size-4 text-gray-400" />
-                                      <span className="text-sm font-bold text-white">
+                                      <DocumentTextIcon className="dark:text-dark-200 size-4 text-gray-500" />
+                                      <span className="dark:text-dark-50 text-sm font-bold text-gray-900">
                                         {p.voucherNo}
                                       </span>
                                     </div>
-                                    <span className="text-[11px] text-gray-500">
+                                    <span className="dark:text-dark-300 text-[11px] text-gray-400">
                                       {new Date(p.createdAt).toLocaleString(
                                         "en-GB",
                                         {
@@ -194,23 +193,23 @@ const fetchPayments = async () => {
                                   </div>
 
                                   <div className="mt-3 grid grid-cols-2 gap-y-2.5 text-[13px]">
-                                    <div className="flex items-center gap-1.5 text-gray-400">
-                                      <BanknotesIcon className="size-3.5 text-emerald-400" />
+                                    <div className="dark:text-dark-200 flex items-center gap-1.5 text-gray-500">
+                                      <BanknotesIcon className="size-3.5 text-emerald-500 dark:text-emerald-400" />
                                       Paid Amount:
                                     </div>
-                                    <div className="text-right font-semibold text-emerald-400">
+                                    <div className="text-right font-semibold text-emerald-600 dark:text-emerald-400">
                                       ₹{p.paidAmount.toLocaleString("en-IN")}
                                     </div>
 
-                                    <div className="flex items-center gap-1.5 text-gray-400">
-                                      <ExclamationCircleIcon className="size-3.5 text-red-400" />
+                                    <div className="dark:text-dark-200 flex items-center gap-1.5 text-gray-500">
+                                      <ExclamationCircleIcon className="size-3.5 text-red-500 dark:text-red-400" />
                                       Pending Amount:
                                     </div>
-                                    <div className="text-right font-semibold text-red-400">
+                                    <div className="text-right font-semibold text-red-600 dark:text-red-400">
                                       ₹{p.pendingAmount.toLocaleString("en-IN")}
                                     </div>
 
-                                    <div className="flex items-center gap-1.5 text-gray-400">
+                                    <div className="dark:text-dark-200 flex items-center gap-1.5 text-gray-500">
                                       <CreditCardIcon className="size-3.5" />
                                       Payment Mode:
                                     </div>
@@ -218,17 +217,17 @@ const fetchPayments = async () => {
                                       <ModeBadge mode={p.paymentMode} />
                                     </div>
 
-                                    <div className="flex items-center gap-1.5 text-gray-400">
+                                    <div className="dark:text-dark-200 flex items-center gap-1.5 text-gray-500">
                                       <UserIcon className="size-3.5" />
                                       Created By:
                                     </div>
-                                    <div className="text-right text-gray-200">
+                                    <div className="dark:text-dark-100 text-right text-gray-700">
                                       {p.createdBy}
                                     </div>
                                   </div>
 
                                   {p.narration && (
-                                    <div className="mt-3 flex items-start gap-1.5 border-t border-white/10 pt-2.5 text-[13px] text-gray-400">
+                                    <div className="dark:border-dark-500 dark:text-dark-200 mt-3 flex items-start gap-1.5 border-t border-gray-200 pt-2.5 text-[13px] text-gray-500">
                                       <ChatBubbleLeftEllipsisIcon className="mt-0.5 size-3.5 shrink-0" />
                                       <span>{p.narration}</span>
                                     </div>
@@ -240,8 +239,7 @@ const fetchPayments = async () => {
                         </div>
                       )}
                     </div>
-                    </div>
-                    
+                  </div>
                 </Dialog.Panel>
               </Transition.Child>
             </div>

@@ -3,19 +3,19 @@ import { Navigate, useOutlet } from "react-router";
 
 // Local Imports
 import { useAuthContext } from "@/app/contexts/auth/context";
-import { HOME_PATH, REDIRECT_URL_KEY } from "@/constants/app";
+// import { HOME_PATH, REDIRECT_URL_KEY } from "@/constants/app";
 
 // ----------------------------------------------------------------------
 
-
 export default function GhostGuard() {
   const outlet = useOutlet();
-  const { isAuthenticated } = useAuthContext();
+  const { isAuthenticated, isInitialized } = useAuthContext();
 
- 
+  if (!isInitialized) {
+    return null;
+  }
 
   if (isAuthenticated) {
-  
     return <Navigate to="/select-company" replace />;
   }
 
