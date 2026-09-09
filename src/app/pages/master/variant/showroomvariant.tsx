@@ -240,8 +240,8 @@ const [accessoryOptions, setAccessoryOptions] = useState<any[]>([]);
       let data = response?.data || response;
       if (!Array.isArray(data)) data = [];
       setVariants(data);
-       console.log("", data);
-    console.log("Accessories:", accessories);
+      
+   
     } catch (error) {
       console.error(error);
       setVariants([]);
@@ -270,7 +270,7 @@ const getAccessories = async () => {
 
     const data = res.data || [];
 
-    console.log("Accessories API:", data);
+  
 
     setAccessoryOptions(data);
   } catch (error) {
@@ -1241,7 +1241,6 @@ updatedAccessories[i] = {
 
   setAccessories(updatedAccessories);
 
-  console.log(updatedAccessories[i]);
 }}
   placeholder="Type or select accessory..."
   error={accessoryErrors[i]}

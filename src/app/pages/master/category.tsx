@@ -13,11 +13,11 @@ import { Fragment, useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import {
   XMarkIcon,
-  PencilSquareIcon,
-  TrashIcon,
+  // PencilSquareIcon,
+  // TrashIcon,
   FunnelIcon,
   DocumentArrowDownIcon,
-  EllipsisHorizontalIcon,
+  // EllipsisHorizontalIcon,
   MagnifyingGlassIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -111,7 +111,7 @@ export default function Category() {
     try {
       setLoading(true);
       const response = await apiHelper.get("/category");
-      console.log("API Response:", response);
+     
 
       let categoriesData = [];
 
@@ -237,7 +237,7 @@ export default function Category() {
 
   const onFormSubmit = async (data: FormValues) => {
     try {
-      console.log("Sending:", { categoryName: data.name, status: data.status });
+    
 
       if (editId !== null) {
         await apiHelper.put(`/category/${editId}`, {

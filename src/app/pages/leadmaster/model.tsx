@@ -2131,7 +2131,7 @@ const totalSteps = isFinancePurchase ? 5 : 4;
   };
 
   const handleSubmit = async () => {
-    console.log("SUBMIT CLICKED");
+    
   if (
     !companyId ||
     !financialYearId
@@ -2143,7 +2143,7 @@ const totalSteps = isFinancePurchase ? 5 : 4;
   }
     if (reviewSummaryValidateRef.current) {
       const isValid = reviewSummaryValidateRef.current();
-      console.log("VALID:", isValid);
+    
       if (!isValid) return;
     }
 
@@ -2219,7 +2219,7 @@ marginMoney:
     : null,
       };
 
-      console.log("PAYLOAD", payload);
+      
 
       const res = await apiHelper.post("/branch-panel/leads", payload);
       console.log("SUCCESS", res.data);
@@ -2345,7 +2345,7 @@ const fetchFinances = async () => {
           ? res.data
           : [];
 
-      console.log("API Response:", data);
+   
 
       setShowroomVariants(data);
     } catch (err) {
@@ -2378,7 +2378,7 @@ const fetchFinances = async () => {
       (v: any) => Number(v.modelId) === Number(model.id),
     );
 
-    console.log("Filtered Showroom Variants:", filtered);
+
 
     setFilteredShowroomVariants(
       filtered.map((item: any) => ({
@@ -2558,7 +2558,7 @@ const fetchFinances = async () => {
                         data={customers}
                         value={selectedCustomer}
                         onChange={(val: any) => {
-                          console.log(val);
+                          
                           setSelectedCustomer(val);
 
                           if (errors.customer) {
