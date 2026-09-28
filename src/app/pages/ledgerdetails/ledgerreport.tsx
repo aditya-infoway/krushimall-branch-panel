@@ -412,9 +412,9 @@ const downloadExcel = async () => {
             <div className="flex h-full flex-col">
               {/* Header - Matches Theme */}
               <div className="dark:border-dark-600 flex items-center justify-between border-b border-gray-200 px-6 py-4">
-                <h2 className="text-lg font-bold text-white">Ledger Report</h2>
+                <h2 className="text-lg font-bold text-black">Ledger Report</h2>
                 <button
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-white transition-colors"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors cursor-pointer"
                   onClick={handleDrawerClose}
                 >
                   <FiX size={18} />

@@ -761,7 +761,7 @@ const paymentModeFilterOptions = [
                       {item.voucherNo}
                     </td>
                     <td className="py-3 whitespace-nowrap">
-                      <span className="bg-primary-500 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold">
+                      <span className="bg-primary-500 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold text-white">
                         {item.type}
                       </span>
                     </td>
