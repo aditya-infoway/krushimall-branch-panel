@@ -98,6 +98,9 @@ const NewAccount = () => {
   // Watch values
   const watchedCountryCode = watch("countryCode");
   const watchedStateCode = watch("stateCode");
+    const watchedBirthday = watch("birthday");
+  const watchedAnniversary = watch("anniversary");
+  type Option = { value: string; label: string };
   const groupOptions = [
     {
       label: "Bank Accounts (Bank)",
@@ -260,129 +263,13 @@ const NewAccount = () => {
   // Use cityOptions for both district and city
   const districtOptions = cityOptions;
   const talukaOptions = cityOptions;
+ const disabledClass = (disabled: boolean) =>
+    disabled ? "pointer-events-none opacity-60" : "";
+
+  const labelClass =
+    "dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700";
 
 
-  const isDark = () => {
-  if (typeof document === "undefined") return false;
-  return document.documentElement.classList.contains("dark");
-};
-
-
-  // ─── react-select custom styles ──────────────────────────────────────────
- const customSelectStyles = {
-  control: (provided: any, state: any) => ({
-    ...provided,
-    backgroundColor: "transparent",
-    borderColor: state.isFocused
-      ? "var(--color-primary-600)"
-      : isDark() 
-        ? "var(--color-dark-450)" 
-        : "var(--color-gray-300)",
-    boxShadow: state.isFocused ? "0 0 0 1px var(--color-primary-600)" : "none",
-    minHeight: "42px",
-    opacity: 1,
-    "&:hover": {
-      borderColor: state.isFocused
-        ? "var(--color-primary-600)"
-        : isDark()
-          ? "var(--color-dark-400)"
-          : "var(--color-gray-400)",
-    },
-  }),
-
-  valueContainer: (provided: any) => ({
-    ...provided,
-    color: isDark() ? "var(--color-dark-100)" : "var(--color-gray-800)",
-  }),
-
-  singleValue: (provided: any, state: any) => ({
-    ...provided,
-    color: state.isDisabled
-      ? (isDark() ? "var(--color-dark-100)" : "var(--color-gray-800)")
-      : (isDark() ? "var(--color-dark-100)" : "var(--color-gray-800)"),
-    opacity: 1,
-  }),
-
-  input: (provided: any) => ({
-    ...provided,
-    color: isDark() ? "var(--color-dark-100)" : "var(--color-gray-800)",
-  }),
-
-  placeholder: (provided: any) => ({
-    ...provided,
-    color: "var(--color-gray-400)",
-  }),
-
-  menu: (provided: any) => ({
-    ...provided,
-    backgroundColor: isDark() ? "var(--color-dark-700)" : "#ffffff",
-    border: isDark() 
-      ? "1px solid var(--color-dark-450)" 
-      : "1px solid var(--color-gray-300)",
-    borderRadius: "0.75rem",
-    overflow: "hidden",
-  }),
-
-  menuList: (provided: any) => ({
-    ...provided,
-    padding: 0,
-    // Custom scrollbar styles
-    "::-webkit-scrollbar": {
-      width: "6px",
-    },
-    "::-webkit-scrollbar-track": {
-      background: isDark() ? "var(--color-dark-600)" : "#f3f4f6",
-    },
-    "::-webkit-scrollbar-thumb": {
-      background: isDark() ? "var(--color-primary-600)" : "#d1d5db",
-      borderRadius: "10px",
-    },
-    "::-webkit-scrollbar-thumb:hover": {
-      background: isDark() ? "var(--color-primary-500)" : "#9ca3af",
-    },
-    scrollbarWidth: "thin",
-    scrollbarColor: isDark() 
-      ? "var(--color-primary-600) var(--color-dark-600)" 
-      : "#d1d5db #f3f4f6",
-  }),
-
-  option: (provided: any, state: any) => ({
-    ...provided,
-    backgroundColor: state.isSelected
-      ? "var(--color-primary-600)"
-      : state.isFocused
-        ? isDark()
-          ? "var(--color-dark-600)"
-          : "var(--color-gray-100)"
-        : isDark()
-          ? "var(--color-dark-700)"
-          : "#ffffff",
-    color: state.isSelected
-      ? "#ffffff"
-      : isDark()
-        ? "#ffffff"
-        : "var(--color-gray-800)",
-    cursor: "pointer",
-  }),
-
-  dropdownIndicator: (provided: any) => ({
-    ...provided,
-    color: isDark() 
-      ? "var(--color-gray-400)" 
-      : "var(--color-gray-500)",
-  }),
-
-  clearIndicator: (provided: any) => ({
-    ...provided,
-    color: isDark() 
-      ? "var(--color-gray-400)" 
-      : "var(--color-gray-500)",
-  }),
-
-  indicatorSeparator: () => ({
-    display: "none",
-  }),
-};
   return (
     <div className="min-h-screen bg-white p-6 transition-colors duration-200 dark:bg-gray-900">
       {/* Header with Back Button */}
@@ -506,25 +393,24 @@ const NewAccount = () => {
             </div>
 
             {/* Country */}
-            <div>
-              <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+                <div>
+              <label className={labelClass}>
                 Country <span className="text-red-500">*</span>
               </label>
               <Controller
                 name="countryCode"
                 control={control}
                 render={({ field }) => (
-                  <Select
-                    options={countryOptions}
-                    styles={customSelectStyles}
-                    classNamePrefix="react-select"
+                  <Combobox
+                    data={countryOptions}
+                    displayField="label"
+                    searchFields={["label"]}
                     placeholder="Search Country"
                     value={
-                      countryOptions.find(
-                        (option) => option.value === field.value,
-                      ) || null
+                      countryOptions.find((o) => o.value === field.value) ||
+                      null
                     }
-                    onChange={(selected) => {
+                    onChange={(selected: Option | null) => {
                       field.onChange(selected?.value || "");
                       setValue("country", selected?.label || "");
                       setValue("stateCode", "");
@@ -545,34 +431,34 @@ const NewAccount = () => {
 
             {/* State */}
             <div>
-              <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+              <label className={labelClass}>
                 State <span className="text-red-500">*</span>
               </label>
-              <Controller
-                name="stateCode"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={stateOptions}
-                    styles={customSelectStyles}
-                    classNamePrefix="react-select"
-                    placeholder="Search State"
-                    isDisabled={!watchedCountryCode}
-                    value={
-                      stateOptions.find(
-                        (option) => option.value === field.value,
-                      ) || null
-                    }
-                    onChange={(selected) => {
-                      field.onChange(selected?.value || "");
-                      setValue("state", selected?.label || "");
-                      setValue("district", "");
-                      setValue("taluka", "");
-                      setValue("city", "");
-                    }}
-                  />
-                )}
-              />
+              <div className={disabledClass(!watchedCountryCode)}>
+                <Controller
+                  name="stateCode"
+                  control={control}
+                  render={({ field }) => (
+                    <Combobox
+                      data={stateOptions}
+                      displayField="label"
+                      searchFields={["label"]}
+                      placeholder="Search State"
+                      value={
+                        stateOptions.find((o) => o.value === field.value) ||
+                        null
+                      }
+                      onChange={(selected: Option | null) => {
+                        field.onChange(selected?.value || "");
+                        setValue("state", selected?.label || "");
+                        setValue("district", "");
+                        setValue("taluka", "");
+                        setValue("city", "");
+                      }}
+                    />
+                  )}
+                />
+              </div>
               {errors.stateCode && (
                 <span className="text-xs text-orange-500">
                   {errors.stateCode.message}
@@ -593,30 +479,30 @@ const NewAccount = () => {
 
             {/* District */}
             <div>
-              <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+              <label className={labelClass}>
                 District <span className="text-red-500">*</span>
               </label>
-              <Controller
-                name="district"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={districtOptions}
-                    styles={customSelectStyles}
-                    classNamePrefix="react-select"
-                    placeholder="Search District"
-                    isDisabled={!watchedStateCode}
-                    value={
-                      districtOptions.find(
-                        (option) => option.value === field.value,
-                      ) || null
-                    }
-                    onChange={(selected) => {
-                      field.onChange(selected?.value || "");
-                    }}
-                  />
-                )}
-              />
+              <div className={disabledClass(!watchedStateCode)}>
+                <Controller
+                  name="district"
+                  control={control}
+                  render={({ field }) => (
+                    <Combobox
+                      data={districtOptions}
+                      displayField="label"
+                      searchFields={["label"]}
+                      placeholder="Search District"
+                      value={
+                        districtOptions.find((o) => o.value === field.value) ||
+                        null
+                      }
+                      onChange={(selected: Option | null) =>
+                        field.onChange(selected?.value || "")
+                      }
+                    />
+                  )}
+                />
+              </div>
               {errors.district && (
                 <span className="text-xs text-orange-500">
                   {errors.district.message}
@@ -626,62 +512,58 @@ const NewAccount = () => {
 
             {/* Taluka */}
             <div>
-              <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
-                Taluka
-              </label>
-              <Controller
-                name="taluka"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={talukaOptions}
-                    styles={customSelectStyles}
-                    classNamePrefix="react-select"
-                    placeholder="Search Taluka"
-                    isDisabled={!watchedStateCode}
-                    value={
-                      talukaOptions.find(
-                        (option) => option.value === field.value,
-                      ) || null
-                    }
-                    onChange={(selected) => {
-                      field.onChange(selected?.value || "");
-                    }}
-                  />
-                )}
-              />
+              <label className={labelClass}>Taluka</label>
+              <div className={disabledClass(!watchedStateCode)}>
+                <Controller
+                  name="taluka"
+                  control={control}
+                  render={({ field }) => (
+                    <Combobox
+                      data={talukaOptions}
+                      displayField="label"
+                      searchFields={["label"]}
+                      placeholder="Search Taluka"
+                      value={
+                        talukaOptions.find((o) => o.value === field.value) ||
+                        null
+                      }
+                      onChange={(selected: Option | null) =>
+                        field.onChange(selected?.value || "")
+                      }
+                    />
+                  )}
+                />
+              </div>
             </div>
-
-            {/* City */}
           </div>
 
           {/* Column 2 */}
           <div className="space-y-4">
+            {/* City */}
             <div>
-              <label className="dark:text-dark-200 mb-1 block text-sm font-medium text-gray-700">
+              <label className={labelClass}>
                 City <span className="text-red-500">*</span>
               </label>
-              <Controller
-                name="city"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={cityOptions}
-                    styles={customSelectStyles}
-                    classNamePrefix="react-select"
-                    placeholder="Search City"
-                    isDisabled={!watchedStateCode}
-                    value={
-                      cityOptions.find(
-                        (option) => option.value === field.value,
-                      ) || null
-                    }
-                    onChange={(selected) => {
-                      field.onChange(selected?.value || "");
-                    }}
-                  />
-                )}
-              />
+              <div className={disabledClass(!watchedStateCode)}>
+                <Controller
+                  name="city"
+                  control={control}
+                  render={({ field }) => (
+                    <Combobox
+                      data={cityOptions}
+                      displayField="label"
+                      searchFields={["label"]}
+                      placeholder="Search City"
+                      value={
+                        cityOptions.find((o) => o.value === field.value) || null
+                      }
+                      onChange={(selected: Option | null) =>
+                        field.onChange(selected?.value || "")
+                      }
+                    />
+                  )}
+                />
+              </div>
               {errors.city && (
                 <span className="text-xs text-orange-500">
                   {errors.city.message}
@@ -770,6 +652,7 @@ const NewAccount = () => {
               <DatePicker
                 label="Birthday On"
                 placeholder="Select Date"
+                value={watchedBirthday || ""}
                 options={{ disableMobile: true }}
                 onChange={(val: Date[]) =>
                   setValue("birthday", val[0]?.toISOString() || "")
@@ -781,6 +664,7 @@ const NewAccount = () => {
               <DatePicker
                 label="Anniversary"
                 placeholder="Select Date"
+                value={watchedAnniversary || ""}
                 options={{ disableMobile: true }}
                 onChange={(val: Date[]) =>
                   setValue("anniversary", val[0]?.toISOString() || "")

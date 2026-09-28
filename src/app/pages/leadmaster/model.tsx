@@ -375,7 +375,7 @@ function CreateAccountModal({
               </div>
 
               {/* Country */}
-              <div className="flex flex-col gap-1">
+               <div className="flex flex-col gap-1">
                 <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
                   Country <span className="text-red-500">*</span>
                 </label>
@@ -383,18 +383,20 @@ function CreateAccountModal({
                   name="countryCode"
                   control={control}
                   render={({ field }) => (
-                    <Select
-                      options={countryOptions}
-                      styles={customSelectStyles}
-                      classNamePrefix="react-select"
+                    <Combobox
+                      data={countryOptions}
+                      displayField="label"
+                      searchFields={["label"]}
                       placeholder="Search Country"
                       value={
-                        countryOptions.find(
-                          (option) => option.value === field.value,
-                        ) || null
+                        countryOptions.find((o) => o.value === field.value) ||
+                        null
                       }
-                      onChange={(selected) => {
+                      onChange={(
+                        selected: { value: string; label: string } | null,
+                      ) => {
                         field.onChange(selected?.value || "");
+                        setValue("countryName", selected?.label || "");
                         setCountry(selected?.value || "");
                         setValue("stateCode", "");
                         setValue("stateName", "");
@@ -416,30 +418,37 @@ function CreateAccountModal({
                 <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
                   State <span className="text-red-500">*</span>
                 </label>
-                <Controller
-                  name="stateCode"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      options={stateOptions}
-                      styles={customSelectStyles}
-                      classNamePrefix="react-select"
-                      placeholder="Search State"
-                      isDisabled={!countryCode}
-                      value={
-                        stateOptions.find(
-                          (option) => option.value === field.value,
-                        ) || null
-                      }
-                      onChange={(selected) => {
-                        field.onChange(selected?.value || "");
-                        setState(selected?.value || "");
-                        setValue("district", "");
-                        setValue("city", "");
-                      }}
-                    />
-                  )}
-                />
+                <div
+                  className={
+                    !countryCode ? "pointer-events-none opacity-60" : ""
+                  }
+                >
+                  <Controller
+                    name="stateCode"
+                    control={control}
+                    render={({ field }) => (
+                      <Combobox
+                        data={stateOptions}
+                        displayField="label"
+                        searchFields={["label"]}
+                        placeholder="Search State"
+                        value={
+                          stateOptions.find((o) => o.value === field.value) ||
+                          null
+                        }
+                        onChange={(
+                          selected: { value: string; label: string } | null,
+                        ) => {
+                          field.onChange(selected?.value || "");
+                          setValue("stateName", selected?.label || "");
+                          setState(selected?.value || "");
+                          setValue("district", "");
+                          setValue("city", "");
+                        }}
+                      />
+                    )}
+                  />
+                </div>
                 {errors.stateCode && (
                   <span className="text-xs text-orange-500">
                     {errors.stateCode.message}
@@ -471,31 +480,34 @@ function CreateAccountModal({
               </div>
 
               {/* District */}
+              {/* District */}
               <div className="flex flex-col gap-1">
                 <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
                   District <span className="text-red-500">*</span>
                 </label>
-                <Controller
-                  name="district"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      options={cityOptions}
-                      styles={customSelectStyles}
-                      classNamePrefix="react-select"
-                      placeholder="Search District"
-                      isDisabled={!stateCode}
-                      value={
-                        cityOptions.find(
-                          (option) => option.value === field.value,
-                        ) || null
-                      }
-                      onChange={(selected) => {
-                        field.onChange(selected?.value || "");
-                      }}
-                    />
-                  )}
-                />
+                <div
+                  className={!stateCode ? "pointer-events-none opacity-60" : ""}
+                >
+                  <Controller
+                    name="district"
+                    control={control}
+                    render={({ field }) => (
+                      <Combobox
+                        data={cityOptions}
+                        displayField="label"
+                        searchFields={["label"]}
+                        placeholder="Search District"
+                        value={
+                          cityOptions.find((o) => o.value === field.value) ||
+                          null
+                        }
+                        onChange={(
+                          selected: { value: string; label: string } | null,
+                        ) => field.onChange(selected?.value || "")}
+                      />
+                    )}
+                  />
+                </div>
                 {errors.district && (
                   <span className="text-xs text-orange-500">
                     {errors.district.message}
@@ -508,34 +520,35 @@ function CreateAccountModal({
                 <label className="dark:text-dark-200 text-sm font-medium text-gray-700">
                   City <span className="text-red-500">*</span>
                 </label>
-                <Controller
-                  name="city"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      options={cityOptions}
-                      styles={customSelectStyles}
-                      classNamePrefix="react-select"
-                      placeholder="Search City"
-                      isDisabled={!stateCode}
-                      value={
-                        cityOptions.find(
-                          (option) => option.value === field.value,
-                        ) || null
-                      }
-                      onChange={(selected) => {
-                        field.onChange(selected?.value || "");
-                      }}
-                    />
-                  )}
-                />
+                <div
+                  className={!stateCode ? "pointer-events-none opacity-60" : ""}
+                >
+                  <Controller
+                    name="city"
+                    control={control}
+                    render={({ field }) => (
+                      <Combobox
+                        data={cityOptions}
+                        displayField="label"
+                        searchFields={["label"]}
+                        placeholder="Search City"
+                        value={
+                          cityOptions.find((o) => o.value === field.value) ||
+                          null
+                        }
+                        onChange={(
+                          selected: { value: string; label: string } | null,
+                        ) => field.onChange(selected?.value || "")}
+                      />
+                    )}
+                  />
+                </div>
                 {errors.city && (
                   <span className="text-xs text-orange-500">
                     {errors.city.message}
                   </span>
                 )}
               </div>
-
               {/* Address */}
               <div className="col-span-1 flex flex-col gap-1 md:col-span-2">
                 <label className="dark:text-dark-200 text-sm font-medium text-gray-700">

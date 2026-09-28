@@ -9,8 +9,6 @@ import {
   ChevronDown,
   X,
   Plus,
- 
- 
 } from "lucide-react";
 import {
   Dialog,
@@ -132,33 +130,33 @@ export default function CashPayment() {
   const [filterDateFrom, setFilterDateFrom] = useState<any>(null);
   const [filterDateTo, setFilterDateTo] = useState<any>(null);
 
-const filteredRows = rows.filter((r) => {
-  const matchesSearch = Object.values(r).some((v) =>
-    String(v).toLowerCase().includes(search.toLowerCase()),
-  );
-  const matchesType = filterType === "All" || r.type === filterType;
+  const filteredRows = rows.filter((r) => {
+    const matchesSearch = Object.values(r).some((v) =>
+      String(v).toLowerCase().includes(search.toLowerCase()),
+    );
+    const matchesType = filterType === "All" || r.type === filterType;
 
-  // NEW: date range filter — DatePicker gives an array, so pull the first date
-  const rowDate = new Date(r.date);
-  rowDate.setHours(0, 0, 0, 0);
+    // NEW: date range filter — DatePicker gives an array, so pull the first date
+    const rowDate = new Date(r.date);
+    rowDate.setHours(0, 0, 0, 0);
 
-  const fromDate =
-    Array.isArray(filterDateFrom) && filterDateFrom[0]
-      ? new Date(filterDateFrom[0])
-      : null;
-  if (fromDate) fromDate.setHours(0, 0, 0, 0);
+    const fromDate =
+      Array.isArray(filterDateFrom) && filterDateFrom[0]
+        ? new Date(filterDateFrom[0])
+        : null;
+    if (fromDate) fromDate.setHours(0, 0, 0, 0);
 
-  const toDate =
-    Array.isArray(filterDateTo) && filterDateTo[0]
-      ? new Date(filterDateTo[0])
-      : null;
-  if (toDate) toDate.setHours(23, 59, 59, 999);
+    const toDate =
+      Array.isArray(filterDateTo) && filterDateTo[0]
+        ? new Date(filterDateTo[0])
+        : null;
+    if (toDate) toDate.setHours(23, 59, 59, 999);
 
-  const matchesDateFrom = !fromDate || rowDate >= fromDate;
-  const matchesDateTo = !toDate || rowDate <= toDate;
+    const matchesDateFrom = !fromDate || rowDate >= fromDate;
+    const matchesDateTo = !toDate || rowDate <= toDate;
 
-  return matchesSearch && matchesType && matchesDateFrom && matchesDateTo;
-});
+    return matchesSearch && matchesType && matchesDateFrom && matchesDateTo;
+  });
   const [cashAccounts, setCashAccounts] = useState<any[]>([]);
   const [oppAccounts, setOppAccounts] = useState<any[]>([]);
   const totalItems = filteredRows.length;
@@ -168,12 +166,12 @@ const filteredRows = rows.filter((r) => {
   const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
   const [companyId, setCompanyId] = useState<number | null>(null);
   const [financialYearId, setFinancialYearId] = useState<number | null>(null);
-const typeFilterOptions = [
-  { id: "All", name: "All Types" },
-  ...Array.from(new Set(rows.map((r) => r.type).filter(Boolean))).map(
-    (type) => ({ id: type, name: type }),
-  ),
-];
+  const typeFilterOptions = [
+    { id: "All", name: "All Types" },
+    ...Array.from(new Set(rows.map((r) => r.type).filter(Boolean))).map(
+      (type) => ({ id: type, name: type }),
+    ),
+  ];
   const getCompany = async () => {
     try {
       const res = await apiHelper.get("/company");
@@ -218,7 +216,7 @@ const typeFilterOptions = [
 
   const getAccounts = async () => {
     try {
-     const res = await apiHelper.get("/branch-panel/accounts?scope=all");
+      const res = await apiHelper.get("/branch-panel/accounts?scope=all");
 
       const accounts = res.data;
 
@@ -253,9 +251,9 @@ const typeFilterOptions = [
   };
   const getVoucherNo = async () => {
     try {
-       const res = await apiHelper.get(
-      `cash-payment/generate-voucher?companyId=${companyId}&financialYearId=${financialYearId}`
-    );
+      const res = await apiHelper.get(
+        `cash-payment/generate-voucher?companyId=${companyId}&financialYearId=${financialYearId}`,
+      );
       setForm((prev) => ({
         ...prev,
         voucherNo: res.voucherNo,
@@ -290,13 +288,14 @@ const typeFilterOptions = [
   useEffect(() => {
     getAccounts();
     getPurchaseBills();
-   
+
     getCashPayments();
-  }, []);useEffect(() => {
-  if (companyId && financialYearId) {
-    getVoucherNo();
-  }
-}, [companyId, financialYearId]);
+  }, []);
+  useEffect(() => {
+    if (companyId && financialYearId) {
+      getVoucherNo();
+    }
+  }, [companyId, financialYearId]);
 
   const purchaseBillOptions = purchaseBills;
   const validateForm = () => {
@@ -457,7 +456,9 @@ const typeFilterOptions = [
   }, [filterType, filterDateFrom, filterDateTo, search]);
   const handleExportExcel = async () => {
     try {
-      const blob = await apiHelper.getBlob("/branch-panel/cash-payments/export/excel");
+      const blob = await apiHelper.getBlob(
+        "/branch-panel/cash-payments/export/excel",
+      );
 
       const url = window.URL.createObjectURL(blob);
 
@@ -553,15 +554,15 @@ const typeFilterOptions = [
               <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
                 Type
               </label>
-               <Listbox
-    data={typeFilterOptions}
-    value={
-      typeFilterOptions.find((o) => o.id === filterType) ||
-      typeFilterOptions[0]
-    }
-    onChange={(opt: any) => setFilterType(opt.id)}
-    displayField="name"
-  />
+              <Listbox
+                data={typeFilterOptions}
+                value={
+                  typeFilterOptions.find((o) => o.id === filterType) ||
+                  typeFilterOptions[0]
+                }
+                onChange={(opt: any) => setFilterType(opt.id)}
+                displayField="name"
+              />
             </div>
             <div>
               <label className="dark:text-dark-200 mb-1.5 block text-sm font-medium text-gray-700">
@@ -648,7 +649,7 @@ const typeFilterOptions = [
                         className="size-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
                       />
                     </td>
-                    <td className="py-3 px-3 text-sm font-medium text-gray-500">
+                    <td className="px-3 py-3 text-sm font-medium text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </td>
                     <td className="px-3 py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-400">
@@ -658,7 +659,7 @@ const typeFilterOptions = [
                       {item.voucherNo}
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap">
-                      <span className="bg-primary-500 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold">
+                      <span className="bg-primary-500 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold text-white">
                         {item.type}
                       </span>
                     </td>
