@@ -23,8 +23,8 @@ api.interceptors.request.use((config) => {
 export const getBaseUrl = () => {
   const apiUrl =
     import.meta.env.VITE_API_URL ||
-    // "http://31.97.237.210/krushimall-api/api";
-    "http://localhost:5001/api";
+    "http://31.97.237.210/krushimall-api/api";
+    // "http://localhost:5001/api";
 
   return apiUrl.replace(/\/api\/?$/, "");
 };

@@ -1219,53 +1219,49 @@ const Order: React.FC = () => {
                   Chassis No
                 </label>
 
-                <Select
-                 options={vehicleOptions}
-                  value={
-                    matchingVehicleOptions.find(
-                      (vehicle: any) =>
-                        String(vehicle.chassisNo) ===
-                        String(allotment.chassisNo),
-                    ) || null
-                  }
-                  getOptionValue={(vehicle: any) =>
-                    String(vehicle.id ?? vehicle.chassisNo)
-                  }
-                  getOptionLabel={(vehicle: any) => vehicle.chassisNo || ""}
-                  components={{
-                    Option: OrderVehicleOption,
-                  }}
-                  onChange={(vehicle: any) => {
-                    setAllotment((prev) => ({
-                      ...prev,
-
-                      chassisNo: vehicle?.chassisNo ?? "",
-                    }));
-                  }}
-                  placeholder="Select Vehicle"
-                  isSearchable
-                  isClearable
-                  noOptionsMessage={() => "No matching chassis found"}
-                  menuPortalTarget={document.body}
-                  menuPosition="fixed"
-                  styles={{
-                    menuPortal: (base: any) => ({
-                      ...base,
-                      zIndex: 99999,
-                    }),
-
-                    menu: (base: any) => ({
-                      ...base,
-                      overflow: "hidden",
-                    }),
-
-                    menuList: (base: any) => ({
-                      ...base,
-                      maxHeight: "300px",
-                      padding: 0,
-                    }),
-                  }}
-                />
+             <Select
+  options={vehicleOptions}
+  value={
+    vehicleOptions.find(
+      (vehicle: any) =>
+        String(vehicle.chassisNo) === String(allotment.chassisNo),
+    ) || null
+  }
+  getOptionValue={(vehicle: any) =>
+    String(vehicle.id ?? vehicle.chassisNo)
+  }
+  getOptionLabel={(vehicle: any) => vehicle.chassisNo || ""}
+  components={{
+    Option: OrderVehicleOption,
+  }}
+  onChange={(vehicle: any) => {
+    setAllotment((prev) => ({
+      ...prev,
+      chassisNo: vehicle?.chassisNo ?? "",
+    }));
+  }}
+  placeholder="Select Vehicle"
+  isSearchable
+  isClearable
+  noOptionsMessage={() => "No matching chassis found"}
+  menuPortalTarget={document.body}
+  menuPosition="fixed"
+  styles={{
+    menuPortal: (base: any) => ({
+      ...base,
+      zIndex: 99999,
+    }),
+    menu: (base: any) => ({
+      ...base,
+      overflow: "hidden",
+    }),
+    menuList: (base: any) => ({
+      ...base,
+      maxHeight: "300px",
+      padding: 0,
+    }),
+  }}
+/>
               </Field>
             </Field>
             <p className="pt-1 text-xs font-semibold text-gray-500 dark:text-gray-400">
