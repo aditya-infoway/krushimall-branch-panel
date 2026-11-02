@@ -299,11 +299,9 @@ export default function CashReceipt() {
         }));
 
       // Opposite Accounts
-      const opp = accounts
-        .filter(
-          (a: any) => a.group === "Customer" || a.group === "Sundry Debtors",
-        )
-        .map((a: any) => ({
+    const opp = accounts
+  .filter((a: any) => a.group !== "Bank Accounts")
+  .map((a: any) => ({
           value: a.id,
           label: a.accountName,
           mobile: a.mobile,
