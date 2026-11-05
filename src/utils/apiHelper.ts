@@ -25,6 +25,7 @@ export const getBaseUrl = () => {
     import.meta.env.VITE_API_URL ||
     "http://31.97.237.210/krushimall-api/api";
     // "http://localhost:5001/api";
+      // "http://192.168.1.5:5001/api";
 
   return apiUrl.replace(/\/api\/?$/, "");
 };
