@@ -1,15 +1,9 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   MagnifyingGlassIcon,
-  // FunnelIcon,
   DocumentArrowDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  // PencilIcon,
-  // TrashIcon,
-  // PlusIcon,
-  // EyeIcon,
 } from "@heroicons/react/24/outline";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 import { Checkbox } from "@/components/ui";
@@ -18,11 +12,12 @@ import apiHelper from "@/utils/apiHelper";
 
 // ---------- Types ----------
 export interface TractorInventoryRow {
-  id: number;
+  id: string; // "T-5" (stock transfer) ya "P-3" (purchase item)
+  source: "TRANSFER" | "PURCHASE";
   stock: "On" | "Off";
-  status: "Present" | "Sold" | "In Transit" | "Pending" | "Reserved" | "Booked";
+  status: "Transit" | "Present" | "Booked";
   location: string;
-  itemCode:string;
+  itemCode: string;
   currentLocation: string;
   billNo: string;
   purchaseBillNo: string;
@@ -39,24 +34,15 @@ export interface TractorInventoryRow {
   keyNumber: string;
   batteryMake: string;
   batteryNo: string;
-first1TyreNo: string;
-first2TyreNo: string;
-second1TyreNo: string;
-second2TyreNo: string;
+  first1TyreNo: string;
+  first2TyreNo: string;
+  second1TyreNo: string;
+  second2TyreNo: string;
   grnDate: string;
   grnRecordDate: string;
   grnNo: string;
   inWardDate: string;
   inWardTime: string;
-  ageDay: number;
-}
-
-interface TractorInventoryProps {
-  rows?: TractorInventoryRow[];
-  onAddTractor?: () => void;
-  onEditRow?: (row: TractorInventoryRow) => void;
-  onDeleteRow?: (row: TractorInventoryRow) => void;
-  onViewRow?: (row: TractorInventoryRow) => void;
 }
 
 // ---------- Options ----------
@@ -68,111 +54,64 @@ const entriesOptions = [
   { id: 100, name: "100" },
 ];
 
-const stockFilterOptions = [
-  { id: "All", name: "All Stock" },
-  { id: "On", name: "Stock On" },
-  { id: "Off", name: "Stock Off" },
-];
-
-const statusFilterOptions = [
-  { id: "All", name: "All Statuses" },
-  { id: "Present", name: "Present" },
-  { id: "Booked", name: "Booked" },
-  { id: "Sold", name: "Sold" },
-  { id: "In Transit", name: "In Transit" },
-  { id: "Pending", name: "Pending" },
-  { id: "Reserved", name: "Reserved" },
-];
-
 const statusColors: Record<TractorInventoryRow["status"], string> = {
+  Transit: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
   Present:
     "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  Sold: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
-  "In Transit":
-    "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  Pending:
-    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-  Reserved:
-    "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
   Booked:
     "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
 };
 
-const stockColors = {
-  On: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  Off: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
-};
-
-const fmt = (n: number) =>
-  n.toLocaleString("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-
-const columns = [
-  "#",
-  "Action",
-  "Stock",
-  "Status",
-  "Location",
-  "Current Location",
-  "Bill No.",
-  "Purchase Bill No.",
-  "Supplier Name",
-  "Item Name",
-  "Model",
-  "Variant",
-  "Colour",
-  "Fuel Type",
-  "Serial No.",
-  "MFG Date",
-  "Chassis No.",
-  "Engine No.",
-  "Key Number",
-  "Battery Make",
-  "Battery No.",
-  "1st Tyer (1)",
-  "1st Tyer (2)",
-  "2nd Tyer (1)",
-  "2nd Tyer (2)",
-  "GRN Date",
-  "GRN Record Date",
-  "GRN No.",
-  "In Ward Date",
-  "In Ward Time",
+const filterTabs = [
+  { id: "All", label: "All" },
+  { id: "Present", label: "Present" },
+  { id: "Transit", label: "Transit" },
+  { id: "Booked", label: "Booked" },
 ];
 
-const TractorInventory: React.FC<TractorInventoryProps> = ({
-  onAddTractor,
-  onEditRow,
-  onDeleteRow,
-  onViewRow,
-}) => {
+const COLUMN_COUNT = 22;
+
+const thClass =
+  "py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400";
+
+const formatDate = (date?: string | null) => {
+  if (!date) return "-";
+  return new Date(date).toLocaleDateString("en-GB");
+};
+
+const formatDateTime = (date?: string | null) => {
+  if (!date) return "-";
+  return new Date(date).toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const TractorInventory: React.FC = () => {
   const [search, setSearch] = useState("");
   const [rowsPerPage, setRowsPerPage] = useState(15);
-  const [selectedStockFilter, setSelectedStockFilter] = useState("All");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [rows, setRows] = useState<TractorInventoryRow[]>([]);
-  const navigate = useNavigate();
 
-  // Sample data - replace with API call
   useEffect(() => {
     fetchInventory();
   }, []);
 
   const fetchInventory = async () => {
     try {
-      const res = await apiHelper.get("/branch-panel/tractor-inventory");
-
+        const res = await apiHelper.get("/branch-panel/tractor-inventory");
       setRows(res.data || []);
     } catch (err) {
       console.log(err);
     }
   };
-  // Add this function with your other handlers
-  const handleToggleStock = async (id: number) => {
+
+  const handleToggleStock = async (id: string) => {
     const item = rows.find((row) => row.id === id);
     if (!item) return;
 
@@ -193,11 +132,11 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
       );
       console.error("Failed to toggle stock:", error);
     }
-  }; // Filter rows
+  };
+
   const filteredRows = useMemo(() => {
     let result = rows;
 
-    // Search filter
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter((r) =>
@@ -223,18 +162,12 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
       );
     }
 
-    // Stock filter
-    if (selectedStockFilter !== "All") {
-      result = result.filter((r) => r.stock === selectedStockFilter);
-    }
-
-    // Status filter
     if (selectedStatusFilter !== "All") {
       result = result.filter((r) => r.status === selectedStatusFilter);
     }
 
     return result;
-  }, [rows, search, selectedStockFilter, selectedStatusFilter]);
+  }, [rows, search, selectedStatusFilter]);
 
   const totalItems = filteredRows.length;
   const totalPages = Math.ceil(totalItems / rowsPerPage);
@@ -246,9 +179,8 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
     currentItems.length > 0 &&
     currentItems.every((item) => selectedIds.includes(item.id));
 
-  // Replace the entire function with:
   const handleSelectAll = (checked: boolean) => {
-    const pageIds = currentItems.map((item) => item.id); // Now returns number[]
+    const pageIds = currentItems.map((item) => item.id);
     if (checked) {
       setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])));
     } else {
@@ -256,49 +188,19 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
     }
   };
 
-  const handleSelectRow = (id: number) => {
+  const handleSelectRow = (id: string) => {
     setSelectedIds((prev) =>
       prev.includes(id)
         ? prev.filter((selectedId) => selectedId !== id)
         : [...prev, id],
     );
   };
-  // const handleAddTractor = () => {
-  //   navigate("/goodscontrol/tractorinventory/add");
-  //   if (onAddTractor) onAddTractor();
-  // };
 
-  // const handleEditRow = (row: TractorInventoryRow) => {
-  //   navigate(`/goodscontrol/tractorinventory/${row.id}`);
-  //   if (onEditRow) onEditRow(row);
-  // };
+  const activeTabIndex = Math.max(
+    filterTabs.findIndex((t) => t.id === selectedStatusFilter),
+    0,
+  );
 
-  // const handleDeleteRow = (row: TractorInventoryRow) => {
-  //   if (window.confirm(`Are you sure you want to delete this tractor?`)) {
-  //     if (onDeleteRow) onDeleteRow(row);
-  //   }
-  // };
-
-  // const handleViewRow = (row: TractorInventoryRow) => {
-  //   navigate(`/goodscontrol/tractorinventory/view/${row.id}`);
-  //   if (onViewRow) onViewRow(row);
-  // };
-  const formatDate = (date?: string | null) => {
-    if (!date) return "-";
-
-    return new Date(date).toLocaleDateString("en-GB");
-  };
-  const formatDateTime = (date?: string | null) => {
-    if (!date) return "-";
-
-    return new Date(date).toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
   return (
     <div className="relative min-h-screen space-y-6 p-4 pb-28 text-gray-900 md:p-6 dark:text-gray-100">
       {/* Header */}
@@ -338,32 +240,18 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
             className="dark:border-dark-500 dark:bg-dark-800 focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-lg border border-gray-300 bg-white py-2.5 pr-4 pl-10 text-sm transition-all duration-200 outline-none focus:ring-2"
           />
         </div>
-        {/* Status Filter Toggle Buttons - Segmented Control Style */}
+
+        {/* Status Filter - Segmented Control */}
         <div className="dark:bg-dark-700/80 relative flex w-full rounded-lg bg-gray-100/80 p-1 sm:inline-flex sm:w-auto">
-          {/* The Sliding Background */}
           <div
             className="dark:bg-dark-600 absolute top-1 bottom-1 rounded-md bg-white shadow-md transition-all duration-500 ease-in-out"
             style={{
-              // 4 filter buttons
               width: "calc(25% - 8px)",
-
-              left:
-                selectedStatusFilter === "All"
-                  ? "4px"
-                  : selectedStatusFilter === "Present"
-                    ? "calc(25% + 4px)"
-                    : selectedStatusFilter === "In Transit"
-                      ? "calc(50% + 4px)"
-                      : "calc(75% + 4px)",
+              left: `calc(${activeTabIndex * 25}% + 4px)`,
             }}
           />
 
-          {[
-            { id: "All", label: "All" },
-            { id: "Present", label: "Present" },
-            { id: "In Transit", label: "Transit" },
-            { id: "Booked", label: "Booked" },
-          ].map((option) => (
+          {filterTabs.map((option) => (
             <button
               key={option.id}
               onClick={() => {
@@ -379,8 +267,9 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
               {option.label}
             </button>
           ))}
-        </div>{" "}
+        </div>
       </div>
+
       {/* Table */}
       <div className="dark:bg-dark-800 dark:border-dark-700 rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
@@ -397,84 +286,28 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
                     onChange={(e: any) => handleSelectAll(e.target.checked)}
                   />
                 </Th>
-                <Th className="w-16 py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  S.No
-                </Th>
-                 <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                   Action
-                </Th>
-                   <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                   Status
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Item Name
-                </Th>
-                  <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Item Code 
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Model
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Variant
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Colour
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Fuel Type
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Serial No.
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  MFG Date
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Chassis No.
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Engine No.
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Key Number
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Battery Make
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Battery No.
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  First 1 Tyer
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  First 2 Tyer
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Second 1 Tyer
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Second 2 Tyer
-                </Th>
-                {/* <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  GRN Date
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  GRN Record Date
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  GRN No.
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  Age Day
-                </Th> */}
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  In Ward Date
-                </Th>
-                <Th className="py-3.5 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                  In Ward Time
-                </Th>
+                <Th className={`w-16 ${thClass}`}>S.No</Th>
+                <Th className={thClass}>Action</Th>
+                <Th className={thClass}>Status</Th>
+                <Th className={thClass}>Item Name</Th>
+                <Th className={thClass}>Item Code</Th>
+                <Th className={thClass}>Model</Th>
+                <Th className={thClass}>Variant</Th>
+                <Th className={thClass}>Colour</Th>
+                <Th className={thClass}>Fuel Type</Th>
+                <Th className={thClass}>Serial No.</Th>
+                <Th className={thClass}>MFG Date</Th>
+                <Th className={thClass}>Chassis No.</Th>
+                <Th className={thClass}>Engine No.</Th>
+                <Th className={thClass}>Key Number</Th>
+                <Th className={thClass}>Battery Make</Th>
+                <Th className={thClass}>Battery No.</Th>
+                <Th className={thClass}>First 1 Tyer</Th>
+                <Th className={thClass}>First 2 Tyer</Th>
+                <Th className={thClass}>Second 1 Tyer</Th>
+                <Th className={thClass}>Second 2 Tyer</Th>
+                <Th className={thClass}>In Ward Date</Th>
+                <Th className={thClass}>In Ward Time</Th>
               </Tr>
             </THead>
 
@@ -498,6 +331,8 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
                     <Td className="py-4 font-medium text-gray-500">
                       {indexOfFirstItem + index + 1}
                     </Td>
+
+                    {/* Stock toggle: Booked ko chhodkar sabhi rows par (Transit + Present) */}
                     <Td className="py-4">
                       {item.status !== "Booked" && (
                         <button
@@ -517,36 +352,51 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
                         </button>
                       )}
                     </Td>
-                       <Td className="py-4 font-medium">{item.status}</Td>
+
+                    {/* Status badge */}
+                    <Td className="py-4">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          statusColors[item.status] ?? ""
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                    </Td>
+
                     <Td className="py-4 font-medium">{item.itemName}</Td>
-                      <Td className="py-4 font-medium">{item.itemCode}</Td>
+                    <Td className="py-4 font-medium">{item.itemCode}</Td>
                     <Td className="py-4">{item.modelName}</Td>
                     <Td className="py-4">{item.variantName}</Td>
                     <Td className="py-4">
                       <span className="inline-flex items-center gap-1.5">
                         <span
                           className="inline-block size-3 rounded-full border border-gray-300"
-                          style={{ backgroundColor: item.colour.toLowerCase() }}
+                          style={{
+                            backgroundColor: (item.colour || "").toLowerCase(),
+                          }}
                         />
                         {item.colour}
                       </span>
                     </Td>
                     <Td className="py-4">{item.fuelType}</Td>
-                    <Td className="py-4 font-mono text-sm">{item.serialNo}</Td>
+                    <Td className="py-4 font-mono text-sm">
+                      {item.serialNo || "-"}
+                    </Td>
                     <Td className="py-4">{formatDate(item.mfgDate)}</Td>
                     <Td className="py-4 font-mono text-sm">{item.chassisNo}</Td>
                     <Td className="py-4 font-mono text-sm">{item.engineNo}</Td>
-                    <Td className="py-4 font-mono text-sm">{item.keyNumber}</Td>
-                    <Td className="py-4">{item.batteryMake}</Td>
-                    <Td className="py-4 font-mono text-sm">{item.batteryNo}</Td>
+                    <Td className="py-4 font-mono text-sm">
+                      {item.keyNumber || "-"}
+                    </Td>
+                    <Td className="py-4">{item.batteryMake || "-"}</Td>
+                    <Td className="py-4 font-mono text-sm">
+                      {item.batteryNo || "-"}
+                    </Td>
                     <Td className="py-4">{item.first1TyreNo || "-"}</Td>
-<Td className="py-4">{item.first2TyreNo || "-"}</Td>
-<Td className="py-4">{item.second1TyreNo || "-"}</Td>
-<Td className="py-4">{item.second2TyreNo || "-"}</Td>
-                    {/* <Td className="py-4">{formatDate(item.grnDate)}</Td>
-                    <Td className="py-4">{formatDate(item.grnRecordDate)}</Td>
-                    <Td className="py-4">{item.grnNo}</Td>
-                    <Td className="py-4">{item.ageDay} Days</Td> */}
+                    <Td className="py-4">{item.first2TyreNo || "-"}</Td>
+                    <Td className="py-4">{item.second1TyreNo || "-"}</Td>
+                    <Td className="py-4">{item.second2TyreNo || "-"}</Td>
                     <Td className="py-4">{formatDate(item.inWardDate)}</Td>
                     <Td className="py-4">{formatDateTime(item.inWardTime)}</Td>
                   </Tr>
@@ -556,7 +406,7 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
               {currentItems.length === 0 && (
                 <Tr>
                   <Td
-                    colSpan={columns.length + 2}
+                    colSpan={COLUMN_COUNT + 1}
                     className="py-12 text-center text-gray-400 dark:text-gray-500"
                   >
                     No tractor inventory records found
@@ -592,9 +442,7 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
               <div className="dark:border-dark-700 dark:bg-dark-800 inline-flex items-center space-x-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
                 <button
                   type="button"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
                   className="dark:hover:bg-dark-700 inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent dark:text-gray-400"
                 >
@@ -643,7 +491,7 @@ const TractorInventory: React.FC<TractorInventoryProps> = ({
 
             <div className="order-3 flex items-center justify-center text-sm text-gray-500 select-none md:w-1/3 md:justify-end dark:text-gray-400">
               <span>
-                {totalItems === 0 ? 0 : indexOfFirstItem + 1} -{" "}
+                {indexOfFirstItem + 1} -{" "}
                 {Math.min(indexOfLastItem, totalItems)} of {totalItems} entries
               </span>
             </div>
