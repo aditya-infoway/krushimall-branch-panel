@@ -51,7 +51,7 @@ const getBankAccounts = async () => {
   try {
     const res = await apiHelper.get("/branch-panel/accounts?scope=all");
 
-    console.log("Account API Response:", res);
+ 
 
     const accounts = res.data || [];
 
@@ -59,8 +59,7 @@ const getBankAccounts = async () => {
       (item: any) => item.group === "Bank Accounts"
     );
 
-    console.log("Filtered Bank Accounts:", banks);
-
+  
    setBankAccountOptions(
   banks.map((item: any) => ({
     id: item.id,

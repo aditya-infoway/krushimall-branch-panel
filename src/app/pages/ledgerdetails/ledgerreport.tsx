@@ -85,26 +85,27 @@ useEffect(() => {
 
   const getLedgerAccounts = async () => {
   try {
-    const res = await apiHelper.get("/branch-panel/accounts");
+   const res = await apiHelper.get("/branch-panel/ledger/report");
 
-    console.log("Accounts:", res);
-
-    setLedgerData(
-      (res.data || res).map((item: any) => ({
-        id: item.id,
-        accountName: item.accountName,
-        group: item.group,
-        address: item.address1 || "",
-        city: item.city || "",
-        state: item.state || "",
-        closingBalance: Number(item.closingBalance || 0),
-        drCr: item.drCr || "",
-      }))
-    );
+setLedgerData(
+  (res.report || res.data?.report || []).map((item: any) => ({
+    id: item.id,
+    accountName: item.accountName,
+    group: item.group,
+    address: item.address1 || "",
+    city: item.city || "",
+    state: item.state || "",
+    closingBalance: Number(item.closingBalance || 0),
+    drCr: item.drCr || "",
+  })),
+);
   } catch (err) {
     console.log(err);
   }
 };
+
+
+
 useEffect(() => {
   getLedgerAccounts();
 }, []);
@@ -234,7 +235,7 @@ const downloadExcel = async () => {
         <Search className="absolute top-1/2 left-3 size-4.5 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
-          placeholder="Search contra entries..."
+     placeholder="Search accounts..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="dark:border-dark-500 dark:bg-dark-800 w-full rounded-lg border border-gray-300 bg-white py-2.5 pr-4 pl-10 text-sm outline-none"

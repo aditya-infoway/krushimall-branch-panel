@@ -1067,7 +1067,7 @@ const downloadExcel = async () => {
                       }}
                     />
                     <Radio
-                      label="Lead Cancel"
+                      label="Lead "
                       name="type"
                       checked={form.type === "Lead Cancel"}
                       onChange={() => {
