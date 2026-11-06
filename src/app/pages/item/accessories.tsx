@@ -169,7 +169,7 @@ const Accessories = () => {
 
       const data = res.data?.data || res.data || [];
 
-      console.log("Showroom Variant Response:", data);
+    
 
       setVariantOptions(
         data.map((item: any) => ({

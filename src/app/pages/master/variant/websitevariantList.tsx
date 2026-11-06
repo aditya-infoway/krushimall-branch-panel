@@ -26,7 +26,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Combobox } from "@/components/shared/form/Combobox";
 // Local UI Imports
-import {  Checkbox } from "@/components/ui";
+import { Checkbox } from "@/components/ui";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/Table";
 // import { Listbox } from "@/components/shared/form/StyledListbox";
 
@@ -80,27 +80,26 @@ type FilterOption = {
 };
 export default function WebsiteVariantList() {
   // const navigate = useNavigate();
- 
 
   const [variants, setVariants] = useState<WebsiteVariantType[]>([]);
   const [loading, setLoading] = useState(false);
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-const [categories, setCategories] = useState<FilterOption[]>([]);
-const [brands, setBrands] = useState<FilterOption[]>([]);
-const [models, setModels] = useState<FilterOption[]>([]);
-const [modelYears, setModelYears] = useState<FilterOption[]>([]);
+  const [categories, setCategories] = useState<FilterOption[]>([]);
+  const [brands, setBrands] = useState<FilterOption[]>([]);
+  const [models, setModels] = useState<FilterOption[]>([]);
+  const [modelYears, setModelYears] = useState<FilterOption[]>([]);
   // Search and filter states
-// Search and filter states
-const [search, setSearch] = useState("");
-const [showFilterBar, setShowFilterBar] = useState(false);
+  // Search and filter states
+  const [search, setSearch] = useState("");
+  const [showFilterBar, setShowFilterBar] = useState(false);
 
-const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("All");
-const [selectedBrandFilter, setSelectedBrandFilter] = useState("All");
-const [selectedModelFilter, setSelectedModelFilter] = useState("All");
-const [selectedYearFilter, setSelectedYearFilter] = useState("All");
-const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("All");
+  const [selectedBrandFilter, setSelectedBrandFilter] = useState("All");
+  const [selectedModelFilter, setSelectedModelFilter] = useState("All");
+  const [selectedYearFilter, setSelectedYearFilter] = useState("All");
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
 
   // Selection states
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -122,102 +121,104 @@ const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
     fetchVariants();
   }, []);
   const getCategories = async () => {
-  try {
-    const res = await apiHelper.get("/category");
-    const data = res?.data || res;
+    try {
+      const res = await apiHelper.get("/category");
+      const data = res?.data || res;
 
-    setCategories(
-      (Array.isArray(data) ? data : []).map((item: any) => ({
-        id: item.id,
-        name: item.categoryName,
-      }))
-    );
-  } catch {
-    setCategories([]);
-  }
-};
+      setCategories(
+        (Array.isArray(data) ? data : []).map((item: any) => ({
+          id: item.id,
+          name: item.categoryName,
+        })),
+      );
+    } catch {
+      setCategories([]);
+    }
+  };
 
-const getBrands = async () => {
-  try {
-    const res = await apiHelper.get("/brand");
-    const data = res?.data || res;
+  const getBrands = async () => {
+    try {
+      const res = await apiHelper.get("/brand");
+      const data = res?.data || res;
 
-   setBrands(
-  (Array.isArray(data) ? data : []).map((item: any) => ({
-    id: String(item.id),
-    name: item.brandName,
-    categoryId: String(item.categoryId),
-  }))
-);
-  } catch {
-    setBrands([]);
-  }
-};
+      setBrands(
+        (Array.isArray(data) ? data : []).map((item: any) => ({
+          id: String(item.id),
+          name: item.brandName,
+          categoryId: String(item.categoryId),
+        })),
+      );
+    } catch {
+      setBrands([]);
+    }
+  };
 
-const getModels = async () => {
-  try {
-    const res = await apiHelper.get("/model");
-    const data = res?.data || res;
+  const getModels = async () => {
+    try {
+      const res = await apiHelper.get("/model");
+      const data = res?.data || res;
 
-   setModels(
-  (Array.isArray(data) ? data : []).map((item: any) => ({
-    id: String(item.id),
-    name: item.modelName,
-    brandId: String(item.brandId),
-  }))
-);
-  } catch {
-    setModels([]);
-  }
-};
+      setModels(
+        (Array.isArray(data) ? data : []).map((item: any) => ({
+          id: String(item.id),
+          name: item.modelName,
+          brandId: String(item.brandId),
+        })),
+      );
+    } catch {
+      setModels([]);
+    }
+  };
 
-const getModelYears = async () => {
-  try {
-    const res = await apiHelper.get("/model-year");
-    const data = res?.data || res;
+  const getModelYears = async () => {
+    try {
+      const res = await apiHelper.get("/model-year");
+      const data = res?.data || res;
 
-    setModelYears(
-  (Array.isArray(data) ? data : []).map((item: any) => ({
-    id: String(item.id),
-    name: String(item.modelYear),
-    modelId: String(item.modelId),
-  }))
-);
-  } catch {
-    setModelYears([]);
-  }
-};
-useEffect(() => {
-  getCategories();
-  getBrands();
-  getModels();
-  getModelYears();
-}, []);
+      setModelYears(
+        (Array.isArray(data) ? data : []).map((item: any) => ({
+          id: String(item.id),
+          name: String(item.modelYear),
+          modelId: String(item.modelId),
+        })),
+      );
+    } catch {
+      setModelYears([]);
+    }
+  };
+  useEffect(() => {
+    getCategories();
+    getBrands();
+    getModels();
+    getModelYears();
+  }, []);
   // Filter logic
- const filteredData = variants.filter((item) => {
+  const filteredData = variants.filter((item) => {
     const matchesSearch =
-     item.category?.categoryName.toLowerCase().includes(search.toLowerCase()) ||
+      item.category?.categoryName
+        .toLowerCase()
+        .includes(search.toLowerCase()) ||
       item.productName?.toLowerCase().includes(search.toLowerCase()) ||
       item.variant?.variantName?.toLowerCase().includes(search.toLowerCase()) ||
       item.variantCode?.toLowerCase().includes(search.toLowerCase()) ||
       item.brand?.brandName?.toLowerCase().includes(search.toLowerCase()) ||
       item.model?.modelName?.toLowerCase().includes(search.toLowerCase()) ||
-         item.modelYear?.modelYear.toString().includes(search.toLowerCase());
-const matchesCategoryDropdown =
-  selectedCategoryFilter === "All" ||
-  String(item.category?.id) === selectedCategoryFilter;
+      item.modelYear?.modelYear.toString().includes(search.toLowerCase());
+    const matchesCategoryDropdown =
+      selectedCategoryFilter === "All" ||
+      String(item.category?.id) === selectedCategoryFilter;
 
-const matchesBrandDropdown =
-  selectedBrandFilter === "All" ||
-  String(item.brand?.id) === selectedBrandFilter;
+    const matchesBrandDropdown =
+      selectedBrandFilter === "All" ||
+      String(item.brand?.id) === selectedBrandFilter;
 
-const matchesModelDropdown =
-  selectedModelFilter === "All" ||
-  String(item.model?.id) === selectedModelFilter;
+    const matchesModelDropdown =
+      selectedModelFilter === "All" ||
+      String(item.model?.id) === selectedModelFilter;
 
-const matchesYearDropdown =
-  selectedYearFilter === "All" ||
-  String(item.modelYear?.id) === selectedYearFilter;;
+    const matchesYearDropdown =
+      selectedYearFilter === "All" ||
+      String(item.modelYear?.id) === selectedYearFilter;
 
     const matchesStatusDropdown =
       selectedStatusFilter === "All" ||
@@ -232,54 +233,54 @@ const matchesYearDropdown =
       matchesStatusDropdown
     );
   });
- const categoryOptions = [
-  { id: "All", name: "All Categories" },
-  ...categories.map((c: any) => ({
-    id: String(c.id),
-    name: c.name,
-  })),
-];
+  const categoryOptions = [
+    { id: "All", name: "All Categories" },
+    ...categories.map((c: any) => ({
+      id: String(c.id),
+      name: c.name,
+    })),
+  ];
 
-const brandOptions = [
-  { id: "All", name: "All Brands" },
-  ...(selectedCategoryFilter === "All"
-    ? []
-    : brands
-        .filter(b => b.categoryId === selectedCategoryFilter)
-        .map(b => ({
-          id: b.id,
-          name: b.name,
-        }))),
-];
+  const brandOptions = [
+    { id: "All", name: "All Brands" },
+    ...(selectedCategoryFilter === "All"
+      ? []
+      : brands
+          .filter((b) => b.categoryId === selectedCategoryFilter)
+          .map((b) => ({
+            id: b.id,
+            name: b.name,
+          }))),
+  ];
 
-const modelOptions = [
-  { id: "All", name: "All Models" },
-  ...(selectedBrandFilter === "All"
-    ? []
-    : models
-        .filter(m => m.brandId === selectedBrandFilter)
-        .map(m => ({
-          id: m.id,
-          name: m.name,
-        }))),
-];
-const yearFilterOptions = [
-  { id: "All", name: "All Years" },
-  ...(selectedModelFilter === "All"
-    ? []
-    : modelYears
-        .filter(y => y.modelId === selectedModelFilter)
-        .map(y => ({
-          id: y.id,
-          name: y.name,
-        }))),
-];
+  const modelOptions = [
+    { id: "All", name: "All Models" },
+    ...(selectedBrandFilter === "All"
+      ? []
+      : models
+          .filter((m) => m.brandId === selectedBrandFilter)
+          .map((m) => ({
+            id: m.id,
+            name: m.name,
+          }))),
+  ];
+  const yearFilterOptions = [
+    { id: "All", name: "All Years" },
+    ...(selectedModelFilter === "All"
+      ? []
+      : modelYears
+          .filter((y) => y.modelId === selectedModelFilter)
+          .map((y) => ({
+            id: y.id,
+            name: y.name,
+          }))),
+  ];
 
-const statusFilterOptions = [
-  { id: "All", name: "All" },
-  { id: "ACTIVE", name: "Active" },
-  { id: "INACTIVE", name: "Inactive" },
-];
+  const statusFilterOptions = [
+    { id: "All", name: "All" },
+    { id: "ACTIVE", name: "Active" },
+    { id: "INACTIVE", name: "Inactive" },
+  ];
   // Pagination calculations
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -447,16 +448,16 @@ const statusFilterOptions = [
                 data={categoryOptions}
                 value={
                   categoryOptions.find(
-                    (opt) => opt.id === selectedCategoryFilter
+                    (opt) => opt.id === selectedCategoryFilter,
                   ) || categoryOptions[0]
                 }
-              onChange={(opt: any) => {
-  setSelectedCategoryFilter(opt.id);
-  setSelectedBrandFilter("All");
-  setSelectedModelFilter("All");
-  setSelectedYearFilter("All");
-  setCurrentPage(1);
-}}
+                onChange={(opt: any) => {
+                  setSelectedCategoryFilter(opt.id);
+                  setSelectedBrandFilter("All");
+                  setSelectedModelFilter("All");
+                  setSelectedYearFilter("All");
+                  setCurrentPage(1);
+                }}
                 displayField="name"
               />
             </div>
@@ -468,16 +469,15 @@ const statusFilterOptions = [
               <Combobox
                 data={brandOptions}
                 value={
-                  brandOptions.find(
-                    (opt) => opt.id === selectedBrandFilter
-                  ) || brandOptions[0]
+                  brandOptions.find((opt) => opt.id === selectedBrandFilter) ||
+                  brandOptions[0]
                 }
-              onChange={(opt: any) => {
-  setSelectedBrandFilter(opt.id);
-  setSelectedModelFilter("All");
-  setSelectedYearFilter("All");
-  setCurrentPage(1);
-}}
+                onChange={(opt: any) => {
+                  setSelectedBrandFilter(opt.id);
+                  setSelectedModelFilter("All");
+                  setSelectedYearFilter("All");
+                  setCurrentPage(1);
+                }}
                 displayField="name"
               />
             </div>
@@ -489,15 +489,14 @@ const statusFilterOptions = [
               <Combobox
                 data={modelOptions}
                 value={
-                  modelOptions.find(
-                    (opt) => opt.id === selectedModelFilter
-                  ) || modelOptions[0]
+                  modelOptions.find((opt) => opt.id === selectedModelFilter) ||
+                  modelOptions[0]
                 }
-              onChange={(opt: any) => {
-  setSelectedModelFilter(opt.id);
-  setSelectedYearFilter("All");
-  setCurrentPage(1);
-}}
+                onChange={(opt: any) => {
+                  setSelectedModelFilter(opt.id);
+                  setSelectedYearFilter("All");
+                  setCurrentPage(1);
+                }}
                 displayField="name"
               />
             </div>
@@ -510,7 +509,7 @@ const statusFilterOptions = [
                 data={yearFilterOptions}
                 value={
                   yearFilterOptions.find(
-                    (opt) => opt.id === selectedYearFilter
+                    (opt) => opt.id === selectedYearFilter,
                   ) || yearFilterOptions[0]
                 }
                 onChange={(opt: any) => {
@@ -529,7 +528,7 @@ const statusFilterOptions = [
                 data={statusFilterOptions}
                 value={
                   statusFilterOptions.find(
-                    (opt) => opt.id === selectedStatusFilter
+                    (opt) => opt.id === selectedStatusFilter,
                   ) || statusFilterOptions[0]
                 }
                 onChange={(opt: any) => {
@@ -667,7 +666,6 @@ const statusFilterOptions = [
                     <Td className="py-4 text-gray-500 dark:text-gray-400">
                       {new Date(item.createdAt).toLocaleDateString("en-IN")}
                     </Td>
-                    
                   </Tr>
                 );
               })}
@@ -675,10 +673,10 @@ const statusFilterOptions = [
               {currentItems.length === 0 && (
                 <Tr>
                   <Td
-                    colSpan={8}
+                    colSpan={11}
                     className="py-12 text-center text-gray-400 dark:text-gray-500"
                   >
-                    No years found
+                          No Website Variant found
                   </Td>
                 </Tr>
               )}

@@ -116,7 +116,7 @@ const AccessoriesInventory: React.FC<AccessoriesInventoryProps> = ({
     try {
       const res = await apiHelper.get("/accessories");
 
-      console.log("Accessories inventory:", res.data);
+ 
 
       setRows(res.data || []);
     } catch (error: any) {

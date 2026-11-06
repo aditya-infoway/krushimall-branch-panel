@@ -43,7 +43,7 @@ import { TestDriveModal } from "./testdrive";
 import { toast } from "sonner";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-import {PaymentDrawer} from "./payment";
+import { PaymentDrawer } from "./payment";
 type Lead = {
   id: number;
   customerName: string;
@@ -98,10 +98,10 @@ export default function LeadBuilder() {
   const [selectedLeadId, setSelectedLeadId] = useState<number | undefined>(
     undefined,
   );
-const [showPaymentDrawer, setShowPaymentDrawer] = useState(false);
-const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<number | undefined>(
-  undefined,
-);
+  const [showPaymentDrawer, setShowPaymentDrawer] = useState(false);
+  const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<
+    number | undefined
+  >(undefined);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmState, setConfirmState] = useState<
     "pending" | "success" | "error"
@@ -112,57 +112,41 @@ const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<number | unde
   // Filter leads based on search
   const navigate = useNavigate();
   const filteredData = leadData.filter((lead: any) => {
-  const searchLower = search.trim().toLowerCase();
+    const searchLower = search.trim().toLowerCase();
 
-  return (
-    // Customer Name
-    String(lead.customer?.accountName ?? "")
-      .toLowerCase()
-      .includes(searchLower) ||
-
-    // Mobile
-    String(lead.customer?.mobile ?? "")
-      .toLowerCase()
-      .includes(searchLower) ||
-
-    // City
-    String(lead.customer?.city ?? lead.city ?? "")
-      .toLowerCase()
-      .includes(searchLower) ||
-
-    // Model
-    String(lead.model?.modelName ?? "")
-      .toLowerCase()
-      .includes(searchLower) ||
-
-    // Variant
-    String(
-      lead.variant?.variantName ??
-      lead.showroomVariant?.variantName ??
-      ""
-    )
-      .toLowerCase()
-      .includes(searchLower) ||
-
-    // Colour
-    String(
-      lead.colour?.colourName ??
-      lead.color?.colourName ??
-      ""
-    )
-      .toLowerCase()
-      .includes(searchLower) ||
-
-    // Executive
-    String(
-      lead.executive?.employeeName ??
-      lead.executiveName ??
-      ""
-    )
-      .toLowerCase()
-      .includes(searchLower)
-  );
-});
+    return (
+      // Customer Name
+      String(lead.customer?.accountName ?? "")
+        .toLowerCase()
+        .includes(searchLower) ||
+      // Mobile
+      String(lead.customer?.mobile ?? "")
+        .toLowerCase()
+        .includes(searchLower) ||
+      // City
+      String(lead.customer?.city ?? lead.city ?? "")
+        .toLowerCase()
+        .includes(searchLower) ||
+      // Model
+      String(lead.model?.modelName ?? "")
+        .toLowerCase()
+        .includes(searchLower) ||
+      // Variant
+      String(
+        lead.variant?.variantName ?? lead.showroomVariant?.variantName ?? "",
+      )
+        .toLowerCase()
+        .includes(searchLower) ||
+      // Colour
+      String(lead.colour?.colourName ?? lead.color?.colourName ?? "")
+        .toLowerCase()
+        .includes(searchLower) ||
+      // Executive
+      String(lead.executive?.employeeName ?? lead.executiveName ?? "")
+        .toLowerCase()
+        .includes(searchLower)
+    );
+  });
 
   // Pagination
   const totalItems = filteredData.length;
@@ -173,7 +157,7 @@ const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<number | unde
   );
   const fetchLeads = async () => {
     try {
-    const res = await apiHelper.get("/branch-panel/leads");
+      const res = await apiHelper.get("/branch-panel/leads");
 
       const data = Array.isArray(res.data) ? res.data : [];
 
@@ -227,9 +211,9 @@ const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<number | unde
     navigate(`/leadmaster/Followup/${id}`);
   };
   const handlePayment = (id: number) => {
-  setSelectedPaymentLeadId(id);
-  setShowPaymentDrawer(true);
-};
+    setSelectedPaymentLeadId(id);
+    setShowPaymentDrawer(true);
+  };
   // const handleSendQuotation = (id: number) => {
   //   console.log(`Send quotation for lead ${id}...`);
   // };
@@ -304,7 +288,7 @@ const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<number | unde
             <THead className="dark:border-dark-600 dark:bg-dark-700/60 border-b border-gray-200 bg-gray-100">
               <Tr>
                 <Th className="w-12"># ID</Th>
-                      <Th className="w-45 min-w-45">quotation No</Th>
+                <Th className="w-45 min-w-45">quotation No</Th>
                 <Th className="w-45 min-w-45">Customer Detail</Th>
                 <Th className="w-45 min-w-45">Vehicle Detail</Th>
                 <Th className="w-45 min-w-45">Purchase Detail</Th>
@@ -316,9 +300,12 @@ const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<number | unde
               </Tr>
             </THead>
             <TBody>
-              {currentItems.map((lead,index) => (
+              {currentItems.map((lead, index) => (
                 <Tr key={lead.id} className="dark:border-dark-700 border-b">
-                 <Td className="font-bold">     {(currentPage - 1) * itemsPerPage + index + 1}</Td>
+                  <Td className="font-bold">
+                    {" "}
+                    {(currentPage - 1) * itemsPerPage + index + 1}
+                  </Td>
                   <Td className="font-bold">{lead.quotationNo}</Td>
 
                   <Td className="text-xs">
@@ -417,26 +404,26 @@ const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<number | unde
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => handleOrderBill(lead.id)}
-                          className="flex-1 cursor-pointer rounded-full border border-yellow-500 py-1 px-2 text-[12px] text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+                          className="flex-1 cursor-pointer rounded-full border border-yellow-500 px-2 py-1 text-[12px] text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
                         >
                           Send Quotation
                         </button>
-                       <button
-  onClick={() => handleEditQuotation(lead.id)}
-  disabled={!!lead.order}
-  className={`flex h-7 w-7 items-center justify-center rounded border ${
-    lead.order
-      ? "dark:border-dark-500 dark:bg-dark-600 dark:text-dark-300 cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500"
-      : "dark:text-blue-400 dark:hover:bg-blue-900/20 cursor-pointer border-blue-500 text-blue-600 hover:bg-blue-50"
-  }`}
-  title={
-    lead.order
-      ? "Quotation cannot be edited after Order is created"
-      : "Edit Quotation"
-  }
->
-  <PencilSquareIcon className="h-3 w-3" />
-</button>
+                        <button
+                          onClick={() => handleEditQuotation(lead.id)}
+                          disabled={!!lead.order}
+                          className={`flex h-7 w-7 items-center justify-center rounded border ${
+                            lead.order
+                              ? "dark:border-dark-500 dark:bg-dark-600 dark:text-dark-300 cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500"
+                              : "cursor-pointer border-blue-500 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                          }`}
+                          title={
+                            lead.order
+                              ? "Quotation cannot be edited after Order is created"
+                              : "Edit Quotation"
+                          }
+                        >
+                          <PencilSquareIcon className="h-3 w-3" />
+                        </button>
                       </div>
                       {/* Test Drive: Red border */}
                       <button
@@ -452,9 +439,17 @@ const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<number | unde
                     <div className="flex w-full flex-col gap-1.5">
                       <button
                         onClick={() => handleCreateOrder(lead.id)}
-                        className="w-full cursor-pointer rounded-md border border-emerald-500 py-0.5 text-[12px] text-emerald-600"
+                        disabled={!!lead.order}
+                        title={
+                          lead.order ? "Order already created" : "Create Order"
+                        }
+                        className={`w-full rounded-md border py-0.5 text-[12px] ${
+                          lead.order
+                            ? "dark:border-dark-500 dark:bg-dark-600 dark:text-dark-300 cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500"
+                            : "cursor-pointer border-emerald-500 text-emerald-600"
+                        }`}
                       >
-                        Create Order
+                        {lead.order ? "Order Created" : "Create Order"}
                       </button>
                       <button
                         onClick={() => handleCreateBooking(lead.id)}
@@ -756,18 +751,18 @@ const [selectedPaymentLeadId, setSelectedPaymentLeadId] = useState<number | unde
           fetchLeads();
         }}
       />
-<PaymentDrawer
-  isOpen={showPaymentDrawer}
-  onClose={() => {
-    setShowPaymentDrawer(false);
-    setSelectedPaymentLeadId(undefined);
-  }}
-  leadId={selectedPaymentLeadId}
-  customerName={
-    leadData.find((lead) => lead.id === selectedPaymentLeadId)
-      ?.customer?.accountName
-  }
-/>
+      <PaymentDrawer
+        isOpen={showPaymentDrawer}
+        onClose={() => {
+          setShowPaymentDrawer(false);
+          setSelectedPaymentLeadId(undefined);
+        }}
+        leadId={selectedPaymentLeadId}
+        customerName={
+          leadData.find((lead) => lead.id === selectedPaymentLeadId)?.customer
+            ?.accountName
+        }
+      />
       {/* Confirmation Modal */}
       <ConfirmModal
         show={showConfirmModal}

@@ -175,17 +175,12 @@ const Order: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [selectedAccessories, setSelectedAccessories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
- const OrderVehicleOption = (props: any) => {
+const OrderVehicleOption = (props: any) => {
   const { data, innerRef, innerProps, isFocused, isSelected } = props;
 
   const inwardDate = data.inwardDate ?? data.inWardDate ?? "";
 
   const motorNo = data.motorNo ?? data.engineNo ?? "";
-
-  const isPresent =
-    String(data.status ?? "")
-      .trim()
-      .toLowerCase() === "present";
 
   const highlighted = isFocused || isSelected;
 
@@ -202,10 +197,12 @@ const Order: React.FC = () => {
       <div className="flex items-start justify-between gap-4">
         {/* LEFT SIDE */}
         <div className="space-y-0.5">
+          {/* Chassis No always show */}
           <p>
             <span className="font-semibold">Chassis No:</span> {data.chassisNo}
           </p>
 
+          {/* Show only if available */}
           {data.batteryNo && (
             <p>
               <span className="font-semibold">Battery No:</span>{" "}
@@ -213,6 +210,7 @@ const Order: React.FC = () => {
             </p>
           )}
 
+          {/* Show only if available */}
           {data.keyNo && (
             <p>
               <span className="font-semibold">Key No:</span> {data.keyNo}
@@ -222,19 +220,7 @@ const Order: React.FC = () => {
 
         {/* RIGHT SIDE */}
         <div className="space-y-0.5 text-right">
-          {/* Status badge: Present = green, Transit = blue */}
-          {data.status && (
-            <span
-              className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                isPresent
-                  ? "bg-green-100 text-green-800"
-                  : "bg-blue-100 text-blue-800"
-              }`}
-            >
-              {data.status}
-            </span>
-          )}
-
+          {/* Show only if available */}
           {inwardDate && (
             <p>
               <span className="font-semibold">Inward Date:</span>{" "}
@@ -249,6 +235,7 @@ const Order: React.FC = () => {
             </p>
           )}
 
+          {/* Show only if available */}
           {motorNo && (
             <p>
               <span className="font-semibold">Motor No:</span> {motorNo}
@@ -452,7 +439,8 @@ const Order: React.FC = () => {
   }, []);
 // Kaun si status wali vehicles order mein allot ho sakti hain.
 // Sirf verify hui vehicles chahiye to "transit" hata do.
-const SELECTABLE_STATUSES = ["present", "transit"];
+// Sirf Present vehicles order mein allot ho sakti hain (Booked automatically bahar)
+const SELECTABLE_STATUSES = ["present"];
 
 // Branch file:           "/branch-panel/tractor-inventory"
 // Sales Executive file:  "/salesexecutive/tractor-inventory"
@@ -469,7 +457,6 @@ const fetchVehicleInventory = async () => {
         : [];
 
     const mappedVehicles = data
-      // Present + Transit rows (Booked automatically bahar)
       .filter((item: any) =>
         SELECTABLE_STATUSES.includes(
           String(item.status ?? "")
@@ -517,11 +504,6 @@ const fetchVehicleInventory = async () => {
 
           status: item.status ?? "",
         };
-      })
-      // Present upar, Transit neeche
-      .sort((a: any, b: any) => {
-        const rank = (s: string) => (s.toLowerCase() === "present" ? 0 : 1);
-        return rank(a.status) - rank(b.status);
       });
 
     setVehicleOptions(mappedVehicles);

@@ -84,7 +84,7 @@ const DetailCard = ({
   className?: string;
 }) => (
   <div
-    className={`dark:bg-dark-700/50 dark:border-dark-600 rounded-xl border border-gray-200 bg-white p-4 shadow-sm ${className}`}
+    className={`dark:bg-dark-700/50 dark:border-dark-600 min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm ${className}`}
   >
     <h4 className="mb-3 text-xs font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500">
       {title}
@@ -100,9 +100,9 @@ const DetailItem = ({
   label: string;
   value?: React.ReactNode;
 }) => (
-  <div>
+  <div className="min-w-0">
     <p className="mb-1 text-xs text-gray-400 dark:text-gray-500">{label}</p>
-    <p className="dark:text-dark-200 text-sm font-medium text-gray-800 dark:text-white">
+    <p className="dark:text-dark-200 text-sm font-medium [overflow-wrap:anywhere] text-gray-800 dark:text-white">
       {value || "-"}
     </p>
   </div>
@@ -600,7 +600,7 @@ const VehicleStockTransferDetails = () => {
                               <p className="text-xs text-gray-400 dark:text-gray-500">
                                 Chassis No
                               </p>
-                              <p className="font-mono text-base font-semibold text-gray-900 dark:text-white">
+                              <p className="font-mono text-base font-semibold break-all text-gray-900 dark:text-white">
                                 {selectedVehicle.chassisNo || "-"}
                               </p>
                             </div>

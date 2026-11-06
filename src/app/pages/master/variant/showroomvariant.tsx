@@ -655,7 +655,7 @@ const updateAccessory = (
         salesPrice: Number(data.salesPrice),
         status: data.status,
       };
-        console.log("Payload:", payload);
+      
       if (editId !== null)
         await apiHelper.put(`/showroom-variant/${editId}`, payload);
       else await apiHelper.post("/showroom-variant", payload);
@@ -670,9 +670,7 @@ const updateAccessory = (
     }
   };
 
-  useEffect(() => {
-    console.log(errors);
-  }, [errors]);
+  
 
   const filteredData = variants.filter((item) => {
   const matchesSearch =

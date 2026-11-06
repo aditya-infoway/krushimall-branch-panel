@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Fragment } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   FiArrowLeft,
@@ -11,7 +11,13 @@ import { RiFileExcel2Fill } from "react-icons/ri";
 import { DatePicker } from "@/components/shared/form/Datepicker";
 import apiHelper from "@/utils/apiHelper";
 import { Search } from "lucide-react";
-import { Group } from "@/app/layouts/Sideblock/Sidebar/Menu/Group";
+import {
+  Menu,
+  MenuButton,
+  MenuItems,
+  MenuItem,
+  Transition,
+} from "@headlessui/react";
 // interface Transaction {
 //   id: number;
 //   date: string;
@@ -22,12 +28,24 @@ import { Group } from "@/app/layouts/Sideblock/Sidebar/Menu/Group";
 //   credit: number;
 //   balance: number;
 // }
+const formatBalance = (amount: number) => {
+  const n = Number(amount || 0);
+  return `${Math.abs(n).toFixed(2)} ${n >= 0 ? "Dr" : "Cr"}`;
+};
 
+const entriesOptions = [
+  { id: 10, name: "10" },
+  { id: 20, name: "20" },
+  { id: 30, name: "30" },
+  { id: 40, name: "40" },
+  { id: 50, name: "50" },
+  { id: 100, name: "100" },
+];
 const LedgerDetails: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage] = useState(10);
+const [rowsPerPage, setRowsPerPage] = useState(10);
   const [fromDate, setFromDate] = useState<any>(null);
   const [toDate, setToDate] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -44,8 +62,9 @@ const [search, setSearch] = useState("");
 
   const filterData = location.state?.filterData;
 
-  const totalDebit = transactions.reduce((sum, t) => sum + t.debit, 0);
-  const totalCredit = transactions.reduce((sum, t) => sum + t.credit, 0);
+const txnRows = transactions.filter((t) => t.type !== "OPENING BALANCE");
+const totalDebit = txnRows.reduce((sum, t) => sum + Number(t.debit || 0), 0);
+const totalCredit = txnRows.reduce((sum, t) => sum + Number(t.credit || 0), 0);
   const totalBalance =
     transactions.length > 0 ? transactions[transactions.length - 1].balance : 0;
 
@@ -117,7 +136,7 @@ const currentData = filteredTransactions.slice(startIndex, endIndex);
       getLedger();
     }
   }, [accountId, appliedFromDate, appliedToDate]);
-  const getLedger = async () => {
+   const getLedger = async () => {
     try {
       setLoading(true);
 
@@ -140,12 +159,11 @@ const currentData = filteredTransactions.slice(startIndex, endIndex);
         });
       }
 
-      setTransactions(data);
-
       let debit = 0;
       let credit = 0;
 
       data.forEach((item: any) => {
+        if (item.type === "OPENING BALANCE") return;
         debit += Number(item.debit || 0);
         credit += Number(item.credit || 0);
       });
@@ -162,7 +180,6 @@ const currentData = filteredTransactions.slice(startIndex, endIndex);
       setLoading(false);
     }
   };
-
   useEffect(() => {
     if (accountId && fromDate && toDate) {
       getLedger();
@@ -204,14 +221,12 @@ const currentData = filteredTransactions.slice(startIndex, endIndex);
   const handleBack = () => {
     navigate("/ledgerdetails/ledgerreport");
   };
-  const clearFilter = () => {
-    setFromDate(filterData.fromDate);
-    setToDate(filterData.toDate);
-
-    setTimeout(() => {
-      getLedger();
-    }, 0);
-  };
+const clearFilter = () => {
+  setFromDate(filterData.fromDate);
+  setToDate(filterData.toDate);
+  setAppliedFromDate(filterData.fromDate);
+  setAppliedToDate(filterData.toDate);
+};
   const downloadExcel = async () => {
     const blob = await apiHelper.getBlob(
       `/branch-panel/ledger/details/${accountId}/export`,
@@ -321,7 +336,7 @@ const currentData = filteredTransactions.slice(startIndex, endIndex);
         <div className="rounded-xl bg-blue-50 p-4 dark:bg-blue-900/20">
           <div className="text-sm text-gray-500">Opening Balance</div>
           <div className="text-xl font-bold text-blue-600">
-            ₹{summary.openingBalance.toFixed(2)}
+         {formatBalance(summary.openingBalance)} 
           </div>
         </div>
 
@@ -342,7 +357,7 @@ const currentData = filteredTransactions.slice(startIndex, endIndex);
         <div className="rounded-xl bg-purple-50 p-4 dark:bg-purple-900/20">
           <div className="text-sm text-gray-500">Closing Balance</div>
           <div className="text-xl font-bold text-purple-600">
-            ₹{summary.closingBalance.toFixed(2)}
+     {formatBalance(summary.closingBalance)} 
           </div>
         </div>
       </div>
@@ -395,7 +410,7 @@ const currentData = filteredTransactions.slice(startIndex, endIndex);
             <tbody className="dark:divide-dark-600 divide-y divide-gray-100">
               {currentData.map((item, index) => (
                 <tr
-                  key={item.id}
+          key={`${item.voucherNo}-${item.type}-${startIndex + index}`}
                   className="dark:hover:bg-dark-600 whitespace-nowrap transition-colors hover:bg-gray-50"
                 >
                   <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
@@ -425,7 +440,8 @@ const currentData = filteredTransactions.slice(startIndex, endIndex);
                     {item.credit === 0 ? "—" : item.credit.toFixed(2)}
                   </td>
                   <td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-white">
-                    {item.balance.toFixed(2)} DR
+                
+  {formatBalance(item.balance)}
                   </td>
                 </tr>
               ))}
@@ -448,7 +464,7 @@ const currentData = filteredTransactions.slice(startIndex, endIndex);
                   {totalCredit.toFixed(2)}
                 </td>
                 <td className="text-primary-500 dark:text-primary-400 px-4 py-3 text-right">
-                  {totalBalance.toFixed(2)} Dr
+              {formatBalance(totalBalance)}
                 </td>
               </tr>
             </tbody>
@@ -458,11 +474,61 @@ const currentData = filteredTransactions.slice(startIndex, endIndex);
         {/* Pagination */}
         {totalPages > 0 && (
           <div className="dark:border-dark-700 dark:bg-dark-800 flex flex-col gap-4 border-t border-gray-200 bg-white px-4 py-4 md:flex-row md:items-center">
-            <div className="order-1 flex items-center justify-center gap-2 text-sm text-gray-600 md:w-1/3 md:justify-start dark:text-gray-400">
-              <span>Show</span>
-              <span className="font-medium">{rowsPerPage}</span>
-              <span>entries</span>
-            </div>
+          <div className="order-1 flex items-center justify-center gap-2 text-sm text-gray-600 md:w-1/3 md:justify-start dark:text-gray-400">
+  <span>Show</span>
+  <div className="w-20">
+    <Menu as="div" className="relative inline-block w-full text-left">
+      <MenuButton className="dark:border-dark-600 dark:bg-dark-700 flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm focus:outline-none dark:text-gray-200">
+        <span>{rowsPerPage}</span>
+        <svg className="ml-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <path
+            fillRule="evenodd"
+            d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </MenuButton>
+      <Transition
+        as={Fragment}
+        enter="transition ease-out duration-100"
+        enterFrom="transform opacity-0 scale-95"
+        enterTo="transform opacity-100 scale-100"
+        leave="transition ease-in duration-75"
+        leaveFrom="transform opacity-100 scale-100"
+        leaveTo="transform opacity-0 scale-95"
+      >
+        <MenuItems
+          anchor="bottom start"
+          className="dark:bg-dark-700 dark:border-dark-600 z-200 w-20 space-y-0.5 rounded-lg border border-gray-200 bg-white p-1 shadow-xl ring-1 ring-black/5 [--anchor-gap:6px] focus:outline-none"
+        >
+          {entriesOptions.map((opt) => (
+            <MenuItem key={opt.id}>
+              {({ active }) => (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRowsPerPage(opt.id);
+                    setCurrentPage(1);
+                  }}
+                  className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-sm font-medium ${
+                    opt.id === rowsPerPage
+                      ? "bg-primary-500 text-white"
+                      : active
+                        ? "dark:bg-dark-600 bg-gray-100 text-gray-900 dark:text-white"
+                        : "text-gray-700 dark:text-gray-200"
+                  }`}
+                >
+                  {opt.name}
+                </button>
+              )}
+            </MenuItem>
+          ))}
+        </MenuItems>
+      </Transition>
+    </Menu>
+  </div>
+  <span>entries</span>
+</div>
 
             <div className="order-2 flex justify-center md:w-1/3">
               <div className="dark:border-dark-700 dark:bg-dark-800 inline-flex items-center space-x-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
