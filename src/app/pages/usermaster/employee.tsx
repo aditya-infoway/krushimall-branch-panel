@@ -221,23 +221,27 @@ const Employee = () => {
   ];
 
   // FIX: backend route is "/departments/list" (see routes/branch/employee.ts)
-  const getDepartments = async () => {
-    try {
-      const res = await apiHelper.get(
-        "/branch-panel/employees/departments/list",
-      );
+const ALLOWED_DEPARTMENTS = ["sales", "service"];
 
-      setDepartmentOptions(
-        res.data.map((item: any) => ({
+const getDepartments = async () => {
+  try {
+    const res = await apiHelper.get(  "/branch-panel/employees/departments/list");
+
+    setDepartmentOptions(
+      (res.data || [])
+        .filter((item: any) =>
+          ALLOWED_DEPARTMENTS.includes(String(item.name).trim().toLowerCase()),
+        )
+        .map((item: any) => ({
           label: item.name,
-          value: item.name, // ✅ Store department name
-          departmentId: item.id, // Keep id separately
+          value: item.name, // department name store hoga
+          departmentId: item.id,
         })),
-      );
-    } catch (err) {
-      console.log(err);
-    }
-  };
+    );
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   // FIX: was missing "/branch-panel" prefix and backend expects
   // "/roles/:departmentId" not "/roles/department/:departmentId"
