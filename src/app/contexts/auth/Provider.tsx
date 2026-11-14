@@ -4,6 +4,7 @@ import { useEffect, useReducer, ReactNode } from "react";
 // Local Imports
 import apiHelper from "@/utils/apiHelper";
 import { isTokenValid, setSession, storage } from "@/utils/jwt";
+import { redirectToAdminLogin } from "@/utils/redirectToAdminLogin";
 import { AuthProvider as AuthContext, AuthContextType } from "./context";
 import { User } from "@/@types/user";
 
@@ -87,8 +88,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (authToken && isTokenValid(authToken)) {
           setSession(authToken);
 
-          // const response = await axios.get<{ user: User }>("/user/profile");
-          // const { user } = response.data;
           const storedUser = localStorage.getItem("branchUser");
 
           dispatch({
@@ -122,15 +121,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     init();
   }, []);
 
-
-
-  
   const login = async (credentials: {
     email: string;
     password: string;
   }): Promise<boolean> => {
     dispatch({ type: "LOGIN_REQUEST" });
-    console.log("Credentials:", credentials);
 
     try {
       const response = await apiHelper.post("/branch/login", credentials);
@@ -151,7 +146,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err: any) {
       const msg =
         err?.response?.data?.message || err?.message || JSON.stringify(err);
-      alert("Error: " + msg + "\nURL: " + err?.config?.url);
       dispatch({
         type: "LOGIN_ERROR",
         payload: {
@@ -164,8 +158,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     localStorage.removeItem("branchUser");
+    localStorage.removeItem("companyId");
+    localStorage.removeItem("financialYearId");
     setSession(null);
     dispatch({ type: "LOGOUT" });
+
+    // Admin app ke login page par bhejo (full reload)
+    redirectToAdminLogin();
   };
 
   if (!children) {
