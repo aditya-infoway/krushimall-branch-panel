@@ -5,6 +5,7 @@ export const master: NavigationTree = {
   type: "root",
   title: "Master Data",
   icon: "master",
+     path: "/master", 
   childs: [
     {
       id: "category",

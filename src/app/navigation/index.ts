@@ -9,10 +9,10 @@ import { goodcontrol } from "./segments/goodscontrol";
 import { report } from "./segments/report";
 import { followups } from "./segments/followups";
 import { bookregister } from "./segments/bookregister";
-import { ledgerreport } from "./segments/ledgerreport";
-import { bookingbalance } from "./segments/bookingbalance";
+// import { ledgerreport } from "./segments/ledgerreport";
+// import { bookingbalance } from "./segments/bookingbalance";
 import { stocktransfer } from "./segments/stocktransfer";
-
+import { logout } from "./segments/logout";
 export const navigation = [
   dashboards,
   master,
@@ -23,9 +23,10 @@ export const navigation = [
   stocktransfer,
   accounting,
   bookregister,
-  ledgerreport,
-  bookingbalance,
+  // ledgerreport,
+  // bookingbalance,
   goodcontrol,
   report,
   followups,
+  logout
 ];

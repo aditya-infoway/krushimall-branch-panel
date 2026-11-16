@@ -4,6 +4,7 @@ export const accounting: NavigationTree = {
   id: "accounting",
   type: "root",
   title: "Accounting MASTER",
+   path: "/accounting",
   icon: "accounting",
   childs: [
     {
@@ -53,6 +54,21 @@ export const accounting: NavigationTree = {
       type: "item",
       title: "Journal Entries",
       path: "/accounting/journal-entries",
+    },
+     {
+      id: "ledgerreport",
+      type: "collapse",
+      title: "Ledger Report",
+      path: "/accounting/ledgerdetails/ledgerreport",
+      icon: "ledgerreport",
+      childs: [
+        {
+          id: "ledgerreport",
+          type: "item",
+          title: "Ledger Report",
+          path: "/accounting/ledgerdetails/ledgerreport",
+        },
+      ],
     },
   ],
 };

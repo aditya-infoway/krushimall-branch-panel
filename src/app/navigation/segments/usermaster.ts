@@ -5,6 +5,7 @@ export const usermaster: NavigationTree = {
  type: "root",
  title: "User Master",
  icon: "user",
+    path: "/usermaster", 
  childs: [
   {
    id: "account",

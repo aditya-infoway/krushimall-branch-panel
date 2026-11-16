@@ -5,6 +5,7 @@ export const enquirysettings: NavigationTree = {
  type: "root",
  title: "Enquiry MASTER",
  icon: "settings",
+    path: "/enquirysettings", 
  childs: [
   {
    id: "enquirytype",

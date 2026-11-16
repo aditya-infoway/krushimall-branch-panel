@@ -4,6 +4,7 @@ export const bookregister: NavigationTree = {
   id: "bookregister",
   type: "root",
   title: "Cash/Bank Register",
+     path: "/bookregister", 
   icon: "cashbank",
   childs: [
     {
