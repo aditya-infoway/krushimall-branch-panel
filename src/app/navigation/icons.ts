@@ -8,7 +8,7 @@ import {
   ClipboardDocumentListIcon,
   ShoppingCartIcon,
   ExclamationTriangleIcon,
-  
+  ArrowLeftStartOnRectangleIcon
 } from "@heroicons/react/24/outline";
 import { ElementType } from "react";
 import {
@@ -25,14 +25,16 @@ import {
   TbTransfer,
   TbBook2,
   TbReportMoney,
+  
 } from "react-icons/tb";
 
 import DashboardsIcon from "@/assets/dualicons/dashboards.svg?react";
 import SettingIcon from "@/assets/dualicons/setting.svg?react";
-import { report } from "./segments/report";
+// import { report } from "./segments/report";
 
 export const navigationIcons: Record<string, ElementType> = {
   dashboards: DashboardsIcon,
+  logout: ArrowLeftStartOnRectangleIcon,
   user: TbBriefcase,
   settings: SettingIcon,
   "dashboards.home": HomeIcon,

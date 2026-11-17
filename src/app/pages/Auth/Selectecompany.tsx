@@ -5,12 +5,13 @@ import Select from "react-select";
 import { Country, State, City } from "country-state-city";
 import { Input } from "@/components/ui";
 import axios from "@/utils/axios";
+import logo from "@/assets/logo.png";
 interface Company {
   id: number;
   companyName: string;
   financialYears: {
-        id: number;
-financialYear: string;
+    id: number;
+    financialYear: string;
     fyStartDate: string;
     fyEndDate: string;
   }[];
@@ -45,8 +46,8 @@ export default function Selectcomapny() {
   const [formData, setFormData] = useState({
     companyName: "",
     logo: null as File | null,
- email: "",
-  accountNumber: "",
+    email: "",
+    accountNumber: "",
     country: "",
     state: "",
     stateCode: "",
@@ -96,8 +97,8 @@ export default function Selectcomapny() {
   const [errors, setErrors] = useState({
     companyName: "",
     country: "",
-     email: "",
-  accountNumber: "",
+    email: "",
+    accountNumber: "",
     state: "",
     district: "",
     city: "",
@@ -114,15 +115,15 @@ export default function Selectcomapny() {
   const validateForm = () => {
     const newErrors = {
       companyName: !formData.companyName ? "Company Name is required" : "",
-email: !formData.email
-  ? "Email is required"
-  : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
-    ? "Enter a valid email"
-    : "",
+      email: !formData.email
+        ? "Email is required"
+        : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
+          ? "Enter a valid email"
+          : "",
 
-accountNumber: !formData.accountNumber
-  ? "Account Number is required"
-  : "",
+      accountNumber: !formData.accountNumber
+        ? "Account Number is required"
+        : "",
       country: !country ? "Country is required" : "",
 
       state: !state ? "State is required" : "",
@@ -198,108 +199,112 @@ accountNumber: !formData.accountNumber
       console.error(error);
     }
   };
- const customSelectStyles = {
-  control: (provided: any, state: any) => ({
-    ...provided,
-    backgroundColor: "transparent",
-    borderColor: state.isFocused
-      ? "var(--color-primary-600)"
-      : "var(--color-gray-300)",
-    boxShadow: state.isFocused
-      ? "0 0 0 1px var(--color-primary-600)"
-      : "none",
-    minHeight: "42px",
+  const customSelectStyles = {
+    control: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: "transparent",
+      borderColor: state.isFocused
+        ? "var(--color-primary-600)"
+        : "var(--color-gray-300)",
+      boxShadow: state.isFocused
+        ? "0 0 0 1px var(--color-primary-600)"
+        : "none",
+      minHeight: "42px",
 
-    "&:hover": {
-      borderColor: "var(--color-primary-500)",
-    },
-  }),
+      "&:hover": {
+        borderColor: "var(--color-primary-500)",
+      },
+    }),
 
-  valueContainer: (provided: any) => ({
-    ...provided,
-    color: "var(--color-dark-100)",
-  }),
+    valueContainer: (provided: any) => ({
+      ...provided,
+      color: "var(--color-dark-100)",
+    }),
 
-  singleValue: (provided: any) => ({
-    ...provided,
-    color: "var(--color-dark-100)",
-  }),
+    singleValue: (provided: any) => ({
+      ...provided,
+      color: "var(--color-dark-100)",
+    }),
 
-  input: (provided: any) => ({
-    ...provided,
-    color: "var(--color-dark-100)",
-  }),
+    input: (provided: any) => ({
+      ...provided,
+      color: "var(--color-dark-100)",
+    }),
 
-  placeholder: (provided: any) => ({
-    ...provided,
-    color: "var(--color-gray-400)",
-  }),
+    placeholder: (provided: any) => ({
+      ...provided,
+      color: "var(--color-gray-400)",
+    }),
 
-  menu: (provided: any) => ({
-    ...provided,
-    backgroundColor: "var(--color-dark-700)",
-    border: "1px solid var(--color-primary-600)",
-    borderRadius: "12px",
-    overflow: "hidden",
-  }),
+    menu: (provided: any) => ({
+      ...provided,
+      backgroundColor: "var(--color-dark-700)",
+      border: "1px solid var(--color-primary-600)",
+      borderRadius: "12px",
+      overflow: "hidden",
+    }),
 
-  menuList: (provided: any) => ({
-    ...provided,
-    padding: 0,
-  }),
+    menuList: (provided: any) => ({
+      ...provided,
+      padding: 0,
+    }),
 
-  option: (provided: any, state: any) => ({
-    ...provided,
-    backgroundColor: state.isSelected
-      ? "var(--color-primary-600)"
-      : state.isFocused
-        ? "var(--color-primary-500)"
-        : "var(--color-dark-700)",
-    color: "#fff",
-    cursor: "pointer",
-  }),
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? "var(--color-primary-600)"
+        : state.isFocused
+          ? "var(--color-primary-500)"
+          : "var(--color-dark-700)",
+      color: "#fff",
+      cursor: "pointer",
+    }),
 
-  dropdownIndicator: (provided: any, state: any) => ({
-    ...provided,
-    color: state.isFocused
-      ? "var(--color-primary-600)"
-      : "var(--color-gray-400)",
-  }),
+    dropdownIndicator: (provided: any, state: any) => ({
+      ...provided,
+      color: state.isFocused
+        ? "var(--color-primary-600)"
+        : "var(--color-gray-400)",
+    }),
 
-  clearIndicator: (provided: any) => ({
-    ...provided,
-    color: "var(--color-gray-400)",
-  }),
+    clearIndicator: (provided: any) => ({
+      ...provided,
+      color: "var(--color-gray-400)",
+    }),
 
-  indicatorSeparator: () => ({
-    display: "none",
-  }),
-};
-const handleSelectCompany = (company: Company) => {
-  const financialYear = company.financialYears?.[0];
+    indicatorSeparator: () => ({
+      display: "none",
+    }),
+  };
+  const handleSelectCompany = (company: Company) => {
+    const financialYear = company.financialYears?.[0];
 
-  if (!financialYear) {
-    alert("Financial year not found");
-    return;
-  }
+    if (!financialYear) {
+      alert("Financial year not found");
+      return;
+    }
 
-  localStorage.setItem("companyId", String(company.id));
-  localStorage.setItem("companyName", company.companyName);
+    localStorage.setItem("companyId", String(company.id));
+    localStorage.setItem("companyName", company.companyName);
 
-  localStorage.setItem("financialYearId", String(financialYear.id));
-  localStorage.setItem("financialYear", financialYear.financialYear);
-  localStorage.setItem("fyStartDate", financialYear.fyStartDate);
-  localStorage.setItem("fyEndDate", financialYear.fyEndDate);
+    localStorage.setItem("financialYearId", String(financialYear.id));
+    localStorage.setItem("financialYear", financialYear.financialYear);
+    localStorage.setItem("fyStartDate", financialYear.fyStartDate);
+    localStorage.setItem("fyEndDate", financialYear.fyEndDate);
 
-  navigate("/dashboards/dashboard");
-};
+    navigate("/dashboards/dashboard");
+  };
   return (
     <div className="dark:bg-dark-900 flex h-screen bg-gray-100">
       {/* Left Side */}
       <div className="dark:bg-dark-700 flex w-full flex-col bg-white p-8 xl:w-1/2">
         {/* Logo */}
-        <div className="mb-8 flex justify-center">
-          <Logo className="mx-auto size-16" />
+        <div className="mb-6 flex justify-center pt-10">
+          <img
+            src={logo}
+            alt="KrushiMall"
+            className="h-20 w-auto object-contain"
+          />
         </div>
 
         {/* Heading */}
@@ -315,8 +320,8 @@ const handleSelectCompany = (company: Company) => {
         {!showForm ? (
           <>
             {/* Company Table */}
-          <div className="h-100 overflow-auto rounded-lg border">
-              <table className="w-full ">
+            <div className="h-100 overflow-auto rounded-lg border">
+              <table className="w-full">
                 <thead className="dark:bg-dark-600 sticky top-0 bg-gray-100">
                   <tr>
                     <th className="p-3 text-left">Company Name</th>
@@ -328,11 +333,11 @@ const handleSelectCompany = (company: Company) => {
                 <tbody>
                   {companies.length > 0 ? (
                     companies.map((company) => (
-                     <tr
-  key={company.id}
-  onClick={() => handleSelectCompany(company)}
-  className="cursor-pointer border-t hover:bg-gray-50"
->
+                      <tr
+                        key={company.id}
+                        onClick={() => handleSelectCompany(company)}
+                        className="cursor-pointer border-t hover:bg-gray-50"
+                      >
                         <td className="p-3">{company.companyName}</td>
 
                         <td className="p-3">
@@ -582,18 +587,18 @@ const handleSelectCompany = (company: Company) => {
                 />
               </div>
               <div>
-  <label className="mb-1 inline-block">Email</label>
+                <label className="mb-1 inline-block">Email</label>
 
-  <Input
-    name="email"
-    value={formData.email}
-    onChange={handleInputChange}
-    type="email"
-    placeholder="Company Email"
-    className="w-full rounded border p-3"
-     error={errors.email}
-  />
-</div>
+                <Input
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  type="email"
+                  placeholder="Company Email"
+                  className="w-full rounded border p-3"
+                  error={errors.email}
+                />
+              </div>
               <div>
                 <label className="mb-1 inline-block">GST Number</label>
                 <Input
@@ -669,26 +674,26 @@ const handleSelectCompany = (company: Company) => {
                 />
               </div>
               <div>
-  <label className="mb-1 inline-block">Account Number</label>
+                <label className="mb-1 inline-block">Account Number</label>
 
-   <Input
-    name="accountNumber"
-    value={formData.accountNumber}
-    onChange={(e) => {
-      const value = e.target.value.replace(/\D/g, "");
+                <Input
+                  name="accountNumber"
+                  value={formData.accountNumber}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
 
-      setFormData((prev) => ({
-        ...prev,
-        accountNumber: value,
-      }));
-    }}
-    type="text"
-    inputMode="numeric"
-    placeholder="Bank Account Number"
-    className="w-full rounded border p-3"
-    error={errors.accountNumber}
-  />
-</div>
+                    setFormData((prev) => ({
+                      ...prev,
+                      accountNumber: value,
+                    }));
+                  }}
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Bank Account Number"
+                  className="w-full rounded border p-3"
+                  error={errors.accountNumber}
+                />
+              </div>
               <div>
                 <label className="mb-1 inline-block">IFSC Code</label>
                 <Input

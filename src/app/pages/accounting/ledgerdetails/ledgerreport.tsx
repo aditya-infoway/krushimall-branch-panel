@@ -14,6 +14,7 @@ import { DatePicker } from "@/components/shared/form/Datepicker";
 import { useEffect } from "react";
 import apiHelper from "@/utils/apiHelper";
 import { Search } from "lucide-react";
+import { createPortal } from "react-dom";
 interface LedgerAccount {
   id: number;
   accountName: string;
@@ -120,7 +121,7 @@ const handleViewClick = (account: any) => {
 
   const handleDrawerOk = () => {
     setIsDrawerOpen(false);
-   navigate("/ledgerdetails/ledgerdetails", {
+   navigate("/accounting/ledgerdetails/ledgerdetails", {
   state: {
     accountId: selectedAccount.id,
     accountName: selectedAccount.accountName,
@@ -400,8 +401,10 @@ const downloadExcel = async () => {
       </div>
 
       {/* Right Side Drawer Modal - Matches Theme */}
-      {isDrawerOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+   {isDrawerOpen &&
+        createPortal(
+  <div className="fixed inset-0 z-100 overflow-hidden">
+            {/* Overlay */}
           {/* Overlay */}
           <div
             className="absolute inset-0 bg-black/50 transition-opacity"
@@ -500,8 +503,9 @@ const downloadExcel = async () => {
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
 
       <style>{`
         @keyframes slideInRight {

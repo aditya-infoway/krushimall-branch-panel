@@ -219,7 +219,7 @@ const currentData = filteredTransactions.slice(startIndex, endIndex);
   };
 
   const handleBack = () => {
-    navigate("/ledgerdetails/ledgerreport");
+    navigate("/accounting/ledgerdetails/ledgerreport");
   };
 const clearFilter = () => {
   setFromDate(filterData.fromDate);

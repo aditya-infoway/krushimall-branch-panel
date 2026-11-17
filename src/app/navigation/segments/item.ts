@@ -5,6 +5,7 @@ export const item: NavigationTree = {
   type: "root",
   title: "Item MASTER",
   icon: "item",
+     path: "/item", 
   childs: [
     {
       id: "tractor",

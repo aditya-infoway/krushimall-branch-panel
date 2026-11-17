@@ -2,7 +2,7 @@ import { Navigate, RouteObject } from "react-router";
 
 import AuthGuard from "@/middleware/AuthGuard";
 import { DynamicLayout } from "../layouts/DynamicLayout";
-import { AppLayout } from "../layouts/AppLayout";
+// import { AppLayout } from "../layouts/AppLayout";
 
 /**
  * Protected routes configuration
@@ -152,7 +152,7 @@ const protectedRoutes: RouteObject = {
           ],
         },
 
-       {
+        {
           path: "leadmaster",
           children: [
             {
@@ -212,7 +212,7 @@ const protectedRoutes: RouteObject = {
                 ).default,
               }),
             },
-              {
+            {
               path: "testdrivehistory",
               lazy: async () => ({
                 Component: (
@@ -271,37 +271,35 @@ const protectedRoutes: RouteObject = {
           ],
         },
 
-       {
-  path: "stocktransfer",
-  children: [
-    {
-      path: "vehiclestock",
-      children: [
-        // Vehicle Stock Transfer List
         {
-          index: true,
-          lazy: async () => ({
-            Component: (
-              await import("@/app/pages/stocktransfer/vehiclestock")
-            ).default,
-          }),
-        },
+          path: "stocktransfer",
+          children: [
+            {
+              path: "vehiclestock",
+              children: [
+                // Vehicle Stock Transfer List
+                {
+                  index: true,
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/stocktransfer/vehiclestock")
+                    ).default,
+                  }),
+                },
 
-        // Vehicle Stock Transfer Details
-         {
-          path: "view/:id",
-          lazy: async () => ({
-            Component: (
-              await import(
-                "@/app/pages/stocktransfer/Vehiclestocktransferdetails"
-              )
-            ).default,
-          }),
+                // Vehicle Stock Transfer Details
+                {
+                  path: "view/:id",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/stocktransfer/Vehiclestocktransferdetails")
+                    ).default,
+                  }),
+                },
+              ],
+            },
+          ],
         },
-      ],
-    },
-  ],
-},
 
         {
           path: "enquirysettings",
@@ -507,37 +505,58 @@ const protectedRoutes: RouteObject = {
                   .default,
               }),
             },
+            {
+              path: "ledgerdetails",
+              children: [
+                {
+                  path: "ledgerreport",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/accounting/ledgerdetails/ledgerreport")
+                    ).default,
+                  }),
+                },
+                {
+                  path: "ledgerdetails",
+                  lazy: async () => ({
+                    Component: (
+                      await import("@/app/pages/accounting/ledgerdetails/ledgerdetails")
+                    ).default,
+                  }),
+                },
+              ],
+            },
           ],
         },
         {
-  path: "goodscontrol",
-  children: [
-    {
-      path: "tractorinventory",
-      lazy: async () => ({
-        Component: (
-          await import("@/app/pages/goodscontrol/tractorinventory")
-        ).default,
-      }),
-    },
-    {
-      path: "accessoriesinventory",
-      lazy: async () => ({
-        Component: (
-          await import("@/app/pages/goodscontrol/accessoriesinventory")
-        ).default,
-      }),
-    },
-    {
-      path: "accessoriesinventory/history/:id",
-      lazy: async () => ({
-        Component: (
-          await import("@/app/pages/goodscontrol/accessorieshistory")
-        ).default,
-      }),
-    },
-  ],
-},
+          path: "goodscontrol",
+          children: [
+            {
+              path: "tractorinventory",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/goodscontrol/tractorinventory")
+                ).default,
+              }),
+            },
+            {
+              path: "accessoriesinventory",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/goodscontrol/accessoriesinventory")
+                ).default,
+              }),
+            },
+            {
+              path: "accessoriesinventory/history/:id",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/goodscontrol/accessorieshistory")
+                ).default,
+              }),
+            },
+          ],
+        },
 
         {
           path: "bookregister",
@@ -559,27 +578,7 @@ const protectedRoutes: RouteObject = {
           ],
         },
 
-        {
-          path: "ledgerdetails",
-          children: [
-            {
-              path: "ledgerreport",
-              lazy: async () => ({
-                Component: (
-                  await import("@/app/pages/ledgerdetails/ledgerreport")
-                ).default,
-              }),
-            },
-            {
-              path: "ledgerdetails",
-              lazy: async () => ({
-                Component: (
-                  await import("@/app/pages/ledgerdetails/ledgerdetails")
-                ).default,
-              }),
-            },
-          ],
-        },
+      
 
         {
           path: "report",
@@ -598,23 +597,17 @@ const protectedRoutes: RouteObject = {
                   .default,
               }),
             },
-          ],
-        },
-
-        {
-          path: "bookingbalance",
-          children: [
-            {
+              {
               path: "bookingbalance",
               lazy: async () => ({
-                Component: (
-                  await import("@/app/pages/bookingbalance/bookingbalance")
-                ).default,
+                Component: (await import("@/app/pages/report/bookingbalance"))
+                  .default,
               }),
             },
           ],
         },
 
+      
         {
           path: "followups",
           children: [
@@ -647,79 +640,66 @@ const protectedRoutes: RouteObject = {
           ],
         },
 
+        {
+          path: "accessories",
+          children: [
+            {
+              index: true,
+              lazy: async () => ({
+                Component: (await import("@/app/pages/purchase/accessories"))
+                  .default,
+              }),
+            },
 
-        {
-      path: "accessories",
-      children: [
-        {
-          index: true,
-          lazy: async () => ({
-            Component: (await import("@/app/pages/purchase/accessories"))
-              .default,
-          }),
+            {
+              path: "add",
+              lazy: async () => ({
+                Component: (await import("@/app/pages/purchase/puraccessories"))
+                  .default,
+              }),
+            },
+
+            {
+              path: "add/:id",
+              lazy: async () => ({
+                Component: (await import("@/app/pages/purchase/puraccessories"))
+                  .default,
+              }),
+            },
+          ],
         },
 
         {
-          path: "add",
+          path: "settings",
           lazy: async () => ({
-            Component: (await import("@/app/pages/purchase/puraccessories"))
-              .default,
+            Component: (await import("@/app/pages/settings/Layout")).default,
           }),
+          children: [
+            {
+              index: true,
+              element: <Navigate to="general" replace />,
+            },
+            {
+              path: "general",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/settings/sections/General")
+                ).default,
+              }),
+            },
+            {
+              path: "appearance",
+              lazy: async () => ({
+                Component: (
+                  await import("@/app/pages/settings/sections/Appearance")
+                ).default,
+              }),
+            },
+          ],
         },
-
-        {
-          path: "add/:id",
-          lazy: async () => ({
-            Component: (await import("@/app/pages/purchase/puraccessories"))
-              .default,
-          }),
-        },
-
       ],
     },
-
-
-    {
-      path: "settings",
-      lazy: async () => ({
-        Component: (await import("@/app/pages/settings/Layout")).default,
-      }),
-      children: [
-        {
-          index: true,
-          element: <Navigate to="general" replace />,
-        },
-        {
-          path: "general",
-          lazy: async () => ({
-            Component: (
-              await import("@/app/pages/settings/sections/General")
-            ).default,
-          }),
-        },
-        {
-          path: "appearance",
-          lazy: async () => ({
-            Component: (
-              await import("@/app/pages/settings/sections/Appearance")
-            ).default,
-          }),
-        },
-      ],
-    },
-
-      ],
-    },
-
-    
-
-
-    
   ],
-}
-
-
-    
-
+};
 
 export { protectedRoutes };

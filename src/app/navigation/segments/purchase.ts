@@ -5,6 +5,7 @@ export const purchase: NavigationTree = {
   type: "root",
   title: "Purchase MASTER",
   icon: "purchase",
+     path: "/purchase", 
   childs: [
     {
       id: "purchase-tractor",
