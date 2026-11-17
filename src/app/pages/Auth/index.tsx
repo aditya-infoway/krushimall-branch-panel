@@ -67,9 +67,9 @@ export default function SignIn() {
                     Welcome to{" "}
                     <span className="text-primary-600">KrushiMall</span>
                   </h2>
-                  <p className="mt-1 leading-relaxed text-gray-600">
+                  {/* <p className="mt-1 leading-relaxed text-gray-600">
                     Please sign in to continue
-                  </p>
+                  </p> */}
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
